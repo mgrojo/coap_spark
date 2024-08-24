@@ -1,0 +1,24 @@
+name = "tests"
+description = "Test subcrate for CoAP SPARK"
+version = "0.1.0-dev"
+
+authors = ["Manuel Gomez"]
+maintainers = ["Manuel Gomez <mgrojo@gmail.com>"]
+maintainers-logins = ["mgrojo"]
+licenses = "MIT"
+website = "https://github.com/mgrojo/coap_spark"
+tags = ["test", "coap", "spark"]
+
+executables = ["tests"]
+
+[[depends-on]]
+coap_spark = "*"
+
+[[pins]]
+coap_spark = { path='..' }
+
+[[depends-on]]
+aunit = "^24.0.0"
+
+[[depends-on]]
+gnatcov = "^22.0.1"
