@@ -8,3 +8,6 @@ maintainers-logins = ["mgrojo"]
 licenses = "MIT"
 website = "https://github.com/mgrojo/coap_spark"
 tags = ["spark", "coap", "iot", "protocol"]
+
+[[depends-on]]
+gnatprove = "^14.1.1"
