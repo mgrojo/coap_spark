@@ -32,7 +32,7 @@ jobs:
       - run: alr gnatprove -j0 --level=4
 
         # Instrument the project code for coverage analysis.
-      - run: cd tests && alr gnatcov instrument --level=stmt --dump-trigger=atexit --projects ada_spark_workflow.gpr
+      - run: cd tests && alr gnatcov instrument --level=stmt --dump-trigger=atexit --projects coap_spark.gpr
 
         # Build testsuite with instrumented code.
       - run: cd tests && alr build -- --src-subdirs=gnatcov-instr --implicit-with=gnatcov_rts_full
@@ -41,7 +41,7 @@ jobs:
       - run: cd tests && alr exec ./bin/tests
 
         # Run the GNATcov code coverage analysis on the trace files.
-      - run: cd tests && alr gnatcov coverage --annotate=xcov --output-dir gnatcov_out --level=stmt --projects ada_spark_workflow.gpr *.srctrace
+      - run: cd tests && alr gnatcov coverage --annotate=xcov --output-dir gnatcov_out --level=stmt --projects coap_spark.gpr *.srctrace
 
         # Upload the code coverage analysis results to codecov.io
       - uses: alire-project/gnatcov-to-codecovio-action@main
