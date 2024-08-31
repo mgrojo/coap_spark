@@ -3849,7 +3849,9 @@ two weeks. For assistance, please contact iana@iana.org.
       <notes/>
     </record>
   </registry>
-
+<!-- See https://github.com/AdaCore/RecordFlux/issues/1297
+  This node is not needed as it is part of RFC9290 and not
+  of RFC7252.
   <registry id="core-standard-problem-detail-keys">
     <title>Standard Problem Detail Keys</title>
     <xref type="rfc" data="rfc9290"/>
@@ -3929,7 +3931,7 @@ two weeks. For assistance, please contact iana@iana.org.
       <xref type="draft" data="draft-amsuess-core-pd-body-error-position-00"/>
     </record>
   </registry>
-	
+  
   <registry id="core-custom-problem-detail-keys">
     <title>Custom Problem Detail Keys</title>
     <xref type="rfc" data="rfc9290"/>
@@ -3952,7 +3954,7 @@ two weeks. For assistance, please contact iana@iana.org.
       <xref type="rfc" data="rfc9290">RFC9290, Appendix B</xref>
     </record>
   </registry>
-
+  -->
   <registry id="target-attributes">
     <title>Target Attributes</title>
     <expert>Carsten Bormann, Marco Tiloca</expert>

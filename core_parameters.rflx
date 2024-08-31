@@ -1,0 +1,195 @@
+-- AUTOMATICALLY GENERATED. DO NOT EDIT.
+-- Generation date: 2024-08-31
+-- Constrained RESTful Environments (CoRE) Parameters
+-- Registry last updated on 2024-08-02
+
+package Core_Parameters is
+
+   -- type Resource_Type_Rt_Link_Target_Attribute_Values
+   -- ... Skipped due to unsupported content in the registry ...
+
+   -- type Interface_Description_If_Link_Target_Attribute_Values
+   -- ... Skipped due to unsupported content in the registry ...
+
+   -- type CoAP_Codes
+   -- ... Skipped due to unsupported content in the registry ...
+
+   type CoAP_Option_Numbers is
+      (-- Ref: rfc7252
+       -- Ref: rfc8613
+       If_Match => 1,
+
+       -- Ref: rfc7252
+       -- Ref: rfc8613
+       Uri_Host => 3,
+
+       -- Ref: rfc7252
+       -- Ref: rfc8613
+       ETag => 4,
+
+       -- Ref: rfc7252
+       -- Ref: rfc8613
+       If_None_Match => 5,
+
+       -- Ref: rfc7641
+       -- Ref: rfc8613
+       Observe => 6,
+
+       -- Ref: rfc7252
+       -- Ref: rfc8613
+       Uri_Port => 7,
+
+       -- Ref: rfc7252
+       -- Ref: rfc8613
+       Location_Path => 8,
+
+       -- Ref: rfc8613
+       OSCORE => 9,
+
+       -- Ref: rfc7252
+       -- Ref: rfc8613
+       Uri_Path => 11,
+
+       -- Ref: rfc7252
+       -- Ref: rfc8613
+       Content_Format => 12,
+
+       -- Ref: rfc7252
+       -- Ref: rfc8516
+       -- Ref: rfc8613
+       Max_Age => 14,
+
+       -- Ref: rfc7252
+       -- Ref: rfc8613
+       Uri_Query => 15,
+
+       -- Ref: rfc8768
+       Hop_Limit => 16,
+
+       -- Ref: rfc7252
+       -- Ref: rfc8613
+       Accept_17 => 17,
+
+       -- Ref: rfc9177
+       Q_Block1 => 19,
+
+       -- Ref: rfc7252
+       -- Ref: rfc8613
+       Location_Query => 20,
+
+       -- Ref: RFC-ietf-core-oscore-edhoc-11
+       EDHOC => 21,
+
+       -- Ref: rfc7959
+       -- Ref: rfc8323
+       -- Ref: rfc8613
+       Block2 => 23,
+
+       -- Ref: rfc7959
+       -- Ref: rfc8323
+       -- Ref: rfc8613
+       Block1 => 27,
+
+       -- Ref: rfc7959
+       -- Ref: rfc8613
+       Size2 => 28,
+
+       -- Ref: rfc9177
+       Q_Block2 => 31,
+
+       -- Ref: rfc7252
+       -- Ref: rfc8613
+       Proxy_Uri => 35,
+
+       -- Ref: rfc7252
+       -- Ref: rfc8613
+       Proxy_Scheme => 39,
+
+       -- Ref: rfc7252
+       -- Ref: rfc8613
+       Size1 => 60,
+
+       -- Ref: rfc9175
+       Echo => 252,
+
+       -- Ref: rfc7967
+       -- Ref: rfc8613
+       No_Response => 258,
+
+       -- Ref: rfc9175
+       Request_Tag => 292,
+
+       -- Ref: Michael_Koster
+       OCF_Accept_Content_Format_Version => 2049,
+
+       -- Ref: Michael_Koster
+       OCF_Content_Format_Version => 2053,
+
+       -- xref = GPC_SPE_207
+       SCP82_Params => 2055)
+   with Size => 16;
+
+   -- type CoAP_Signaling_Codes
+   -- ... Skipped due to unsupported content in the registry ...
+
+   -- type CoAP_Signaling_Option_Numbers
+   -- ... Skipped due to unsupported content in the registry ...
+
+   type OSCORE_Flag_Bits is
+      (-- description = For using a Group OSCORE Security Context, set to 1 if the
+       --  message is protected with the group mode
+       -- Ref: draft-ietf-core-oscore-groupcomm-14
+       Group_Flag => 2,
+
+       -- description = Set to 1 if kid context is present in the compressed          COSE
+       --  object
+       -- Ref: rfc8613
+       Kid_Context_Flag => 3,
+
+       -- description = Set to 1 if kid is present in the compressed COSE object
+       -- Ref: rfc8613
+       Kid_Flag => 4,
+
+       -- description = Encodes the Partial IV length; can have value 0 to 5
+       -- Ref: rfc8613
+       Partial_IV_Length => 7,
+
+       -- description = Set to 1 if the OSCORE Option specifies a third byte, which
+       --  includes the flag bits 16-23
+       -- Ref: draft-ietf-core-oscore-key-update-03
+       Extension_2_Flag => 8,
+
+       -- description = Set to 1 if nonce is present in the compressed COSE object
+       -- Ref: draft-ietf-core-oscore-key-update-03
+       Nonce_Flag => 15,
+
+       -- description = Set to 1 if the OSCORE Option specifies a fourth byte, which
+       --  includes the flag bits 24-31
+       -- Ref: draft-ietf-core-oscore-key-update-03
+       Extension_3_Flag => 16,
+
+       -- description = Set to 1 if the OSCORE Option specifies a fifth byte, which
+       --  includes the flag bits 32-39
+       -- Ref: draft-ietf-core-oscore-key-update-03
+       Extension_4_Flag => 24,
+
+       -- description = Set to 1 if the OSCORE Option specifies a sixth byte, which
+       --  includes the flag bits 40-47
+       -- Ref: draft-ietf-core-oscore-key-update-03
+       Extension_5_Flag => 32,
+
+       -- description = Set to 1 if the OSCORE Option specifies a seventh byte, which
+       --  includes the flag bits 48-55
+       -- Ref: draft-ietf-core-oscore-key-update-03
+       Extension_6_Flag => 40,
+
+       -- description = Set to 1 if the OSCORE Option specifies a eighth byte, which
+       --  includes the flag bits 56-63
+       -- Ref: draft-ietf-core-oscore-key-update-03
+       Extension_7_Flag => 48)
+   with Size => 6;
+
+   -- type Endpoint_Type_Et_RD_Parameter_Values
+   -- ... Skipped due to unsupported content in the registry ...
+
+end Core_Parameters;

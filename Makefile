@@ -1,3 +1,5 @@
+RFLX_HOME := tools/RecordFlux/.venv/bin
+
 convert_iana: spec/iana_registry/core-parameters.xml
-	tools/RecordFlux/.venv/bin/rflx convert iana $<
+	$(RFLX_HOME)/rflx convert iana -d spec $<
 .PHONY: convert_iana
