@@ -6,173 +6,173 @@ package CoAP is
    -- Other possible values are reserved.
    type Code_Class is
     (Request => 0,
-     Success => 2,      -- The request was successfully received, understood, and accepted.
-     Client_Error => 4, -- The request contains bad syntax or cannot be fulfilled.
-     Server_Error => 5) -- The server failed to fulfill an apparently valid request.
+    Success => 2,        -- The request was successfully received, understood, and accepted.
+    Client_Error => 4, -- The request contains bad syntax or cannot be fulfilled.
+    Server_Error => 5) -- The server failed to fulfill an apparently valid request.
    with Size => 3;
 
    -- https://www.iana.org/assignments/core-parameters/core-parameters.xhtml#method-codes
    -- Other possible values are Unassigned.
    type Method_Code is
-    (Get => 1,    -- Ref [RFC7252]
-     Post => 2,   -- Ref [RFC7252]
-     Put => 3,    -- Ref [RFC7252]
-     Delete => 4, -- Ref [RFC7252]
-     Fetch => 5,  -- Ref [RFC8132]
-     Patch => 6,  -- Ref [RFC8132]
-     iPatch => 7) -- Ref [RFC8132]
+    (Get => 1,     -- Ref [RFC7252]
+    Post => 2,    -- Ref [RFC7252]
+    Put => 3,     -- Ref [RFC7252]
+    Delete => 4, -- Ref [RFC7252]
+    Fetch => 5,   -- Ref [RFC8132]
+    Patch => 6,   -- Ref [RFC8132]
+    iPatch => 7) -- Ref [RFC8132]
    with Size => 5;
 
    -- Following *_Response types are the detail codes corresponding to the Response
    -- https://www.iana.org/assignments/core-parameters/core-parameters.xhtml#response-codes
    type Success_Response is
-     (-- 2.00    Unassigned
-      Created => 1, -- Ref [RFC7252]
-      Deleted => 2, -- Ref [RFC7252]
-      Valid => 3, -- Ref [RFC7252]
-      Changed => 4, -- Ref [RFC7252]
-      Content => 5, -- Ref [RFC7252]
-                     -- 2.06-2.30  Unassigned
-      Continue => 31) -- Ref [RFC7959]
+    (-- 2.00    Unassigned
+    Created => 1, -- Ref [RFC7252]
+    Deleted => 2, -- Ref [RFC7252]
+    Valid => 3, -- Ref [RFC7252]
+    Changed => 4, -- Ref [RFC7252]
+    Content => 5, -- Ref [RFC7252]
+                  -- 2.06-2.30   Unassigned
+    Continue => 31) -- Ref [RFC7959]
    with Size => 5;
 
    type Client_Error_Response is
-     (Bad_Request => 0, -- Ref [RFC7252]
-      Unauthorized => 1, -- Ref [RFC7252]
-      Bad_Option => 2, -- Ref [RFC7252]
-      Forbidden => 3, -- Ref [RFC7252]
-      Not_Found => 4, -- Ref [RFC7252]
-      Method_Not_Allowed => 5, -- Ref [RFC7252]
-      Not_Acceptable => 6, -- Ref [RFC7252]
-                           -- 4.07   Unassigned
-      Request_Entity_Incomplete => 8, -- Ref [RFC7959]
-      Conflict => 9, -- Ref [RFC8132]
-                     -- 4.10-4.11  Unassigned
-      Precondition_Failed => 12, -- Ref [RFC7252]
-      Request_Entity_Too_Large => 13, -- Ref [RFC7252][RFC7959]
-      Unassigned => 14, -- Ref
-      Unsupported_Content => 15, -- Ref Format,[RFC7252]
-                                 -- 4.16-4.21  Unassigned
-      Unprocessable_Entity => 22, -- Ref [RFC8132]
-                                  -- 4.23-4.28  Unassigned
-      Too_Many_Requests => 29) -- Ref [RFC8516]
-                               -- 4.30-4.31  Unassigned
+    (Bad_Request => 0, -- Ref [RFC7252]
+    Unauthorized => 1, -- Ref [RFC7252]
+    Bad_Option => 2, -- Ref [RFC7252]
+    Forbidden => 3, -- Ref [RFC7252]
+    Not_Found => 4, -- Ref [RFC7252]
+    Method_Not_Allowed => 5, -- Ref [RFC7252]
+    Not_Acceptable => 6, -- Ref [RFC7252]
+                        -- 4.07   Unassigned
+    Request_Entity_Incomplete => 8, -- Ref [RFC7959]
+    Conflict => 9, -- Ref [RFC8132]
+                  -- 4.10-4.11   Unassigned
+    Precondition_Failed => 12, -- Ref [RFC7252]
+    Request_Entity_Too_Large => 13, -- Ref [RFC7252][RFC7959]
+    Unassigned => 14, -- Ref
+    Unsupported_Content => 15, -- Ref Format,[RFC7252]
+                              -- 4.16-4.21   Unassigned
+    Unprocessable_Entity => 22, -- Ref [RFC8132]
+                              -- 4.23-4.28   Unassigned
+    Too_Many_Requests => 29) -- Ref [RFC8516]
+                            -- 4.30-4.31   Unassigned
    with Size => 5;
 
    type Server_Error_Response is
      (Internal_Server_Error => 0, -- Ref [RFC7252]
-      Not_Implemented => 1, -- Ref [RFC7252]
-      Bad_Gateway => 2, -- Ref [RFC7252]
-      Service_Unavailable => 3, -- Ref [RFC7252]
-      Gateway_Timeout => 4, -- Ref [RFC7252]
-      Proxying_Not_Supported => 5, -- Ref [RFC7252]
-                                   -- 5.06-5.07  Unassigned
-      Hop => 8) -- Ref Limit Reached,[RFC8768]
-                -- 5.09-5.31  Unassigned
+     Not_Implemented => 1, -- Ref [RFC7252]
+     Bad_Gateway => 2, -- Ref [RFC7252]
+     Service_Unavailable => 3, -- Ref [RFC7252]
+     Gateway_Timeout => 4, -- Ref [RFC7252]
+     Proxying_Not_Supported => 5, -- Ref [RFC7252]
+                                    -- 5.06-5.07   Unassigned
+     Hop => 8) -- Ref Limit Reached,[RFC8768]
+                -- 5.09-5.31   Unassigned
    with Size => 5;
 
    -- The full list of Codes is defined in
    -- https://www.iana.org/assignments/core-parameters/core-parameters.xhtml#option-numbers
    type Option_Numbers is
      (-- Ref: rfc7252
-      -- Ref: rfc8613
-      If_Match => 1,
+     -- Ref: rfc8613
+     If_Match => 1,
 
-      -- Ref: rfc7252
-      -- Ref: rfc8613
-      Uri_Host => 3,
+     -- Ref: rfc7252
+     -- Ref: rfc8613
+     Uri_Host => 3,
 
-      -- Ref: rfc7252
-      -- Ref: rfc8613
-      ETag => 4,
+     -- Ref: rfc7252
+     -- Ref: rfc8613
+     ETag => 4,
 
-      -- Ref: rfc7252
-      -- Ref: rfc8613
-      If_None_Match => 5,
+     -- Ref: rfc7252
+     -- Ref: rfc8613
+     If_None_Match => 5,
 
-      -- Ref: rfc7641
-      -- Ref: rfc8613
-      Observe => 6,
+     -- Ref: rfc7641
+     -- Ref: rfc8613
+     Observe => 6,
 
-      -- Ref: rfc7252
-      -- Ref: rfc8613
-      Uri_Port => 7,
+     -- Ref: rfc7252
+     -- Ref: rfc8613
+     Uri_Port => 7,
 
-      -- Ref: rfc7252
-      -- Ref: rfc8613
-      Location_Path => 8,
+     -- Ref: rfc7252
+     -- Ref: rfc8613
+     Location_Path => 8,
 
-      -- Ref: rfc8613
-      OSCORE => 9,
+     -- Ref: rfc8613
+     OSCORE => 9,
 
-      -- Ref: rfc7252
-      -- Ref: rfc8613
-      Uri_Path => 11,
+     -- Ref: rfc7252
+     -- Ref: rfc8613
+     Uri_Path => 11,
 
-      -- Ref: rfc7252
-      -- Ref: rfc8613
-      Content_Format => 12,
+     -- Ref: rfc7252
+     -- Ref: rfc8613
+     Content_Format => 12,
 
-      -- Ref: rfc7252
-      -- Ref: rfc8516
-      -- Ref: rfc8613
-      Max_Age => 14,
+     -- Ref: rfc7252
+     -- Ref: rfc8516
+     -- Ref: rfc8613
+     Max_Age => 14,
 
-      -- Ref: rfc7252
-      -- Ref: rfc8613
-      Uri_Query => 15,
+     -- Ref: rfc7252
+     -- Ref: rfc8613
+     Uri_Query => 15,
 
-      -- Ref: rfc8768
-      Hop_Limit => 16,
+     -- Ref: rfc8768
+     Hop_Limit => 16,
 
-      -- Ref: rfc7252
-      -- Ref: rfc8613
-      Accept_17 => 17,
+     -- Ref: rfc7252
+     -- Ref: rfc8613
+     Accept_17 => 17,
 
-      -- Ref: rfc9177
-      Q_Block1 => 19,
+     -- Ref: rfc9177
+     Q_Block1 => 19,
 
-      -- Ref: rfc7252
-      -- Ref: rfc8613
-      Location_Query => 20,
+     -- Ref: rfc7252
+     -- Ref: rfc8613
+     Location_Query => 20,
 
-      -- Ref: RFC-ietf-core-oscore-edhoc-11
-      EDHOC => 21,
+     -- Ref: RFC-ietf-core-oscore-edhoc-11
+     EDHOC => 21,
 
-      -- Ref: rfc7959
-      -- Ref: rfc8323
-      -- Ref: rfc8613
-      Block2 => 23,
+     -- Ref: rfc7959
+     -- Ref: rfc8323
+     -- Ref: rfc8613
+     Block2 => 23,
 
-      -- Ref: rfc7959
-      -- Ref: rfc8323
-      -- Ref: rfc8613
-      Block1 => 27,
+     -- Ref: rfc7959
+     -- Ref: rfc8323
+     -- Ref: rfc8613
+     Block1 => 27,
 
-      -- Ref: rfc7959
-      -- Ref: rfc8613
-      Size2 => 28,
+     -- Ref: rfc7959
+     -- Ref: rfc8613
+     Size2 => 28,
 
-      -- Ref: rfc9177
-      Q_Block2 => 31,
+     -- Ref: rfc9177
+     Q_Block2 => 31,
 
-      -- Ref: rfc7252
-      -- Ref: rfc8613
-      Proxy_Uri => 35,
+     -- Ref: rfc7252
+     -- Ref: rfc8613
+     Proxy_Uri => 35,
 
-      -- Ref: rfc7252
-      -- Ref: rfc8613
-      Proxy_Scheme => 39,
+     -- Ref: rfc7252
+     -- Ref: rfc8613
+     Proxy_Scheme => 39,
 
-      -- Ref: rfc7252
-      -- Ref: rfc8613
-      Size1 => 60,
+     -- Ref: rfc7252
+     -- Ref: rfc8613
+     Size1 => 60,
 
-      -- Ref: rfc9175
-      Echo => 252,
+     -- Ref: rfc9175
+     Echo => 252,
 
-      -- Ref: rfc7967
-      -- Ref: rfc8613
+     -- Ref: rfc7967
+     -- Ref: rfc8613
      No_Response => 258,
 
      -- Ref: rfc9175
@@ -187,5 +187,44 @@ package CoAP is
      -- xref = GPC_SPE_207
      SCP82_Params => 2055)
    with Size => 16;
+
+   type Version_Type is (First_Version => 1) with Size => 2;
+
+   type Message_Type is
+      (Confirmable => 0,
+      Non_Confirmable => 1,
+      Acknowledgement => 2,
+      Reset => 3) with Size => 2;
+
+   type Token_Length is range 0 .. 8 with Size => 4;
+
+   -- 16-bit unsigned integer in network byte order.
+   type Message_ID_Type is range 0 ..   2 ** 16 - 1 with Size => 16;
+
+   -- Message as defined in "3. Message Format" (RFC7252)
+   type CoAP_Message is
+      message
+         Ver : Version_Type;
+         T : Message_Type;
+         TKL : Token_Length;
+         Class : Code_Class
+            then Method            if Class = Request
+            then Success_Code      if Class = Success
+            then Client_Error_Code if Class = Client_Error
+            then Server_Error_Code if Class = Server_Error;
+         Method : Method_Code
+            then Message_ID;
+         Success_Code : Success_Response
+            then Message_ID;
+         Client_Error_Code : Client_Error_Response
+            then Message_ID;
+         Server_Error_Code : Server_Error_Response
+            then Message_ID;
+         Message_ID : Message_ID_Type
+            then Token
+               with Size => TKL * 8;
+         Token : Opaque;
+         Options_And_Payload : Opaque;
+      end message;
 
 end CoAP;
