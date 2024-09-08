@@ -71,6 +71,82 @@ package CoAP is
                 -- 5.09-5.31   Unassigned
    with Size => 5;
 
+   type Version_Type is (First_Version => 1) with Size => 2;
+
+   type Message_Type is
+      (Confirmable => 0,
+      Non_Confirmable => 1,
+      Acknowledgement => 2,
+      Reset => 3) with Size => 2;
+
+   type Token_Length is range 0 .. 8 with Size => 4;
+
+   -- 16-bit unsigned integer in network byte order.
+   type Message_ID_Type is range 0 ..   2 ** 16 - 1 with Size => 16;
+
+   -- Message as defined in "3. Message Format" (RFC7252)
+   -- Due to the lack of support of end markers (see
+   -- https://github.com/AdaCore/RecordFlux/issues/61) the
+   -- Options_And_Payload field models the final parts that are not
+   -- controlled by fixed sizes or by type-length-value semantics.
+   -- This Options_And_Payload will contain Option_Sequence with
+   -- 0 to n Option_Type elements, optionally followed by the
+   -- Payload_Marker and the Payload until the end of the message.
+   type CoAP_Message is
+      message
+         Ver : Version_Type;
+         T : Message_Type;
+         TKL : Token_Length;
+         Class : Code_Class
+            then Method            if Class = Request
+            then Success_Code      if Class = Success
+            then Client_Error_Code if Class = Client_Error
+            then Server_Error_Code if Class = Server_Error;
+         Method : Method_Code
+            then Message_ID;
+         Success_Code : Success_Response
+            then Message_ID;
+         Client_Error_Code : Client_Error_Response
+            then Message_ID;
+         Server_Error_Code : Server_Error_Response
+            then Message_ID;
+         Message_ID : Message_ID_Type;
+         Token : Opaque with Size => TKL * 8;
+         Options_And_Payload : Opaque;
+      end message;
+
+   -- Common type for Option Delta and Option Length
+   type Option_Base_Type is range 0 .. 2 ** 4 - 1 with Size => 4;
+
+   -- Common types for Option Delta (extended) and Option Length (extended)
+   type Option_Extended8_Type is range 0 .. 2 ** 8 - 1 with Size => 8;
+   type Option_Extended16_Type is range 0 .. 2 ** 16 - 1 with Size => 16;
+
+   -- Ref "3.1. Option Format" in RFC7252
+   type Option_Type is
+      message
+         Option_Delta : Option_Base_Type;
+         Option_Length : Option_Base_Type
+            then Option_Value with Size => Option_Length * 8 if Option_Length < 13 and Option_Delta < 13
+            then Option_Delta_Extended8 if Option_Delta = 13
+            then Option_Delta_Extended16 if Option_Delta = 14;
+         Option_Delta_Extended8 : Option_Extended8_Type
+            then Option_Value with Size => Option_Length * 8 if Option_Length < 13;
+         Option_Delta_Extended16 : Option_Extended16_Type
+            then Option_Value with Size => Option_Length * 8 if Option_Length < 13
+            then Option_Length_Extended8 if Option_Length = 13
+            then Option_Length_Extended16 if Option_Length = 14;
+         Option_Length_Extended8 : Option_Extended8_Type
+            then Option_Value with Size => (13 + Option_Length_Extended8) * 8;
+         Option_Length_Extended16 : Option_Extended16_Type
+            then Option_Value with Size => (269 + Option_Length_Extended16) * 8;
+         Option_Value : Opaque;
+      end message;
+
+   type Option_Sequence is sequence of Option_Type;
+
+   type Marker_Type is (Payload_Marker => 16#FF#) with Size => 8;
+
    -- The full list of Codes is defined in
    -- https://www.iana.org/assignments/core-parameters/core-parameters.xhtml#option-numbers
    type Option_Numbers is
@@ -187,72 +263,5 @@ package CoAP is
      -- xref = GPC_SPE_207
      SCP82_Params => 2055)
    with Size => 16;
-
-   type Version_Type is (First_Version => 1) with Size => 2;
-
-   type Message_Type is
-      (Confirmable => 0,
-      Non_Confirmable => 1,
-      Acknowledgement => 2,
-      Reset => 3) with Size => 2;
-
-   type Token_Length is range 0 .. 8 with Size => 4;
-
-   -- 16-bit unsigned integer in network byte order.
-   type Message_ID_Type is range 0 ..   2 ** 16 - 1 with Size => 16;
-
-   -- Message as defined in "3. Message Format" (RFC7252)
-   type CoAP_Message is
-      message
-         Ver : Version_Type;
-         T : Message_Type;
-         TKL : Token_Length;
-         Class : Code_Class
-            then Method            if Class = Request
-            then Success_Code      if Class = Success
-            then Client_Error_Code if Class = Client_Error
-            then Server_Error_Code if Class = Server_Error;
-         Method : Method_Code
-            then Message_ID;
-         Success_Code : Success_Response
-            then Message_ID;
-         Client_Error_Code : Client_Error_Response
-            then Message_ID;
-         Server_Error_Code : Server_Error_Response
-            then Message_ID;
-         Message_ID : Message_ID_Type
-            then Token
-               with Size => TKL * 8;
-         Token : Opaque;
-         Options_And_Payload : Opaque;
-      end message;
-
-   -- Common type for Option Delta and Option Length
-   type Option_Base_Type is range 0 .. 2 ** 4 - 1 with Size => 4;
-
-   -- Common types for Option Delta (extended) and Option Length (extended)
-   type Option_Extended8_Type is range 0 .. 2 ** 8 - 1 with Size => 8;
-   type Option_Extended16_Type is range 0 .. 2 ** 16 - 1 with Size => 16;
-
-   -- Ref "3.1. Option Format" in RFC7252
-   type Option_Type is
-      message
-         Option_Delta : Option_Base_Type;
-         Option_Length : Option_Base_Type
-            then Option_Value with Size => Option_Length * 8 if Option_Length < 13 and Option_Delta < 13
-            then Option_Delta_Extended8 if Option_Delta = 13
-            then Option_Delta_Extended16 if Option_Delta = 14;
-         Option_Delta_Extended8 : Option_Extended8_Type
-            then Option_Value with Size => Option_Length * 8 if Option_Length < 13;
-         Option_Delta_Extended16 : Option_Extended16_Type
-            then Option_Value with Size => Option_Length * 8 if Option_Length < 13
-            then Option_Length_Extended8 if Option_Length = 13
-            then Option_Length_Extended16 if Option_Length = 14;
-         Option_Length_Extended8 : Option_Extended8_Type
-            then Option_Value with Size => (13 + Option_Length_Extended8) * 8;
-         Option_Length_Extended16 : Option_Extended16_Type
-            then Option_Value with Size => (269 + Option_Length_Extended16) * 8;
-         Option_Value : Opaque;
-      end message;
 
 end CoAP;
