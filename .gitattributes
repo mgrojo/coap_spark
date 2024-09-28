@@ -1,0 +1,6 @@
+# Highlight languages similar to Ada as Ada when GitHub does not support them
+#
+# RecordFlux language
+*.rflx linguist-language=Ada
+# GNAT Project files
+*.gpr linguist-language=Ada

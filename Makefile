@@ -1,6 +1,8 @@
 RFLX_HOME := tools/RecordFlux/.venv/bin
 RFLX := $(RFLX_HOME)/rflx
 SPECS = $(wildcard specs/*.rflx)
+GNATPROVE := gnatprove
+
 GENERATED = generated/$(SPECS:.rflx=.ads)
 
 all: generate
@@ -24,3 +26,7 @@ $(GENERATED): $(SPECS)
 clean:
 	rm -r $(dir $(GENERATED))
 .PHONY: clean
+
+prove: $(GENERATED)
+	$(GNATPROVE) -Pcoap_spark.gpr
+.PHONY: prove
