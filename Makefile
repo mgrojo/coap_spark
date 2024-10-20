@@ -1,5 +1,5 @@
-RFLX_HOME := tools/RecordFlux/.venv/bin
-RFLX := $(RFLX_HOME)/rflx
+RFLX_HOME := tools/RecordFlux/
+RFLX := $(RFLX_HOME)/.venv/bin/rflx
 SPECS = $(wildcard specs/*.rflx)
 GNATPROVE := gnatprove
 
@@ -22,6 +22,11 @@ generate: $(GENERATED)
 $(GENERATED): $(SPECS)
 	@mkdir -p $(dir $@)
 	@$(RFLX) generate -d $(dir $@) $<
+	@$(RFLX) graph -d $(dir $@) $<
+
+test:
+	$(MAKE) -C tests test
+.PHONY: test
 
 clean:
 	rm -r $(dir $(GENERATED))
