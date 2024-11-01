@@ -82,7 +82,9 @@ package CoAP is
    type Token_Length is range 0 .. 8 with Size => 4;
 
    -- 16-bit unsigned integer in network byte order.
-   type Message_ID_Type is range 0 ..   2 ** 16 - 1 with Size => 16;
+   type Message_ID_Type is range 0 .. 2 ** 16 - 1 with Size => 16;
+
+   type Length_16 is range 0 .. 2 ** 16 - 1 with Size => 16;
 
    -- Message as defined in "3. Message Format" (RFC7252)
    -- Due to the lack of support of end markers (see
