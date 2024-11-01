@@ -1,0 +1,71 @@
+with CoAP;
+
+package CoAP_Client is
+
+   generic
+      Channel : Channel with Readable, Writable;
+      with function Get_Method return CoAP::Method_Code;
+      with function Get_Request_Options_And_Payload return Opaque;
+      with function Get_Random_Token return Opaque;
+      -- with function Extract_Options (Options_And_Payload : Opaque) return CoAP::Option_Sequence;
+      -- with function Extract_Payload (Options_And_Payload : Opaque) return Opaque;
+   machine Session is
+      Request : CoAP::CoAP_Message;
+      Response : CoAP::CoAP_Message;
+      Messsage_ID : CoAP::Message_ID_Type := 0;
+   begin
+
+      state Create_Request is
+         Token : Opaque := Get_Random_Token;
+      begin
+         Request := CoAP::CoAP_Message'(Ver => CoAP::First_Version,
+                     T => CoAP::Confirmable,
+                     TKL => Token'Size / 8,
+                     Class => CoAP::Request,
+                     Method => Get_Method,
+                     Message_ID => Messsage_ID,
+                     Token => Token,
+                     Options_And_Payload => Get_Request_Options_And_Payload);
+
+      transition
+         goto Send_Request
+      exception
+         goto Failure
+      end Create_Request;
+
+      state Send_Request is
+      begin
+         Channel'Write (Request);
+      transition
+         goto Receive_Response
+      end Send_Request;
+
+      state Receive_Response is
+      begin
+         Channel'Read (Response);
+      transition
+         goto Success
+            if Response'Valid = True and Response.Message_ID = Messsage_ID and Response.Class = CoAP::Success
+         goto Failure
+            if Response'Valid = True and Response.Message_ID = Messsage_ID and
+               (Response.Class = CoAP::Client_Error or Response.Class = CoAP::Server_Error)
+         -- Ignore invalid messages and messages with an unexpected Message ID
+         goto Receive_Response
+      exception
+         goto Failure
+      end Receive_Response;
+
+      state Success is
+      begin
+      transition
+         goto null
+      end Success;
+
+      state Failure is
+      begin
+      transition
+         goto null
+      end Failure;
+   end Session;
+
+end CoAP_Client;
