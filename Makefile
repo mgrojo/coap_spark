@@ -1,9 +1,9 @@
 RFLX_HOME := tools/RecordFlux/
 RFLX := $(RFLX_HOME)/.venv/bin/rflx
-SPECS = $(wildcard specs/*.rflx)
+SPECS := specs/coap_client.rflx # $(wildcard specs/*.rflx)
 GNATPROVE := gnatprove
 
-GENERATED = generated/$(SPECS:.rflx=.ads)
+GENERATED := $(patsubst specs/%,generated/%,$(SPECS:.rflx=.ads))
 
 all: generate
 .PHONY: all
@@ -19,7 +19,8 @@ convert_iana: spec/iana_registry/core-parameters.xml
 generate: $(GENERATED)
 .PHONY: generate
 
-$(GENERATED): $(SPECS)
+generated/%.ads: specs/%.rflx
+	@echo "Generating $@ from $<" 
 	@mkdir -p $(dir $@)
 	@$(RFLX) generate -d $(dir $@) $<
 	@$(RFLX) graph -d $(dir $@) $<
