@@ -22,7 +22,7 @@ package CoAP_Client is
    generic
       Transport : Channel with Readable, Writable;
       with function Get_Method return CoAP::Method_Code;
-      with function Get_Random_Message_ID return CoAP::Message_ID_Type;
+      with function Get_New_Message_ID return CoAP::Message_ID_Type;
       with function Get_Random_Token return Token_Data;
       with function Get_Options_And_Payload return Options_And_Payload_Data;
    machine Session is
@@ -36,7 +36,7 @@ package CoAP_Client is
          Method : CoAP::Method_Code;
          Options_And_Payload : Options_And_Payload_Data;
       begin
-         Messsage_ID := Get_Random_Message_ID;
+         Messsage_ID := Get_New_Message_ID;
          Method := Get_Method;
          Random_Token := Get_Random_Token;
          Options_And_Payload := Get_Options_And_Payload;
