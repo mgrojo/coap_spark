@@ -7,15 +7,26 @@ with RFLX.RFLX_Builtin_Types;
 with RFLX.RFLX_Types;
 with RFLX.RFLX_Types.Operations;
 
-package body RFLX.Coap_Client.Session is
+package body RFLX.Coap_Client.Session
+   with SPARK_Mode
+is
 
-   package Random_Bytes is
-      new Ada.Numerics.Discrete_Random (RFLX_Types.Byte);
-   Byte_Generator : Random_Bytes.Generator;
+   -- The random number generators cannot be proved by SPARK.
+   package Random with SPARK_Mode => Off is
+      package Bytes is
+         new Ada.Numerics.Discrete_Random (RFLX_Types.Byte);
+      Byte_Generator : Bytes.Generator;
 
-   package Random_ID is
-      new Ada.Numerics.Discrete_Random (RFLX.CoAP.Message_ID_Type);
-   ID_Generator : Random_ID.Generator;
+      package ID is
+         new Ada.Numerics.Discrete_Random (RFLX.CoAP.Message_ID_Type);
+      ID_Generator : ID.Generator;
+   end Random;
+
+   package body Random with SPARK_Mode => Off is
+   begin
+      Bytes.Reset (Byte_Generator);
+      ID.Reset (ID_Generator);
+   end Random;
 
    procedure Get_Method
      (State       : in out RFLX.CoAP_Client.Session_Environment.State;
@@ -27,7 +38,9 @@ package body RFLX.Coap_Client.Session is
 
    procedure Get_New_Message_ID
      (State       : in out RFLX.CoAP_Client.Session_Environment.State;
-      RFLX_Result : out RFLX.CoAP.Message_ID_Type) is
+      RFLX_Result : out RFLX.CoAP.Message_ID_Type)
+      with SPARK_Mode => Off
+   is
       use type RFLX.CoAP.Message_ID_Type;
    begin
       if State.Is_First_Message then
@@ -36,7 +49,7 @@ package body RFLX.Coap_Client.Session is
          --  value of the variable (e.g., on startup) be randomized, in order
          --  to make successful off-path attacks on the protocol less likely.
          State.Is_First_Message := False;
-         State.Current_Message_ID := Random_ID.Random (ID_Generator);
+         State.Current_Message_ID := Random.ID.Random (Random.ID_Generator);
       elsif State.Current_Message_ID = RFLX.CoAP.Message_ID_Type'Last then
          State.Current_Message_ID := RFLX.CoAP.Message_ID_Type'First;
       else
@@ -47,11 +60,13 @@ package body RFLX.Coap_Client.Session is
 
    procedure Get_Random_Token
      (State       : in out RFLX.CoAP_Client.Session_Environment.State;
-      RFLX_Result : out RFLX.CoAP_Client.Token_Data.Structure) is
+      RFLX_Result : out RFLX.CoAP_Client.Token_Data.Structure)
+      with SPARK_Mode => Off
+   is
    begin
-      Random_Bytes.Reset (Byte_Generator);
+
       for I in RFLX_Result.Token'Range loop
-         RFLX_Result.Token (I) := Random_Bytes.Random (Byte_Generator);
+         RFLX_Result.Token (I) := Random.Bytes.Random (Random.Byte_Generator);
       end loop;
 
       RFLX_Result := (Length => RFLX_Result.Token'Length,
@@ -62,17 +77,23 @@ package body RFLX.Coap_Client.Session is
    procedure Add_Option
      (Option : RFLX.CoAP.Option_Numbers;
       Value : RFLX.RFLX_Types.Bytes;
-      Current_Delta : in out RFLX.CoAP.Option_Base_Type;
-      Option_Sequence_Cxt : in out RFLX.CoAP.Option_Sequence.Context) is
+      Current_Delta : in out RFLX.CoAP.Option_Extended16_Type;
+      Option_Sequence_Cxt : in out RFLX.CoAP.Option_Sequence.Context)
+   is
+      use type RFLX.CoAP.Option_Extended16_Type;
 
-      Option_Delta : constant RFLX.RFLX_Types.Base_Integer :=
-         RFLX.CoAP.To_Base_Integer (Option) -
-         RFLX.CoAP.To_Base_Integer (Current_Delta);
+      Option_Delta : constant RFLX.CoAP.Option_Extended16_Type :=
+         RFLX.CoAP.Option_Extended16_Type
+            (RFLX.CoAP.To_Base_Integer (Option)) - Current_Delta;
+
       Option_Length : constant RFLX.RFLX_Types.Base_Integer :=
          RFLX.RFLX_Types.Base_Integer (Value'Length);
+
       Option_Cxt : RFLX.CoAP.Option_Type.Context;
-      Option_Buffer : RFLX.RFLX_Types.Bytes_Ptr;
+      Option_Buffer : RFLX.RFLX_Types.Bytes_Ptr :=
+        new RFLX.RFLX_Types.Bytes'(1 .. 4_096 => 0);
    begin
+      pragma Assert (Option_Buffer'Length = 4096);
       RFLX.CoAP.Option_Type.Initialize
          (Ctx => Option_Cxt,
           Buffer => Option_Buffer);
@@ -130,15 +151,15 @@ package body RFLX.Coap_Client.Session is
       RFLX.CoAP.Option_Sequence.Append_Element (Ctx => Option_Sequence_Cxt,
                                                 Element_Ctx => Option_Cxt);
 
-      Current_Delta := RFLX.CoAP.Option_Base_Type
-                         (RFLX.CoAP.To_Base_Integer (Option));
+      Current_Delta :=
+        RFLX.CoAP.Option_Extended16_Type (RFLX.CoAP.To_Base_Integer (Option));
 
    end Add_Option;
 
    procedure Add_String_Option
      (Option : RFLX.CoAP.Option_Numbers;
       Value : String;
-      Current_Delta : in out RFLX.CoAP.Option_Base_Type;
+      Current_Delta : in out RFLX.CoAP.Option_Extended16_Type;
       Option_Sequence_Cxt : in out RFLX.CoAP.Option_Sequence.Context)
    is
       subtype String_Subtype is String (1 .. Value'Length);
@@ -158,7 +179,7 @@ package body RFLX.Coap_Client.Session is
    procedure Add_Uint_Option
      (Option : RFLX.CoAP.Option_Numbers;
       Value : RFLX.RFLX_Arithmetic.U64;
-      Current_Delta : in out RFLX.CoAP.Option_Base_Type;
+      Current_Delta : in out RFLX.CoAP.Option_Extended16_Type;
       Option_Sequence_Cxt : in out RFLX.CoAP.Option_Sequence.Context)
    is
       use type RFLX.RFLX_Arithmetic.U64;
@@ -221,7 +242,7 @@ package body RFLX.Coap_Client.Session is
       Hostname : constant String := "coap.me";
       Path : constant String := "test";
       Default_Port : constant := 5683; -- TODO move to an appropiate place
-      Current_Delta : RFLX.CoAP.Option_Base_Type := 0;
+      Current_Delta : RFLX.CoAP.Option_Extended16_Type := 0;
    begin
       RFLX.CoAP.Option_Sequence.Initialize
         (Ctx => Option_Sequence_Cxt,
@@ -257,7 +278,4 @@ package body RFLX.Coap_Client.Session is
 
    end Get_Options_And_Payload;
 
-begin
-   Random_Bytes.Reset (Byte_Generator);
-   Random_ID.Reset (ID_Generator);
 end RFLX.CoAP_Client.Session;
