@@ -1,10 +1,11 @@
 with Ada.Numerics.Discrete_Random;
 with Ada.Unchecked_Conversion;
-
 with RFLX.CoAP.Option_Sequence;
 with RFLX.CoAP.Option_Type;
+with RFLX.RFLX_Arithmetic;
 with RFLX.RFLX_Builtin_Types;
 with RFLX.RFLX_Types;
+with RFLX.RFLX_Types.Operations;
 
 package body RFLX.Coap_Client.Session is
 
@@ -58,17 +59,12 @@ package body RFLX.Coap_Client.Session is
                       Token  => RFLX_Result.Token);
    end Get_Random_Token;
 
-   procedure Add_String_Option
+   procedure Add_Option
      (Option : RFLX.CoAP.Option_Numbers;
-      Value : String;
+      Value : RFLX.RFLX_Types.Bytes;
       Current_Delta : in out RFLX.CoAP.Option_Base_Type;
       Option_Sequence_Cxt : in out RFLX.CoAP.Option_Sequence.Context) is
 
-      subtype String_Subtype is String (1 .. Value'Length);
-      subtype Bytes_Subtype is RFLX.RFLX_Types.Bytes (1 .. Value'Length);
-      function To_Bytes is new Ada.Unchecked_Conversion
-         (Source => String_Subtype,
-          Target => Bytes_Subtype);
       Option_Delta : constant RFLX.RFLX_Types.Base_Integer :=
          RFLX.CoAP.To_Base_Integer (Option) -
          RFLX.CoAP.To_Base_Integer (Current_Delta);
@@ -129,7 +125,7 @@ package body RFLX.Coap_Client.Session is
 
       RFLX.CoAP.Option_Type.Set_Option_Value
         (Ctx => Option_Cxt,
-         Data => To_Bytes (Value));
+         Data => Value);
 
       RFLX.CoAP.Option_Sequence.Append_Element (Ctx => Option_Sequence_Cxt,
                                                 Element_Ctx => Option_Cxt);
@@ -137,7 +133,83 @@ package body RFLX.Coap_Client.Session is
       Current_Delta := RFLX.CoAP.Option_Base_Type
                          (RFLX.CoAP.To_Base_Integer (Option));
 
+   end Add_Option;
+
+   procedure Add_String_Option
+     (Option : RFLX.CoAP.Option_Numbers;
+      Value : String;
+      Current_Delta : in out RFLX.CoAP.Option_Base_Type;
+      Option_Sequence_Cxt : in out RFLX.CoAP.Option_Sequence.Context)
+   is
+      subtype String_Subtype is String (1 .. Value'Length);
+      subtype Bytes_Subtype is RFLX.RFLX_Types.Bytes (1 .. Value'Length);
+      function To_Bytes is new Ada.Unchecked_Conversion
+         (Source => String_Subtype,
+          Target => Bytes_Subtype);
+   begin
+
+      Add_Option (Option => Option,
+                  Value => To_Bytes (Value),
+                  Current_Delta => Current_Delta,
+                  Option_Sequence_Cxt => Option_Sequence_Cxt);
+
    end Add_String_Option;
+
+   procedure Add_Uint_Option
+     (Option : RFLX.CoAP.Option_Numbers;
+      Value : RFLX.RFLX_Arithmetic.U64;
+      Current_Delta : in out RFLX.CoAP.Option_Base_Type;
+      Option_Sequence_Cxt : in out RFLX.CoAP.Option_Sequence.Context)
+   is
+      use type RFLX.RFLX_Arithmetic.U64;
+      use type RFLX.RFLX_Builtin_Types.Index;
+      subtype Bytes_Subtype is RFLX.RFLX_Types.Bytes
+                                 (1 .. RFLX.RFLX_Arithmetic.U64
+                                         'Max_Size_In_Storage_Elements);
+      Bytes_Value : Bytes_Subtype;
+      Size_In_Bytes : RFLX.RFLX_Builtin_Types.Index;
+   begin
+
+      -- Quote from RFC7252:
+      --  An option definition may specify a range of permissible
+      --  numbers of bytes; if it has a choice, a sender SHOULD
+      --  represent the integer with as few bytes as possible, i.e.,
+      --  without leading zero bytes. For example, the number 0 is
+      --  represented with an empty option value (a zero-length
+      --  sequence of bytes) and the number 1 by a single byte with
+      --  the numerical value of 1 (bit combination 00000001 in most
+      --  significant bit first notation).
+
+      if Value = 0 then
+         Add_Option (Option => Option,
+                     Value => Bytes_Value (1 .. 0),
+                     Current_Delta => Current_Delta,
+                     Option_Sequence_Cxt => Option_Sequence_Cxt);
+      else
+
+         for I in Bytes_Value'Range loop
+            if Value <= 2**(Positive (I) * 8) then
+               Size_In_Bytes := I;
+               exit;
+            end if;
+         end loop;
+
+         RFLX.RFLX_Types.Operations.Insert
+            (Val    => Value,
+            Buffer => Bytes_Value,
+            First  => Bytes_Value'First,
+            Last   => Size_In_Bytes,
+            Off    => 0,
+            Size   => Positive (Size_In_Bytes) * 8,
+            BO     => RFLX.RFLX_Types.High_Order_First);
+      end if;
+
+      Add_Option (Option => Option,
+                  Value => Bytes_Value (1 .. Size_In_Bytes),
+                  Current_Delta => Current_Delta,
+                  Option_Sequence_Cxt => Option_Sequence_Cxt);
+
+   end Add_Uint_Option;
 
    procedure Get_Options_And_Payload
      (State       : in out RFLX.CoAP_Client.Session_Environment.State;
@@ -147,6 +219,8 @@ package body RFLX.Coap_Client.Session is
       Option_Sequence_Buffer : RFLX.RFLX_Types.Bytes_Ptr;
 
       Hostname : constant String := "coap.me";
+      Path : constant String := "test";
+      Default_Port : constant := 5683; -- TODO move to an appropiate place
       Current_Delta : RFLX.CoAP.Option_Base_Type := 0;
    begin
       RFLX.CoAP.Option_Sequence.Initialize
@@ -156,6 +230,18 @@ package body RFLX.Coap_Client.Session is
       Add_String_Option
          (Option => RFLX.CoAP.Uri_Host,
           Value => Hostname,
+          Current_Delta => Current_Delta,
+          Option_Sequence_Cxt => Option_Sequence_Cxt);
+
+      Add_String_Option
+         (Option => RFLX.CoAP.Uri_Path,
+          Value => Path,
+          Current_Delta => Current_Delta,
+          Option_Sequence_Cxt => Option_Sequence_Cxt);
+
+      Add_Uint_Option
+         (Option => RFLX.CoAP.Uri_Port,
+          Value => Default_Port,
           Current_Delta => Current_Delta,
           Option_Sequence_Cxt => Option_Sequence_Cxt);
 
