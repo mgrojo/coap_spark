@@ -23,7 +23,6 @@ abstract project Coap_Spark_Config is
            ,"-gnatyA" -- Use of array index numbers in array attributes
            ,"-gnatyB" -- Check Boolean operators
            ,"-gnatyb" -- Blanks not allowed at statement end
-           ,"-gnatyc" -- Check comments
            ,"-gnaty-d" -- Disable check no DOS line terminators present
            ,"-gnatye" -- Check end/exit labels
            ,"-gnatyf" -- No form feeds or vertical tabs
