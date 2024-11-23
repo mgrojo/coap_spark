@@ -5,7 +5,6 @@ with RFLX.CoAP.Option_Sequence;
 with RFLX.CoAP.Option_Type;
 with RFLX.RFLX_Arithmetic;
 with RFLX.RFLX_Builtin_Types;
-with RFLX.RFLX_Types;
 with RFLX.RFLX_Types.Operations;
 
 package body RFLX.Coap_Client.Session
@@ -13,6 +12,9 @@ package body RFLX.Coap_Client.Session
 is
 
    use type RFLX.CoAP.Option_Extended16_Type;
+   use type RFLX.RFLX_Arithmetic.U64;
+   use type RFLX.RFLX_Builtin_Types.Index;
+   use type RFLX.RFLX_Builtin_Types.Length;
 
    -- The random number generators cannot be proved by SPARK.
    package Random with SPARK_Mode => Off is
@@ -90,7 +92,8 @@ is
          RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt) and then
             To_Option_Extended16_Type (Option) >= Current_Delta and then
                      Value'Length <= RFLX.CoAP.Option_Extended16_Type'Last,
-         Post => To_Option_Extended16_Type (Option) = Current_Delta
+         Post => To_Option_Extended16_Type (Option) = Current_Delta and then
+            RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
    is
 
       subtype Base_Delta_Type is RFLX.CoAP.Option_Extended16_Type
@@ -180,6 +183,7 @@ is
       RFLX.CoAP.Option_Type.Take_Buffer
          (Ctx => Option_Cxt,
           Buffer => Option_Buffer);
+      pragma Unreferenced (Option_Cxt);
 
       RFLX.RFLX_Types.Free (Option_Buffer);
 
@@ -196,7 +200,9 @@ is
             Value'First <= Value'Last and then
             Value'Length <= RFLX.CoAP.Option_Extended16_Type'Last,
          Post => To_Option_Extended16_Type (Option) = Current_Delta and then
-            RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
+            RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt) and then
+            RFLX.CoAP.Option_Sequence.Byte_Size (Option_Sequence_Cxt) >=
+               Value'Length
    is
       Value_Bytes : RFLX.RFLX_Types.Bytes
                        (RFLX_Builtin_Types.Index (Value'First) ..
@@ -230,16 +236,18 @@ is
       Current_Delta : in out RFLX.CoAP.Option_Extended16_Type;
       Option_Sequence_Cxt : in out RFLX.CoAP.Option_Sequence.Context)
       with
-         Pre => RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt),
+         Pre => RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
+            and then
+               To_Option_Extended16_Type (Option) >= Current_Delta,
          Post => RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
    is
-      use type RFLX.RFLX_Arithmetic.U64;
-      use type RFLX.RFLX_Builtin_Types.Index;
+      subtype Possible_Sizes_In_Bytes is
+         RFLX.RFLX_Builtin_Types.Index
+            range 1 .. RFLX.RFLX_Arithmetic.U64'Max_Size_In_Storage_Elements;
       subtype Bytes_Subtype is RFLX.RFLX_Types.Bytes
-                                 (1 .. RFLX.RFLX_Arithmetic.U64
-                                         'Max_Size_In_Storage_Elements);
+                                 (Possible_Sizes_In_Bytes);
       Bytes_Value : Bytes_Subtype := (others => 0);
-      Size_In_Bytes : RFLX.RFLX_Builtin_Types.Index;
+      Size_In_Bytes : RFLX.RFLX_Builtin_Types.Index := 1;
    begin
 
       -- Quote from RFC7252:
@@ -259,8 +267,11 @@ is
                      Option_Sequence_Cxt => Option_Sequence_Cxt);
       else
 
-         for I in Bytes_Value'Range loop
-            if Value <= 2**(Positive (I) * 8) then
+         for I in Possible_Sizes_In_Bytes loop
+
+            if I = Possible_Sizes_In_Bytes'Last or else
+               Value < 2**(Natural (I) * 8)
+            then
                Size_In_Bytes := I;
                exit;
             end if;
@@ -268,12 +279,12 @@ is
 
          RFLX.RFLX_Types.Operations.Insert
             (Val    => Value,
-            Buffer => Bytes_Value,
-            First  => Bytes_Value'First,
-            Last   => Size_In_Bytes,
-            Off    => 0,
-            Size   => Positive (Size_In_Bytes) * 8,
-            BO     => RFLX.RFLX_Types.High_Order_First);
+             Buffer => Bytes_Value,
+             First  => Bytes_Value'First,
+             Last   => Size_In_Bytes,
+             Off    => 0,
+             Size   => Positive (Size_In_Bytes) * 8,
+             BO     => RFLX.RFLX_Types.High_Order_First);
       end if;
 
       Add_Option (Option => Option,
@@ -298,8 +309,13 @@ is
       Hostname : constant Ada.Strings.UTF_Encoding.UTF_8_String := "coap.me";
       Path : constant Ada.Strings.UTF_Encoding.UTF_8_String := "test";
       Default_Port : constant := 5683; -- TODO move to an appropiate place
+
       Current_Delta : RFLX.CoAP.Option_Extended16_Type := 0;
    begin
+
+      RFLX_Result := (Length              => 0,
+                      Options_And_Payload => (others => 0));
+
       RFLX.CoAP.Option_Sequence.Initialize
         (Ctx => Option_Sequence_Cxt,
          Buffer => Option_Sequence_Buffer);
@@ -328,20 +344,21 @@ is
 
       pragma Unreferenced (Current_Delta);
 
-      RFLX.CoAP.Option_Sequence.Copy
-         (Ctx => Option_Sequence_Cxt,
-          Buffer => RFLX_Result.Options_And_Payload
-                      (1 .. RFLX.RFLX_Builtin_Types.Index
-                              (RFLX.CoAP.Option_Sequence.Byte_Size
-                                 (Option_Sequence_Cxt))));
-      RFLX_Result.Length := RFLX.CoAP.Length_16
-                              (RFLX.CoAP.Option_Sequence.Byte_Size
-                                  (Option_Sequence_Cxt));
+      declare
+         Last : constant RFLX.RFLX_Builtin_Types.Index :=
+            RFLX.RFLX_Builtin_Types.Index
+               (RFLX.CoAP.Option_Sequence.Byte_Size (Option_Sequence_Cxt));
+      begin
+         RFLX.CoAP.Option_Sequence.Copy
+            (Ctx => Option_Sequence_Cxt,
+             Buffer => RFLX_Result.Options_And_Payload (1 .. Last));
+         RFLX_Result.Length := RFLX.CoAP.Length_16 (Last);
+      end;
 
-        
       RFLX.CoAP.Option_Sequence.Take_Buffer
          (Ctx => Option_Sequence_Cxt,
           Buffer => Option_Sequence_Buffer);
+      pragma Unreferenced (Option_Sequence_Cxt);
 
       RFLX.RFLX_Types.Free (Option_Sequence_Buffer);
 
