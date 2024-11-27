@@ -7,7 +7,7 @@ with RFLX.RFLX_Arithmetic;
 with RFLX.RFLX_Builtin_Types;
 with RFLX.RFLX_Types.Operations;
 
-package body RFLX.Coap_Client.Session
+package body RFLX.CoAP_Client.Session
    with SPARK_Mode
 is
 
@@ -15,6 +15,7 @@ is
    use type RFLX.RFLX_Arithmetic.U64;
    use type RFLX.RFLX_Builtin_Types.Index;
    use type RFLX.RFLX_Builtin_Types.Length;
+   use type RFLX.RFLX_Builtin_Types.Bit_Length;
 
    -- The random number generators cannot be proved by SPARK.
    package Random with SPARK_Mode => Off is
@@ -32,6 +33,31 @@ is
       Bytes.Reset (Byte_Generator);
       ID.Reset (ID_Generator);
    end Random;
+
+   subtype Base_Delta_Type is
+      RFLX.CoAP.Option_Extended16_Type range 0 .. 12;
+   subtype Extended8_Delta_Type is
+      RFLX.CoAP.Option_Extended16_Type range 13 .. 268;
+   subtype Extended16_Delta_Type is
+      RFLX.CoAP.Option_Extended16_Type
+      range 269 .. RFLX.CoAP.Option_Extended16_Type'Last;
+
+   Max_Option_Value_Length : constant :=
+      Extended16_Delta_Type'First + RFLX.CoAP.Option_Extended16_Type'Last;
+
+   subtype Option_Value_Length is RFLX.RFLX_Builtin_Types.Length
+      range 0 .. Max_Option_Value_Length;
+
+   subtype Base_Length_Type is
+      Option_Value_Length range 0 .. 12;
+   subtype Extended8_Length_Type is
+      Option_Value_Length range 13 .. 268;
+   subtype Extended16_Length_Type is
+      Option_Value_Length
+      range 269 .. Option_Value_Length'Last;
+
+   subtype Option_Bytes is RFLX.RFLX_Types.Bytes
+      with Dynamic_Predicate => Option_Bytes'Length <= Max_Option_Value_Length;
 
    procedure Get_Method
      (State       : in out RFLX.CoAP_Client.Session_Environment.State;
@@ -74,100 +100,115 @@ is
          RFLX_Result.Token (I) := Random.Bytes.Random (Random.Byte_Generator);
       end loop;
 
-      RFLX_Result := (Length => RFLX_Result.Token'Length,
-                      Unused => RFLX.CoAP_Client.Unused_4'First,
-                      Token  => RFLX_Result.Token);
+      RFLX_Result :=
+        (Length => RFLX_Result.Token'Length,
+         Unused => RFLX.CoAP_Client.Unused_4'First,
+         Token  => RFLX_Result.Token);
    end Get_Random_Token;
 
    function To_Option_Extended16_Type (Option : RFLX.CoAP.Option_Numbers)
       return RFLX.CoAP.Option_Extended16_Type
    is (RFLX.CoAP.Option_Extended16_Type (RFLX.CoAP.To_Base_Integer (Option)));
 
+   function To_Option_Base (Value : RFLX.CoAP.Option_Extended16_Type)
+      return RFLX.CoAP.Option_Base_Type
+   is (case Value is
+         when Base_Delta_Type => RFLX.CoAP.Option_Base_Type (Value),
+         when Extended8_Delta_Type => 13,
+         when Extended16_Delta_Type => 14);
+
+   function To_Option_Base (Value : Option_Value_Length)
+      return RFLX.CoAP.Option_Base_Type
+   is (case Value is
+         when Base_Length_Type => RFLX.CoAP.Option_Base_Type (Value),
+         when Extended8_Length_Type => 13,
+         when Extended16_Length_Type => 14);
+
+   -- See figure 8 in RFC7252
+   function Option_Byte_Size
+     (Option : RFLX.CoAP.Option_Numbers;
+      Option_Length : Option_Value_Length)
+      return RFLX.RFLX_Builtin_Types.Length
+   is
+      (1 +
+         (case To_Option_Extended16_Type (Option) is
+            when Base_Delta_Type => 0,
+            when Extended8_Delta_Type => 1,
+            when Extended16_Delta_Type => 2) +
+         (case Option_Length is
+            when Base_Length_Type => 0,
+            when Extended8_Length_Type => 1,
+            when Extended16_Length_Type => 2) + Option_Length);
+
+   function To_Bit_Size (Value : RFLX.RFLX_Builtin_Types.Length)
+                          return RFLX.RFLX_Types.Bit_Length
+   is (RFLX.RFLX_Types.Bit_Length (Value) * 8);
+
    procedure Add_Option
      (Option : RFLX.CoAP.Option_Numbers;
-      Value : RFLX.RFLX_Types.Bytes;
+      Value : Option_Bytes;
       Current_Delta : in out RFLX.CoAP.Option_Extended16_Type;
       Option_Sequence_Cxt : in out RFLX.CoAP.Option_Sequence.Context)
       with Pre =>
-         RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt) and then
+            RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt) and then
+            RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt) and then
             To_Option_Extended16_Type (Option) >= Current_Delta and then
-                     Value'Length <= RFLX.CoAP.Option_Extended16_Type'Last,
+            RFLX.CoAP.Option_Sequence.Available_Space (Option_Sequence_Cxt) >=
+            To_Bit_Size (Option_Byte_Size (Option, Value'Length)),
          Post => To_Option_Extended16_Type (Option) = Current_Delta and then
-            RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
+            RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt) and then
+            RFLX.CoAP.Option_Sequence.Byte_Size (Option_Sequence_Cxt) >=
+               Option_Byte_Size (Option, Value'Length)
    is
-
-      subtype Base_Delta_Type is RFLX.CoAP.Option_Extended16_Type
-                                   range 0 .. 12;
-      subtype Extended8_Delta_Type is RFLX.CoAP.Option_Extended16_Type
-                                       range 13 .. 268;
-      subtype Extended16_Delta_Type is
-       RFLX.CoAP.Option_Extended16_Type
-         range 269 .. RFLX.CoAP.Option_Extended16_Type'Last;
-
       Option_Delta : constant RFLX.CoAP.Option_Extended16_Type :=
-         To_Option_Extended16_Type (Option) - Current_Delta;
-      Final_Option_Delta : RFLX.CoAP.Option_Base_Type;
+        To_Option_Extended16_Type (Option) - Current_Delta;
 
-      Option_Length : constant RFLX.CoAP.Option_Extended16_Type :=
-         RFLX.CoAP.Option_Extended16_Type (Value'Length);
-
-      Final_Option_Length : RFLX.CoAP.Option_Base_Type;
+      Option_Length : constant Option_Value_Length :=
+        Option_Value_Length (Value'Length);
 
       Option_Cxt : RFLX.CoAP.Option_Type.Context;
       Option_Buffer : RFLX.RFLX_Types.Bytes_Ptr :=
         new RFLX.RFLX_Types.Bytes'
         (1 .. RFLX.RFLX_Builtin_Types.Index
-               (RFLX.CoAP.Option_Extended16_Type'Last) => 0);
+               (Option_Byte_Size (Option, Value'Length)) => 0);
    begin
 
       RFLX.CoAP.Option_Type.Initialize
          (Ctx => Option_Cxt,
           Buffer => Option_Buffer);
 
-      Final_Option_Delta := (case Option_Delta is
-                     when Base_Delta_Type =>
-                        RFLX.CoAP.Option_Base_Type (Option_Delta),
-                     when Extended8_Delta_Type => 13,
-                     when Extended16_Delta_Type => 14);
-
-      Final_Option_Length := (case Option_Length is
-                     when Base_Delta_Type =>
-                        RFLX.CoAP.Option_Base_Type (Option_Length),
-                     when Extended8_Delta_Type => 13,
-                     when Extended16_Delta_Type => 14);
-
       RFLX.CoAP.Option_Type.Set_Option_Delta
          (Ctx => Option_Cxt,
-          Val => Final_Option_Delta);
+          Val => To_Option_Base (Option_Delta));
 
       RFLX.CoAP.Option_Type.Set_Option_Length
          (Ctx => Option_Cxt,
-          Val => Final_Option_Length);
+          Val => To_Option_Base (Option_Length));
 
-      case Final_Option_Delta is
-      when 13 =>
-         RFLX.CoAP.Option_Type.Set_Option_Delta_Extended8
-            (Ctx => Option_Cxt,
-             Val => RFLX.CoAP.Option_Extended8_Type (Option_Delta - 13));
-      when 14 =>
-         RFLX.CoAP.Option_Type.Set_Option_Delta_Extended16
-            (Ctx => Option_Cxt,
-             Val => RFLX.CoAP.Option_Extended16_Type (Option_Delta - 269));
-      when others =>
-         null;
+      case RFLX.CoAP.Option_Type.Get_Option_Delta (Option_Cxt) is
+         when 13 =>
+            RFLX.CoAP.Option_Type.Set_Option_Delta_Extended8
+              (Ctx => Option_Cxt,
+               Val => RFLX.CoAP.Option_Extended8_Type (Option_Delta - 13));
+         when 14 =>
+            RFLX.CoAP.Option_Type.Set_Option_Delta_Extended16
+              (Ctx => Option_Cxt,
+               Val => RFLX.CoAP.Option_Extended16_Type (Option_Delta - 269));
+         when others =>
+            null;
       end case;
 
-      case Final_Option_Length is
-      when 13 =>
-         RFLX.CoAP.Option_Type.Set_Option_Length_Extended8
-            (Ctx => Option_Cxt,
-             Val => RFLX.CoAP.Option_Extended8_Type (Option_Length - 13));
-      when 14 =>
-         RFLX.CoAP.Option_Type.Set_Option_Length_Extended16
-            (Ctx => Option_Cxt,
-             Val => RFLX.CoAP.Option_Extended16_Type (Option_Length - 269));
-      when others =>
-         null;
+      case RFLX.CoAP.Option_Type.Get_Option_Length (Option_Cxt) is
+         when 13 =>
+            RFLX.CoAP.Option_Type.Set_Option_Length_Extended8
+              (Ctx => Option_Cxt,
+               Val => RFLX.CoAP.Option_Extended8_Type (Option_Length - 13));
+         when 14 =>
+            RFLX.CoAP.Option_Type.Set_Option_Length_Extended16
+              (Ctx => Option_Cxt,
+               Val => RFLX.CoAP.Option_Extended16_Type (Option_Length - 269));
+         when others =>
+            null;
       end case;
 
       RFLX.CoAP.Option_Type.Set_Option_Value
@@ -195,26 +236,30 @@ is
       Current_Delta : in out RFLX.CoAP.Option_Extended16_Type;
       Option_Sequence_Cxt : in out RFLX.CoAP.Option_Sequence.Context)
       with Pre =>
+         RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt) and then
          RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt) and then
             To_Option_Extended16_Type (Option) >= Current_Delta and then
             Value'First <= Value'Last and then
-            Value'Length <= RFLX.CoAP.Option_Extended16_Type'Last,
-         Post => To_Option_Extended16_Type (Option) = Current_Delta and then
-            RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt) and then
-            RFLX.CoAP.Option_Sequence.Byte_Size (Option_Sequence_Cxt) >=
-               Value'Length
+            Value'Length <= Max_Option_Value_Length,
+         Post => To_Option_Extended16_Type (Option) = Current_Delta
+            and then
+            RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
+            and then
+            RFLX.CoAP.Option_Sequence.Has_Element (Option_Sequence_Cxt)
+            and then
+            RFLX.CoAP.Option_Sequence.Byte_Size (Option_Sequence_Cxt) > 0
    is
-      Value_Bytes : RFLX.RFLX_Types.Bytes
-                       (RFLX_Builtin_Types.Index (Value'First) ..
-                        RFLX_Builtin_Types.Index (Value'Last)) :=
-                         (others => 0);
+      Value_Bytes : Option_Bytes
+          (RFLX_Builtin_Types.Index (Value'First) ..
+               RFLX_Builtin_Types.Index (Value'Last)) :=
+        (others => 0);
    begin
 
       for I in Value_Bytes'Range loop
 
          RFLX.RFLX_Types.Operations.Insert
            (Val => RFLX.RFLX_Types.Base_Integer
-                     (Character'Pos (Value (Natural (I)))),
+                (Character'Pos (Value (Natural (I)))),
             Buffer => Value_Bytes,
             First => I,
             Last => I,
@@ -236,10 +281,18 @@ is
       Current_Delta : in out RFLX.CoAP.Option_Extended16_Type;
       Option_Sequence_Cxt : in out RFLX.CoAP.Option_Sequence.Context)
       with
-         Pre => RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
+         Pre => RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt)
+            and then
+               RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
             and then
                To_Option_Extended16_Type (Option) >= Current_Delta,
          Post => RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
+            and then
+               RFLX.CoAP.Option_Sequence.Has_Element (Option_Sequence_Cxt)
+            and then
+               To_Option_Extended16_Type (Option) = Current_Delta
+            and then
+               RFLX.CoAP.Option_Sequence.Byte_Size (Option_Sequence_Cxt) > 0
    is
       subtype Possible_Sizes_In_Bytes is
          RFLX.RFLX_Builtin_Types.Index
@@ -269,8 +322,8 @@ is
 
          for I in Possible_Sizes_In_Bytes loop
 
-            if I = Possible_Sizes_In_Bytes'Last or else
-               Value < 2**(Natural (I) * 8)
+            if I = Possible_Sizes_In_Bytes'Last
+              or else Value < 2**(Natural (I) * 8)
             then
                Size_In_Bytes := I;
                exit;
@@ -287,10 +340,11 @@ is
              BO     => RFLX.RFLX_Types.High_Order_First);
       end if;
 
-      Add_Option (Option => Option,
-                  Value => Bytes_Value (1 .. Size_In_Bytes),
-                  Current_Delta => Current_Delta,
-                  Option_Sequence_Cxt => Option_Sequence_Cxt);
+      Add_Option
+        (Option => Option,
+         Value => Bytes_Value (1 .. Size_In_Bytes),
+         Current_Delta => Current_Delta,
+         Option_Sequence_Cxt => Option_Sequence_Cxt);
 
    end Add_Uint_Option;
 
@@ -302,9 +356,9 @@ is
 
       Option_Sequence_Cxt : RFLX.CoAP.Option_Sequence.Context;
       Option_Sequence_Buffer : RFLX.RFLX_Types.Bytes_Ptr :=
-         new RFLX.RFLX_Types.Bytes'
+        new RFLX.RFLX_Types.Bytes'
         (1 .. RFLX.RFLX_Builtin_Types.Index
-               (RFLX.CoAP.Option_Extended16_Type'Last) => 0);
+               (Max_Option_Value_Length) => 0);
 
       Hostname : constant Ada.Strings.UTF_Encoding.UTF_8_String := "coap.me";
       Path : constant Ada.Strings.UTF_Encoding.UTF_8_String := "test";
@@ -324,7 +378,7 @@ is
          (Option => RFLX.CoAP.Uri_Host,
           Value => Hostname,
           Current_Delta => Current_Delta,
-          Option_Sequence_Cxt => Option_Sequence_Cxt);
+         Option_Sequence_Cxt => Option_Sequence_Cxt);
 
       pragma Assert (RFLX.CoAP.Uri_Port > RFLX.CoAP.Uri_Host);
 
@@ -332,7 +386,7 @@ is
          (Option => RFLX.CoAP.Uri_Port,
           Value => Default_Port,
           Current_Delta => Current_Delta,
-          Option_Sequence_Cxt => Option_Sequence_Cxt);
+         Option_Sequence_Cxt => Option_Sequence_Cxt);
 
       pragma Assert (RFLX.CoAP.Uri_Path > RFLX.CoAP.Uri_Port);
 
@@ -340,19 +394,26 @@ is
          (Option => RFLX.CoAP.Uri_Path,
           Value => Path,
           Current_Delta => Current_Delta,
-          Option_Sequence_Cxt => Option_Sequence_Cxt);
+         Option_Sequence_Cxt => Option_Sequence_Cxt);
 
       pragma Unreferenced (Current_Delta);
 
       declare
          Last : constant RFLX.RFLX_Builtin_Types.Index :=
-            RFLX.RFLX_Builtin_Types.Index
-               (RFLX.CoAP.Option_Sequence.Byte_Size (Option_Sequence_Cxt));
+           RFLX.RFLX_Builtin_Types.Index
+             (RFLX.CoAP.Option_Sequence.Byte_Size (Option_Sequence_Cxt));
       begin
-         RFLX.CoAP.Option_Sequence.Copy
-            (Ctx => Option_Sequence_Cxt,
-             Buffer => RFLX_Result.Options_And_Payload (1 .. Last));
-         RFLX_Result.Length := RFLX.CoAP.Length_16 (Last);
+         if Last in RFLX_Result.Options_And_Payload'Range then
+            RFLX.CoAP.Option_Sequence.Copy
+               (Ctx => Option_Sequence_Cxt,
+               Buffer => RFLX_Result.Options_And_Payload (1 .. Last));
+            RFLX_Result.Length := RFLX.CoAP.Length_16 (Last);
+
+            State.Current_Status := RFLX.CoAP_Client.Session_Environment.OK;
+         else
+            State.Current_Status :=
+              RFLX.CoAP_Client.Session_Environment.Capacity_Error;
+         end if;
       end;
 
       RFLX.CoAP.Option_Sequence.Take_Buffer
