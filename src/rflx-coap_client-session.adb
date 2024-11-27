@@ -65,6 +65,8 @@ is
    begin
       -- TODO: Implement this procedure
       RFLX_Result := RFLX.CoAP.Get;
+      State.Current_Status := RFLX.CoAP_Client.Session_Environment.OK;
+
    end Get_Method;
 
    procedure Get_New_Message_ID
