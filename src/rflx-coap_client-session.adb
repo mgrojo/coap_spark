@@ -158,9 +158,7 @@ is
             RFLX.CoAP.Option_Sequence.Available_Space (Option_Sequence_Cxt) >=
             To_Bit_Size (Option_Byte_Size (Option, Value'Length)),
          Post => To_Option_Extended16_Type (Option) = Current_Delta and then
-            RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt) and then
-            RFLX.CoAP.Option_Sequence.Byte_Size (Option_Sequence_Cxt) >=
-               Option_Byte_Size (Option, Value'Length)
+            RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
    is
       Option_Delta : constant RFLX.CoAP.Option_Extended16_Type :=
         To_Option_Extended16_Type (Option) - Current_Delta;
@@ -242,7 +240,9 @@ is
          RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt) and then
             To_Option_Extended16_Type (Option) >= Current_Delta and then
             Value'First <= Value'Last and then
-            Value'Length <= Max_Option_Value_Length,
+            Value'Length <= Max_Option_Value_Length and then
+            RFLX.CoAP.Option_Sequence.Available_Space (Option_Sequence_Cxt) >=
+            To_Bit_Size (Option_Byte_Size (Option, Value'Length)),
          Post => To_Option_Extended16_Type (Option) = Current_Delta
             and then
             RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
@@ -287,7 +287,12 @@ is
             and then
                RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
             and then
-               To_Option_Extended16_Type (Option) >= Current_Delta,
+               To_Option_Extended16_Type (Option) >= Current_Delta
+            and then
+               RFLX.CoAP.Option_Sequence.Available_Space (Option_Sequence_Cxt)
+               >=
+               To_Bit_Size (Option_Byte_Size (Option,
+               RFLX.RFLX_Arithmetic.U64'Max_Size_In_Storage_Elements)),
          Post => RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
             and then
                RFLX.CoAP.Option_Sequence.Has_Element (Option_Sequence_Cxt)
@@ -315,12 +320,7 @@ is
       --  the numerical value of 1 (bit combination 00000001 in most
       --  significant bit first notation).
 
-      if Value = 0 then
-         Add_Option (Option => Option,
-                     Value => RFLX.RFLX_Types.Bytes'(1 .. 0 => 0),
-                     Current_Delta => Current_Delta,
-                     Option_Sequence_Cxt => Option_Sequence_Cxt);
-      else
+      if Value /= 0 then
 
          for I in Possible_Sizes_In_Bytes loop
 
@@ -344,7 +344,7 @@ is
 
       Add_Option
         (Option => Option,
-         Value => Bytes_Value (1 .. Size_In_Bytes),
+         Value => Bytes_Value (1 .. (if Value = 0 then 0 else Size_In_Bytes)),
          Current_Delta => Current_Delta,
          Option_Sequence_Cxt => Option_Sequence_Cxt);
 
@@ -377,17 +377,17 @@ is
          Buffer => Option_Sequence_Buffer);
 
       Add_String_Option
-         (Option => RFLX.CoAP.Uri_Host,
-          Value => Hostname,
-          Current_Delta => Current_Delta,
+        (Option => RFLX.CoAP.Uri_Host,
+         Value => Hostname,
+         Current_Delta => Current_Delta,
          Option_Sequence_Cxt => Option_Sequence_Cxt);
 
       pragma Assert (RFLX.CoAP.Uri_Port > RFLX.CoAP.Uri_Host);
 
       Add_Uint_Option
-         (Option => RFLX.CoAP.Uri_Port,
-          Value => Default_Port,
-          Current_Delta => Current_Delta,
+        (Option => RFLX.CoAP.Uri_Port,
+         Value => Default_Port,
+         Current_Delta => Current_Delta,
          Option_Sequence_Cxt => Option_Sequence_Cxt);
 
       pragma Assert (RFLX.CoAP.Uri_Path > RFLX.CoAP.Uri_Port);
