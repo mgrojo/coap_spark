@@ -1,6 +1,4 @@
 with Ada.Streams;
-with GNAT.Sockets.Thin;
-with Interfaces.C;
 
 package body Channel with
    SPARK_Mode
@@ -43,22 +41,10 @@ is
                          Server : Boolean := False) with
       SPARK_Mode => Off
    is
-      use Interfaces;
-      TTL_Option : aliased C.int := 64;
-      IP_TTL : C.int := 2;
-      Result : C.int;
-      IPPROTO_IP : constant C.int := 0;
    begin
       GNAT.Sockets.Create_Socket (Socket => Socket,
                                   Family => GNAT.Sockets.Family_Inet,
                                   Mode => GNAT.Sockets.Socket_Datagram);
-
-      Result := GNAT.Sockets.Thin.C_Setsockopt
-         (S => C.int (GNAT.Sockets.To_C (Socket)),
-          Level => IPPROTO_IP,
-          Optname => IP_TTL,
-          Optval => TTL_Option'Address,
-          Optlen => C.int (TTL_Option'Size / 8));
 
       if Server then
          GNAT.Sockets.Bind_Socket
