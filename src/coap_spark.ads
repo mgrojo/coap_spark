@@ -1,6 +1,6 @@
 with RFLX.CoAP;
 with Channel;
 
-package Coap_Spark is
+package CoAP_SPARK is
 
-end Coap_Spark;
+end CoAP_SPARK;
