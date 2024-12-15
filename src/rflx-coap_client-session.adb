@@ -1,5 +1,7 @@
 with Ada.Numerics.Discrete_Random;
 with Ada.Strings.UTF_Encoding;
+with Ada.Text_IO;
+with Ada.Strings.Fixed;
 with Ada.Unchecked_Conversion;
 with RFLX.CoAP.Option_Sequence;
 with RFLX.CoAP.Option_Type;
@@ -356,46 +358,44 @@ is
    is
       use type RFLX.CoAP.Option_Numbers;
 
-      Option_Sequence_Cxt : RFLX.CoAP.Option_Sequence.Context;
+      Option_Sequence_Cxt    : RFLX.CoAP.Option_Sequence.Context;
       Option_Sequence_Buffer : RFLX.RFLX_Types.Bytes_Ptr :=
         new RFLX.RFLX_Types.Bytes'
-        (1 .. RFLX.RFLX_Builtin_Types.Index
-               (Max_Option_Value_Length) => 0);
+          (1 .. RFLX.RFLX_Builtin_Types.Index (Max_Option_Value_Length) => 0);
 
-      Hostname : constant Ada.Strings.UTF_Encoding.UTF_8_String := "coap.me";
-      Path : constant Ada.Strings.UTF_Encoding.UTF_8_String := "test";
+      Hostname     : constant Ada.Strings.UTF_Encoding.UTF_8_String :=
+        "coap.me";
+      Path         : constant Ada.Strings.UTF_Encoding.UTF_8_String := "test";
       Default_Port : constant := 5683; -- TODO move to an appropiate place
 
       Current_Delta : RFLX.CoAP.Option_Extended16_Type := 0;
    begin
 
-      RFLX_Result := (Length              => 0,
-                      Options_And_Payload => (others => 0));
+      RFLX_Result := (Length => 0, Options_And_Payload => (others => 0));
 
       RFLX.CoAP.Option_Sequence.Initialize
-        (Ctx => Option_Sequence_Cxt,
-         Buffer => Option_Sequence_Buffer);
+        (Ctx => Option_Sequence_Cxt, Buffer => Option_Sequence_Buffer);
 
       Add_String_Option
-        (Option => RFLX.CoAP.Uri_Host,
-         Value => Hostname,
-         Current_Delta => Current_Delta,
+        (Option              => RFLX.CoAP.Uri_Host,
+         Value               => Hostname,
+         Current_Delta       => Current_Delta,
          Option_Sequence_Cxt => Option_Sequence_Cxt);
 
       pragma Assert (RFLX.CoAP.Uri_Port > RFLX.CoAP.Uri_Host);
 
       Add_Uint_Option
-        (Option => RFLX.CoAP.Uri_Port,
-         Value => Default_Port,
-         Current_Delta => Current_Delta,
+        (Option              => RFLX.CoAP.Uri_Port,
+         Value               => Default_Port,
+         Current_Delta       => Current_Delta,
          Option_Sequence_Cxt => Option_Sequence_Cxt);
 
       pragma Assert (RFLX.CoAP.Uri_Path > RFLX.CoAP.Uri_Port);
 
       Add_String_Option
-         (Option => RFLX.CoAP.Uri_Path,
-          Value => Path,
-          Current_Delta => Current_Delta,
+        (Option              => RFLX.CoAP.Uri_Path,
+         Value               => Path,
+         Current_Delta       => Current_Delta,
          Option_Sequence_Cxt => Option_Sequence_Cxt);
 
       pragma Unreferenced (Current_Delta);
@@ -407,7 +407,7 @@ is
       begin
          if Last in RFLX_Result.Options_And_Payload'Range then
             RFLX.CoAP.Option_Sequence.Copy
-               (Ctx => Option_Sequence_Cxt,
+              (Ctx    => Option_Sequence_Cxt,
                Buffer => RFLX_Result.Options_And_Payload (1 .. Last));
             RFLX_Result.Length := RFLX.CoAP.Length_16 (Last);
 
@@ -419,12 +419,194 @@ is
       end;
 
       RFLX.CoAP.Option_Sequence.Take_Buffer
-         (Ctx => Option_Sequence_Cxt,
-          Buffer => Option_Sequence_Buffer);
+        (Ctx => Option_Sequence_Cxt, Buffer => Option_Sequence_Buffer);
       pragma Unreferenced (Option_Sequence_Cxt);
 
       RFLX.RFLX_Types.Free (Option_Sequence_Buffer);
 
    end Get_Options_And_Payload;
+
+   function Image (Value : RFLX_Types.Bytes) return String
+     with Pre => Value'Length in 1 .. Max_Option_Value_Length
+   is
+      Result : String (1 .. Value'Length * RFLX_Types.Byte'Width) :=
+         (others => ' ');
+      Index : Positive range Result'Range := 1;
+   begin
+      for I in Value'Range loop
+         Result (Index .. Index + RFLX_Types.Byte'Width - 1) :=
+            Ada.Strings.Fixed.Tail (Source => Value (I)'Image,
+                                    Count => RFLX_Types.Byte'Width);
+         if I /= Value'Last then
+            Index := Index + RFLX_Types.Byte'Width;
+         end if;
+      end loop;
+      return Result;
+   end Image;
+
+   procedure Put_Option
+     (Option_Cxt : RFLX.CoAP.Option_Type.Context;
+      Option_Delta : in out RFLX.RFLX_Types.Base_Integer;
+      End_Of_Options : out Boolean)
+      with Pre => RFLX.CoAP.Option_Type.Initialized (Option_Cxt) and then
+                  RFLX.CoAP.Option_Type.Has_Buffer (Option_Cxt)
+   is
+      Option_Length : Option_Value_Length;
+
+   begin
+      End_Of_Options := False;
+
+      Option_Delta := Option_Delta +
+         RFLX.CoAP.To_Base_Integer
+            (RFLX.CoAP.Option_Type.Get_Option_Delta (Option_Cxt));
+
+      Option_Length :=
+         Option_Value_Length
+            (RFLX.CoAP.Option_Type.Get_Option_Length (Option_Cxt));
+
+      case Option_Delta is
+         when 13 =>
+            Option_Delta := 13 + RFLX.RFLX_Types.Base_Integer
+               (RFLX.CoAP.Option_Type.Get_Option_Delta_Extended8 (Option_Cxt));
+         when 14 =>
+            Option_Delta := 269 + RFLX.RFLX_Types.Base_Integer
+               (RFLX.CoAP.Option_Type.Get_Option_Delta_Extended16 (Option_Cxt));
+         when 15 =>
+            if Option_Length = 15 then
+               End_Of_Options := True;
+               return;
+            else
+               raise Constraint_Error; -- TODO: Add a proper error
+            end if;
+         when others =>
+            null;
+      end case;
+
+      case Option_Length is
+         when 13 =>
+            Option_Length := 13 + Option_Value_Length
+               (RFLX.CoAP.Option_Type.Get_Option_Length_Extended8 (Option_Cxt));
+         when 14 =>
+            Option_Length := 269 + Option_Value_Length
+               (RFLX.CoAP.Option_Type.Get_Option_Length_Extended16 (Option_Cxt));
+         when 15 =>
+            raise Constraint_Error; -- TODO: Add a proper error
+         when others =>
+            null;
+      end case;
+
+      if Option_Length > 0 then
+         declare
+            Option_Value : RFLX.RFLX_Types.Bytes_Ptr :=
+               new RFLX.RFLX_Types.Bytes'
+               (1 .. RFLX_Builtin_Types.Index (Option_Length) => 0);
+            Option_Number : constant RFLX.CoAP.Option_Numbers :=
+               RFLX.CoAP.To_Actual (Option_Delta);
+         begin
+            RFLX.CoAP.Option_Type.Get_Option_Value
+               (Ctx => Option_Cxt,
+               Data => Option_Value.all);
+
+            Ada.Text_IO.Put_Line
+               ("Option: " & Option_Number'Image &
+                  ", Length: " & Option_Length'Image &
+                  ", Value: " & Image (Option_Value.all));
+
+            RFLX.RFLX_Types.Free (Option_Value);
+         end;
+      else
+         Ada.Text_IO.Put_Line
+           ("Option: "
+            & CoAP.Option_Numbers'Image (CoAP.To_Actual (Option_Delta))
+            & ", no value");
+      end if;
+   end Put_Option;
+
+   procedure Put_Options_And_Payload
+     (State : in out RFLX.CoAP_Client.Session_Environment.State;
+      Data : RFLX_Types.Bytes;
+      RFLX_Result : out Boolean)
+   is
+      use type CoAP_Client.Session_Environment.Status_Type;
+      Option_Sequence_Cxt : RFLX.CoAP.Option_Sequence.Context;
+      Buffer : RFLX.RFLX_Types.Bytes_Ptr := new RFLX.RFLX_Types.Bytes'(Data);
+      Option_Delta : RFLX.RFLX_Types.Base_Integer := 0;
+   begin
+
+      if Data'Length = 0 then
+         Ada.Text_IO.Put_Line ("Options and payload are empty");
+      else
+
+         RFLX.CoAP.Option_Sequence.Initialize
+           (Ctx => Option_Sequence_Cxt, Buffer => Buffer);
+
+         declare
+            Option_Cxt : RFLX.CoAP.Option_Type.Context;
+            End_Of_Options : Boolean;
+         begin
+
+            Read_Options :
+            loop
+               RFLX.CoAP.Option_Sequence.Switch
+                  (Ctx => Option_Sequence_Cxt,
+                   Element_Ctx => Option_Cxt);
+
+               RFLX.CoAP.Option_Type.Verify_Message
+                  (Ctx => Option_Cxt);
+
+               if not RFLX.CoAP.Option_Type.Well_Formed_Message
+                  (Ctx => Option_Cxt)
+               then
+                  State.Current_Status :=
+                     RFLX.CoAP_Client.Session_Environment.Malformed_Message;
+                  exit Read_Options;
+               end if;
+               Put_Option (Option_Cxt, Option_Delta, End_Of_Options);
+
+               RFLX.CoAP.Option_Sequence.Update
+                  (Ctx => Option_Sequence_Cxt,
+                   Element_Ctx => Option_Cxt);
+
+               exit Read_Options when End_Of_Options or else
+                  not RFLX.CoAP.Option_Sequence.Has_Element
+                     (Option_Sequence_Cxt);
+            end loop Read_Options;
+
+            if CoAP.Option_Sequence.Sequence_Last (Option_Sequence_Cxt)
+              < Option_Sequence_Cxt.Last
+            then
+               -- When there is something left to be read, it is the payload
+               Print_Payload :
+               declare
+                  Payload_Marker_Offset : constant := 2;
+                  First : constant RFLX.RFLX_Builtin_Types.Index :=
+                    RFLX.RFLX_Builtin_Types.Index
+                      (CoAP.Option_Sequence.Sequence_Last (Option_Sequence_Cxt)
+                       / 8 + Payload_Marker_Offset);
+                  Last  : constant RFLX.RFLX_Builtin_Types.Index :=
+                    RFLX.RFLX_Builtin_Types.Index
+                      (Option_Cxt.Last / 8);
+               begin
+
+                  RFLX.CoAP.Option_Type.Take_Buffer
+                    (Ctx => Option_Cxt, Buffer => Buffer);
+
+                  Ada.Text_IO.Put_Line
+                    ("Payload: " & Image (Buffer (First .. Last)));
+               end Print_Payload;
+            else
+               RFLX.CoAP.Option_Type.Take_Buffer
+                 (Ctx => Option_Cxt, Buffer => Buffer);
+            end if;
+
+         end;
+            
+         RFLX.RFLX_Types.Free (Buffer);
+      end if;
+
+      RFLX_Result := State.Current_Status =
+         RFLX.CoAP_Client.Session_Environment.OK;
+
+   end Put_Options_And_Payload;
 
 end RFLX.CoAP_Client.Session;

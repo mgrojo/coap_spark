@@ -4,7 +4,7 @@ package RFLX.CoAP_Client.Session_Environment with
    SPARK_Mode
 is
 
-   type Status_Type is (OK, Capacity_Error);
+   type Status_Type is (OK, Capacity_Error, Malformed_Message);
 
    type State is record
       Current_Status : Status_Type := OK;

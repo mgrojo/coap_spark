@@ -16,3 +16,6 @@ coap_spark = "*"
 
 [[pins]]
 coap_spark = { path='..' }
+
+[build-switches]
+"*".style_checks = ["-gnatyC"]

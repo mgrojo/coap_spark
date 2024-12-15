@@ -12,8 +12,8 @@ all: generate
 # its IANA registry is the CoAP Option Code, and we are
 # copying it to the manually written coap.rflx, instead of
 # including the generated one.
-convert_iana: spec/iana_registry/core-parameters.xml
-	$(RFLX) convert iana -d spec $<
+convert_iana: specs/iana_registry/core-parameters.xml
+	$(RFLX) convert iana -d specs $<
 .PHONY: convert_iana
 
 generate: $(GENERATED)

@@ -89,8 +89,10 @@ begin
       FSM.Run (Ctx);
    end loop;
    pragma Warnings (Off, "statement has no effect");
-   pragma Warnings (Off, """Ctx"" is set by ""Finalize"" but not used after the call");
+   pragma Warnings
+      (Off, """Ctx"" is set by ""Finalize"" but not used after the call");
    FSM.Finalize (Ctx);
    pragma Warnings (On, "statement has no effect");
-   pragma Warnings (On, """Ctx"" is set by ""Finalize"" but not used after the call");
+   pragma Warnings
+      (On, """Ctx"" is set by ""Finalize"" but not used after the call");
 end CoAP_Client;

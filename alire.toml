@@ -11,3 +11,6 @@ tags = ["spark", "coap", "iot", "protocol"]
 
 [[depends-on]]
 gnatprove = "^14.1.1"
+
+[build-switches]
+"*".style_checks = ["-gnatyC"]
