@@ -14,6 +14,8 @@ all: generate
 # including the generated one.
 convert_iana: specs/iana_registry/core-parameters.xml
 	$(RFLX) convert iana -d specs $<
+	specs/iana_registry/convert_content_formats.awk $< \
+		> src/coap_spark-content_formats.ads
 .PHONY: convert_iana
 
 generate: $(GENERATED)

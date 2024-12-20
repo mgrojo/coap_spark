@@ -5,14 +5,17 @@
 
 BEGIN {
     FS=" *[<>]"
+    content_list[contentcoding] = ""
+    print "with Interfaces;"
+    print ""
     print "package CoAP_SPARK.Content_Formats"
     print "   with SPARK_Mode => On"
     print "is"
-    print
+    print ""
     print "   -- Generated from Constrained RESTful Environments (CoRE) Parameters"
     print "   -- https://www.iana.org/assignments/core-parameters/core-parameters.xhtml"
     print "   -- From the registry with id=\"content-formats\""
-    print
+    print ""
 }
 
 /<contenttype>/ {
@@ -51,9 +54,17 @@ BEGIN {
 
  /<id>/ {
     if (contenttype && match($3, /^[0-9]+$/)) {
+        full_id = identifier contentcoding
+        full_constant = package "." full_id
+        if (package == "text") {
+            text_list[identifier] = full_constant
+        }
         package_list[package] = package_list[package] \
             sprintf("      -- %s\n", comment) \
-            sprintf("      %s%s : constant := %s;\n\n", identifier, contentcoding, $3)
+            sprintf("      %s : constant := %s;\n\n", full_id, $3)
+        gsub("\"", "\"\"", comment)
+        content_list[full_constant] = content_list[full_constant] \
+            sprintf("         when %s =>\n           \"%s\",", full_constant, comment)
     }
     contenttype=0
     contentcoding=""
@@ -65,5 +76,20 @@ END	{
         printf("%s", package_list[i])
         printf("   end %s;\n\n", i)
     }
+    print "   function Is_Text (Content_Type : Interfaces.Unsigned_32) return Boolean"
+    print "   is (case Content_Type is"
+    print ""
+    for (i in text_list) {
+        printf("          when %s => True,\n", text_list[i])
+    }
+    print "          when others => False);"
+    print ""
+    print "   function To_String (Content_Type : Interfaces.Unsigned_32) return String"
+    printf("   is (case Content_Type is")
+    for (i in content_list) {
+        print content_list[i]
+    }
+    print "         when others => \"application/octet-stream\");"
+    print ""
     print "end CoAP_SPARK.Content_Formats;"
 }
