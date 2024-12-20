@@ -26,6 +26,8 @@ package CoAP_Client is
       with function Get_Random_Token return Token_Data;
       with function Get_Options_And_Payload return Options_And_Payload_Data;
       with function Put_Options_And_Payload (Data : Opaque) return Boolean;
+      with function Put_Client_Error (Error_Code : CoAP::Client_Error_Response) return Boolean;
+      with function Put_Server_Error (Error_Code : CoAP::Server_Error_Response) return Boolean;
    machine Session is
       Request : CoAP::CoAP_Message;
       Response : CoAP::CoAP_Message;
@@ -70,7 +72,7 @@ package CoAP_Client is
       transition
          goto Success
             if Response'Valid and Response.Message_ID = Messsage_ID and Response.Class = CoAP::Success
-         goto Failure
+         goto Treat_Error_Response
             if Response'Valid and Response.Message_ID = Messsage_ID and
                (Response.Class = CoAP::Client_Error or Response.Class = CoAP::Server_Error)
          -- Ignore invalid messages and messages with an unexpected Message ID
@@ -78,6 +80,38 @@ package CoAP_Client is
       exception
          goto Failure
       end Receive_Response;
+
+      state Treat_Error_Response is
+      begin
+      transition
+         goto Treat_Client_Error_Response
+            if Response.Class = CoAP::Client_Error
+         goto Treat_Server_Error_Response
+            if Response.Class = CoAP::Server_Error
+         goto Failure
+      exception
+         goto Failure
+      end Treat_Error_Response;
+
+      state Treat_Client_Error_Response is
+         OK : Boolean;
+      begin
+         OK := Put_Client_Error(Response.Client_Error_Code);
+      transition
+         goto Failure
+      exception
+         goto Failure
+      end Treat_Client_Error_Response;
+
+      state Treat_Server_Error_Response is
+         OK : Boolean;
+      begin
+         OK := Put_Server_Error(Response.Server_Error_Code);
+      transition
+         goto Failure
+      exception
+         goto Failure
+      end Treat_Server_Error_Response;
 
       state Success is
          OK : Boolean;

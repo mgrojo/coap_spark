@@ -74,7 +74,7 @@ procedure CoAP_Client is
 begin
    Channel.Initialize (Skt);
    FSM.Initialize (Ctx);
-   Channel.Connect (Skt, "coap.me");
+   Channel.Connect (Skt, "localhost");
    while FSM.Active (Ctx) loop
       pragma Loop_Invariant (FSM.Initialized (Ctx));
       for C in FSM.Channel'Range loop
