@@ -9,6 +9,7 @@ is
    -- uint value as bytes.
    -- According to Section 5.10. Option Definitions "Table 4: Options"
    -- the maximum size for uint options is 4 bytes.
+   -- The other registered options by IANA are also not larger than 4 bytes.
    subtype UInt_Bytes is RFLX.RFLX_Types.Bytes (1 .. 4);
 
    type Option_Format is (Unknown, Empty, Opaque, UInt, UTF8_String);
@@ -24,40 +25,97 @@ is
    Max_Option_Value_Length : constant := 1034;
 
    -- See RFC7252, Section 5.10. Option Definitions "Table 4: Options"
+   -- except otherwise noted by another reference.
    Option_Properties_Table : constant Option_Table :=
-     (RFLX.CoAP.If_Match       =>
+     (RFLX.CoAP.If_Match                          =>
         (Format => Opaque, Repeatable => True, Maximum_Length => 8),
-      RFLX.CoAP.Uri_Host       =>
+      RFLX.CoAP.Uri_Host                          =>
         (Format => UTF8_String, Repeatable => False, Maximum_Length => 255),
-      RFLX.CoAP.ETag           =>
+      RFLX.CoAP.ETag                              =>
         (Format => Opaque, Repeatable => True, Maximum_Length => 8),
-      RFLX.CoAP.If_None_Match  =>
+      RFLX.CoAP.If_None_Match                     =>
         (Format => Empty, Repeatable => False, Maximum_Length => 0),
-      RFLX.CoAP.Uri_Port       =>
+
+      -- rfc7641:
+      RFLX.CoAP.Observe                           =>
+        (Format => UInt, Repeatable => False, Maximum_Length => 3),
+
+      -- rfc8613:
+      RFLX.CoAP.OSCORE                            =>
+        (Format => Opaque, Repeatable => False, Maximum_Length => 255),
+
+      RFLX.CoAP.Uri_Port                          =>
         (Format => UInt, Repeatable => False, Maximum_Length => 2),
-      RFLX.CoAP.Location_Path  =>
+
+      -- rfc8768:
+      RFLX.CoAP.Hop_Limit                         =>
+        (Format => UInt, Repeatable => False, Maximum_Length => 1),
+
+      RFLX.CoAP.Location_Path                     =>
         (Format => UTF8_String, Repeatable => True, Maximum_Length => 255),
-      RFLX.CoAP.Uri_Path       =>
+      RFLX.CoAP.Uri_Path                          =>
         (Format => UTF8_String, Repeatable => True, Maximum_Length => 255),
-      RFLX.CoAP.Content_Format =>
+      RFLX.CoAP.Content_Format                    =>
         (Format => UInt, Repeatable => False, Maximum_Length => 2),
-      RFLX.CoAP.Max_Age        =>
+      RFLX.CoAP.Max_Age                           =>
         (Format => UInt, Repeatable => False, Maximum_Length => 4),
-      RFLX.CoAP.Uri_Query      =>
+      RFLX.CoAP.Uri_Query                         =>
         (Format => UTF8_String, Repeatable => True, Maximum_Length => 255),
-      RFLX.CoAP.Accept_17      =>
+      RFLX.CoAP.Accept_17                         =>
         (Format => UInt, Repeatable => True, Maximum_Length => 2),
-      RFLX.CoAP.Location_Query =>
+
+      -- rfc9177:
+      RFLX.CoAP.Q_Block1                          =>
+        (Format => UInt, Repeatable => False, Maximum_Length => 3),
+
+      RFLX.CoAP.Location_Query                    =>
         (Format => UTF8_String, Repeatable => True, Maximum_Length => 255),
-      RFLX.CoAP.Proxy_Uri      =>
+
+      -- RFC-ietf-core-oscore-edhoc-11
+      RFLX.CoAP.EDHOC                             =>
+        (Format => Empty, Repeatable => False, Maximum_Length => 0),
+
+      -- rfc7959
+      RFLX.CoAP.Block2                            =>
+        (Format => UInt, Repeatable => False, Maximum_Length => 3),
+      RFLX.CoAP.Block1                            =>
+        (Format => UInt, Repeatable => False, Maximum_Length => 3),
+      RFLX.CoAP.Size2                             =>
+        (Format => UInt, Repeatable => False, Maximum_Length => 4),
+
+      -- rfc9177:
+      RFLX.CoAP.Q_Block2                          =>
+        (Format => UInt, Repeatable => True, Maximum_Length => 3),
+
+      RFLX.CoAP.Proxy_Uri                         =>
         (Format         => UTF8_String,
          Repeatable     => False,
          Maximum_Length => Max_Option_Value_Length),
-      RFLX.CoAP.Proxy_Scheme   =>
+      RFLX.CoAP.Proxy_Scheme                      =>
         (Format => UTF8_String, Repeatable => False, Maximum_Length => 255),
-      RFLX.CoAP.Size1          =>
+      RFLX.CoAP.Size1                             =>
         (Format => UInt, Repeatable => False, Maximum_Length => 4),
-      others                   =>
+
+      -- rfc9175:
+      RFLX.CoAP.Echo                              =>
+        (Format => Opaque, Repeatable => False, Maximum_Length => 40),
+
+      -- rfc7967:
+      RFLX.CoAP.No_Response                       =>
+        (Format => UInt, Repeatable => False, Maximum_Length => 1),
+
+      -- rfc9175:
+      RFLX.CoAP.Request_Tag                       =>
+        (Format => Opaque, Repeatable => True, Maximum_Length => 8),
+
+      -- https://datatracker.ietf.org/meeting/interim-2022-core-10/materials/slides-interim-2022-core-10-sessa-pramtrzd-pramtrzd-content-format-for-coap-03-00.pdf
+      RFLX.CoAP.OCF_Accept_Content_Format_Version =>
+        (Format => UInt, Repeatable => False, Maximum_Length => 2),
+      RFLX.CoAP.OCF_Content_Format_Version        =>
+        (Format => UInt, Repeatable => False, Maximum_Length => 2),
+
+      -- No reference found:
+      RFLX.CoAP.SCP82_Params                      =>
         (Format         => Unknown,
          Repeatable     => True,
          Maximum_Length => Natural'Last));
