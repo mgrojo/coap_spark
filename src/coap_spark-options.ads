@@ -6,11 +6,15 @@ package CoAP_SPARK.Options
   with SPARK_Mode
 is
 
-   -- uint value as bytes.
    -- According to Section 5.10. Option Definitions "Table 4: Options"
    -- the maximum size for uint options is 4 bytes.
    -- The other registered options by IANA are also not larger than 4 bytes.
-   subtype UInt_Bytes is RFLX.RFLX_Types.Bytes (1 .. 4);
+   -- Maximum size in general is 1034 bytes.
+   Max_Uint_Length : constant := 4;
+   Max_Option_Value_Length : constant := 1034;
+   
+   subtype UInt_Bytes is RFLX.RFLX_Types.Bytes
+                           with Dynamic_Predicate => UInt_Bytes'Length <= Max_Uint_Length;
 
    type Option_Format is (Unknown, Empty, Opaque, UInt, UTF8_String);
 
@@ -22,7 +26,7 @@ is
 
    type Option_Table is array (RFLX.CoAP.Option_Numbers) of Option_Properties;
 
-   Max_Option_Value_Length : constant := 1034;
+
 
    -- See RFC7252, Section 5.10. Option Definitions "Table 4: Options"
    -- except otherwise noted by another reference.
@@ -118,11 +122,25 @@ is
       RFLX.CoAP.SCP82_Params                      =>
         (Format         => Unknown,
          Repeatable     => True,
-         Maximum_Length => Natural'Last));
+         Maximum_Length => Max_Option_Value_Length));
 
    function Image
-     (Format : Option_Format; Value : RFLX.RFLX_Types.Bytes) return String
-   with Pre => Value'Length in 1 .. Max_Option_Value_Length;
+     (Format : Option_Format; Value : RFLX.RFLX_Types.Bytes)
+      return String
+   with
+     Pre  =>
+      (case Format is when UInt => Value'Length in 0 .. Max_Uint_Length,
+         when UTF8_String | Opaque =>
+           Value'Length in 0 .. Max_Option_Value_Length,
+         when Empty => Value'Length = 0,
+         when Unknown => Value'Length in 0 .. Max_Option_Value_Length),
+     Post =>
+      (case Format is
+         when UInt => Image'Result'Length <= Interfaces.Unsigned_32'Width,
+         when UTF8_String => Image'Result'Length = Value'Length,
+         when Empty => Image'Result'Length = 0,
+         when Opaque | Unknown =>
+           Image'Result'Length = Value'Length * RFLX.RFLX_Types.Byte'Width);
 
    function To_UInt (Value : UInt_Bytes) return Interfaces.Unsigned_32;
 

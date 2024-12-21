@@ -12,7 +12,13 @@ is
       use type RFLX.RFLX_Types.Index;
    begin
 
+      if Value'Length = 0 then
+         return "";
+      end if;
+
       case Format is
+         when Empty =>
+            return "";
          when UTF8_String =>
             declare
                Result :
@@ -28,11 +34,12 @@ is
          when UInt =>
             return To_UInt (Value)'Image;
 
-         when others =>
+         when Opaque | Unknown =>
             declare
-               Result : String (1 .. Value'Length * RFLX.RFLX_Types.Byte'Width) :=
+               Result : String (1 ..
+                                Value'Length * RFLX.RFLX_Types.Byte'Width) :=
                  (others => ' ');
-               Index  : Positive range Result'Range := 1;
+               Index  : Positive range Result'Range := Result'First;
             begin
                for I in Value'Range loop
                   Result (Index .. Index + RFLX.RFLX_Types.Byte'Width - 1) :=

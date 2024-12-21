@@ -373,8 +373,8 @@ is
           (1 .. RFLX.RFLX_Builtin_Types.Index (Max_Option_Value_Length) => 0);
 
       Hostname     : constant Ada.Strings.UTF_Encoding.UTF_8_String :=
-        "localhost";
-      Path         : constant Ada.Strings.UTF_Encoding.UTF_8_String := "/";
+        "coap.me";
+      Path         : constant Ada.Strings.UTF_Encoding.UTF_8_String := "test";
       Default_Port : constant := 5683; -- TODO move to an appropiate place
 
       Current_Delta : RFLX.CoAP.Option_Extended16_Type := 0;
@@ -446,30 +446,27 @@ is
        and then RFLX.CoAP.Option_Type.Has_Buffer (Option_Cxt)
    is
       Option_Length : Option_Value_Length;
+      Encoded_Option_Delta : RFLX.RFLX_Types.Base_Integer;
 
    begin
       End_Of_Options := False;
 
-      Option_Delta :=
-        Option_Delta
-        + RFLX.CoAP.To_Base_Integer
+      Encoded_Option_Delta := RFLX.CoAP.To_Base_Integer
             (RFLX.CoAP.Option_Type.Get_Option_Delta (Option_Cxt));
 
       Option_Length :=
         Option_Value_Length
           (RFLX.CoAP.Option_Type.Get_Option_Length (Option_Cxt));
 
-      case Option_Delta is
+      case Encoded_Option_Delta is
          when 13 =>
-            Option_Delta :=
-              13
+            Option_Delta := Option_Delta + 13
               + RFLX.RFLX_Types.Base_Integer
                   (RFLX.CoAP.Option_Type.Get_Option_Delta_Extended8
                      (Option_Cxt));
 
          when 14 =>
-            Option_Delta :=
-              269
+            Option_Delta := Option_Delta + 269
               + RFLX.RFLX_Types.Base_Integer
                   (RFLX.CoAP.Option_Type.Get_Option_Delta_Extended16
                      (Option_Cxt));
@@ -485,20 +482,18 @@ is
             end if;
 
          when others =>
-            null;
+            Option_Delta := Option_Delta + Encoded_Option_Delta;
       end case;
 
       case Option_Length is
          when 13 =>
-            Option_Length :=
-              13
+            Option_Length := 13
               + Option_Value_Length
                   (RFLX.CoAP.Option_Type.Get_Option_Length_Extended8
                      (Option_Cxt));
 
          when 14 =>
-            Option_Length :=
-              269
+            Option_Length := 269
               + Option_Value_Length
                   (RFLX.CoAP.Option_Type.Get_Option_Length_Extended16
                      (Option_Cxt));
@@ -536,12 +531,11 @@ is
                & CoAP_SPARK.Options.Image
                    (Format =>
                       CoAP_SPARK.Options.Option_Properties_Table
-                        (Option_Number)
-                        .Format,
+                        (Option_Number).Format,
                     Value  => Option_Value.all));
 
             if CoAP.To_Actual (Option_Delta) = CoAP.Content_Format then
-               if Option_Length > CoAP_SPARK.Options.UInt_Bytes'Length then
+               if Option_Length > CoAP_SPARK.Options.Max_Uint_Length then
                   State.Current_Status :=
                     RFLX.CoAP_Client.Session_Environment.Malformed_Message;
                else
