@@ -151,7 +151,7 @@ is
    function To_Bit_Size
      (Value : RFLX.RFLX_Builtin_Types.Length) return RFLX.RFLX_Types.Bit_Length
    is (RFLX.RFLX_Types.Bit_Length (Value) * 8);
-
+ 
    procedure Add_Option
      (Option              : RFLX.CoAP.Option_Numbers;
       Value               : Option_Bytes;
@@ -159,7 +159,8 @@ is
       Option_Sequence_Cxt : in out RFLX.CoAP.Option_Sequence.Context)
    with
      Pre =>
-       RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt)
+       Value'Length <= CoAP_SPARK.Options.Max_Option_Value_Length
+       and then RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt)
        and then RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
        and then To_Option_Extended16_Type (Option) >= Current_Delta
        and then RFLX.CoAP.Option_Sequence.Available_Space (Option_Sequence_Cxt)
@@ -250,7 +251,7 @@ is
        and then RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
        and then To_Option_Extended16_Type (Option) >= Current_Delta
        and then Value'First <= Value'Last
-       and then Value'Length <= Max_Option_Value_Length
+       and then Value'Length <= CoAP_SPARK.Options.Max_Option_Value_Length
        and then RFLX.CoAP.Option_Sequence.Available_Space (Option_Sequence_Cxt)
                 >= To_Bit_Size (Option_Byte_Size (Option, Value'Length)),
      Post =>
@@ -570,23 +571,22 @@ is
       RFLX_Result : out Boolean)
    is
       use type CoAP_Client.Session_Environment.Status_Type;
-      Option_Sequence_Cxt : RFLX.CoAP.Option_Sequence.Context;
-      Buffer              : RFLX.RFLX_Types.Bytes_Ptr :=
-        new RFLX.RFLX_Types.Bytes'(Data);
-      Option_Delta        : RFLX.RFLX_Types.Base_Integer := 0;
    begin
 
       if Data'Length = 0 then
          Ada.Text_IO.Put_Line ("Options and payload are empty");
       else
-
-         RFLX.CoAP.Option_Sequence.Initialize
-           (Ctx => Option_Sequence_Cxt, Buffer => Buffer);
-
          declare
-            Option_Cxt     : RFLX.CoAP.Option_Type.Context;
-            End_Of_Options : Boolean;
+            Option_Sequence_Cxt : RFLX.CoAP.Option_Sequence.Context;
+            Buffer              : RFLX.RFLX_Types.Bytes_Ptr :=
+              new RFLX.RFLX_Types.Bytes'(Data);
+            Option_Delta        : RFLX.RFLX_Types.Base_Integer := 0;
+            Option_Cxt          : RFLX.CoAP.Option_Type.Context;
+            End_Of_Options      : Boolean;
          begin
+
+            RFLX.CoAP.Option_Sequence.Initialize
+              (Ctx => Option_Sequence_Cxt, Buffer => Buffer);
 
             Read_Options :
             loop
@@ -614,8 +614,14 @@ is
             end loop Read_Options;
 
             if CoAP.Option_Sequence.Sequence_Last (Option_Sequence_Cxt)
-              < Option_Sequence_Cxt.Last
+              >= Option_Sequence_Cxt.Last
             then
+               RFLX.CoAP.Option_Type.Take_Buffer
+                 (Ctx => Option_Cxt, Buffer => Buffer);
+               pragma Assert (not RFLX.CoAP.Option_Type.Has_Buffer
+                                    (Option_Cxt));
+               RFLX.RFLX_Types.Free (Buffer);
+            else
                -- When there is something left to be read, it is the payload
                Print_Payload :
                declare
@@ -640,6 +646,7 @@ is
 
                   RFLX.CoAP.Option_Type.Take_Buffer
                     (Ctx => Option_Cxt, Buffer => Buffer);
+                  pragma Assert (not RFLX.CoAP.Option_Type.Has_Buffer (Option_Cxt));
 
                   Ada.Text_IO.Put_Line
                     ("Content-Format: "
@@ -651,15 +658,11 @@ is
                      & CoAP_SPARK.Options.Image
                          (Format => Payload_Format,
                           Value  => Buffer (First .. Last)));
+
+                  RFLX.RFLX_Types.Free (Buffer); 
                end Print_Payload;
-            else
-               RFLX.CoAP.Option_Type.Take_Buffer
-                 (Ctx => Option_Cxt, Buffer => Buffer);
             end if;
-
          end;
-
-         RFLX.RFLX_Types.Free (Buffer);
       end if;
 
       RFLX_Result :=
@@ -671,7 +674,7 @@ is
      (State       : in out RFLX.CoAP_Client.Session_Environment.State;
       Error_Code  : RFLX.CoAP.Client_Error_Response;
       RFLX_Result : out Boolean)
-      is
+   is
    begin
       Ada.Text_IO.Put_Line
         ("Server answered with client error: 4."
@@ -688,7 +691,7 @@ is
      (State       : in out RFLX.CoAP_Client.Session_Environment.State;
       Error_Code  : RFLX.CoAP.Server_Error_Response;
       RFLX_Result : out Boolean)
-      is
+   is
    begin
       Ada.Text_IO.Put_Line
         ("Server answered with server error: 5."
