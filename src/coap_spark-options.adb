@@ -32,14 +32,14 @@ is
             end;
 
          when UInt =>
-            return To_UInt (Value)'Image;
+            return Interfaces.Unsigned_32'Image (To_UInt (Value));
 
          when Opaque | Unknown =>
             declare
                Result : String (1 ..
                                 Value'Length * RFLX.RFLX_Types.Byte'Width) :=
                  (others => ' ');
-               Index  : Positive range Result'Range := Result'First;
+               Index  : Positive := Result'First;
             begin
                for I in Value'Range loop
                   Result (Index .. Index + RFLX.RFLX_Types.Byte'Width - 1) :=

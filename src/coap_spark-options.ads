@@ -26,8 +26,6 @@ is
 
    type Option_Table is array (RFLX.CoAP.Option_Numbers) of Option_Properties;
 
-
-
    -- See RFC7252, Section 5.10. Option Definitions "Table 4: Options"
    -- except otherwise noted by another reference.
    Option_Properties_Table : constant Option_Table :=

@@ -522,35 +522,43 @@ is
             RFLX.CoAP.Option_Type.Get_Option_Value
               (Ctx => Option_Cxt, Data => Option_Value.all);
 
+            Ada.Text_IO.Put ("Option: ");
+            Ada.Text_IO.Put_Line (Option_Number'Image);
+            Ada.Text_IO.Put ("  - Length: ");
+            Ada.Text_IO.Put_Line (Option_Length'Image);
+            Ada.Text_IO.Put ("  - Value: ");
+
+            if Option_Value.all'Length >
+             CoAP_SPARK.Options.Option_Properties_Table
+              (Option_Number).Maximum_Length
+            then
+              Ada.Text_IO.Put
+               ("Option value is too long for option");
+              Ada.Text_IO.Put_Line (Option_Number'Image);
+
+              State.Current_Status :=
+                RFLX.CoAP_Client.Session_Environment.Malformed_Message;
+              return;
+            end if;
+            
             Ada.Text_IO.Put_Line
-              ("Option: "
-               & Option_Number'Image
-               & ", Length: "
-               & Option_Length'Image
-               & ", Value: "
-               & CoAP_SPARK.Options.Image
-                   (Format =>
-                      CoAP_SPARK.Options.Option_Properties_Table
-                        (Option_Number).Format,
-                    Value  => Option_Value.all));
+             (CoAP_SPARK.Options.Image
+               (Format =>
+                 CoAP_SPARK.Options.Option_Properties_Table
+                  (Option_Number).Format,
+                Value  => Option_Value.all));
 
             if CoAP.To_Actual (Option_Delta) = CoAP.Content_Format then
-               if Option_Length > CoAP_SPARK.Options.Max_Uint_Length then
-                  State.Current_Status :=
-                    RFLX.CoAP_Client.Session_Environment.Malformed_Message;
-               else
-                  State.Content_Format :=
-                    CoAP_SPARK.Options.To_UInt (Value => Option_Value.all);
-               end if;
+               State.Content_Format :=
+                  CoAP_SPARK.Options.To_UInt (Value => Option_Value.all);
             end if;
 
             RFLX.RFLX_Types.Free (Option_Value);
          end;
       else
-         Ada.Text_IO.Put_Line
-           ("Option: "
-            & CoAP.Option_Numbers'Image (CoAP.To_Actual (Option_Delta))
-            & ", no value");
+         Ada.Text_IO.Put_Line ("Option: " & CoAP.Option_Numbers'Image
+                            (CoAP.To_Actual (Option_Delta)));
+         Ada.Text_IO.Put_Line ("  - Value: empty");
 
          if CoAP.To_Actual (Option_Delta) = CoAP.Content_Format then
             State.Content_Format := 0;
@@ -594,7 +602,7 @@ is
                then
                   State.Current_Status :=
                     RFLX.CoAP_Client.Session_Environment.Malformed_Message;
-                  exit Read_Options;
+                  return;
                end if;
                Put_Option (State, Option_Cxt, Option_Delta, End_Of_Options);
 
@@ -642,14 +650,13 @@ is
                     (Ctx => Option_Cxt, Buffer => Buffer);
                   pragma Assert (not RFLX.CoAP.Option_Type.Has_Buffer (Option_Cxt));
 
-                  Ada.Text_IO.Put_Line
-                    ("Content-Format: "
-                     & CoAP_SPARK.Content_Formats.To_String
+                  Ada.Text_IO.Put
+                    ("Content-Format: ");
+                  Ada.Text_IO.Put_Line (CoAP_SPARK.Content_Formats.To_String
                          (State.Content_Format));
 
-                  Ada.Text_IO.Put_Line
-                    ("Payload: "
-                     & CoAP_SPARK.Options.Image
+                  Ada.Text_IO.Put ("Payload: ");
+                  Ada.Text_IO.Put_Line (CoAP_SPARK.Options.Image
                          (Format => Payload_Format,
                           Value  => Buffer (First .. Last)));
 
