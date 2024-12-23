@@ -8,6 +8,7 @@ is
    type Status_Type is (OK, Capacity_Error, Malformed_Message);
 
    type State is record
+      Method : RFLX.CoAP.Method_Code := RFLX.CoAP.Get;
       Current_Status : Status_Type := OK;
       Is_First_Message : Boolean := True;
       Current_Message_ID : RFLX.CoAP.Message_ID_Type := 0;

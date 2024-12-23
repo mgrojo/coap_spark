@@ -20,12 +20,15 @@ is
    subtype UInt_Bytes is RFLX.RFLX_Types.Bytes
       with Dynamic_Predicate => UInt_Bytes'Length <= Max_Uint_Length;
 
+   subtype Option_Value_Length is
+     Natural range 0 .. CoAP_SPARK.Options.Max_Option_Value_Length;
+
    type Option_Format is (Unknown, Empty, Opaque, UInt, UTF8_String);
 
    type Option_Properties is record
       Format         : Option_Format;
       Repeatable     : Boolean;
-      Maximum_Length : Natural;
+      Maximum_Length : Option_Value_Length;
    end record;
 
    type Option_Table is array (RFLX.CoAP.Option_Numbers) of Option_Properties;
@@ -130,7 +133,7 @@ is
 
    function Get_Number (Opt : Option) return RFLX.CoAP.Option_Numbers;
 
-   function Get_Length (Opt : Option) return Natural;
+   function Get_Length (Opt : Option) return Option_Value_Length;
 
    function Has_Buffer (Opt : Option) return Boolean;
 
@@ -224,7 +227,7 @@ private
    function Has_Buffer (Opt : Option) return Boolean
    is (Opt.Value /= null);
    
-   function Get_Length (Opt : Option) return Natural is
+   function Get_Length (Opt : Option) return Option_Value_Length is
      (if Opt.Value = null then 0 else Opt.Value.all'Length);
 
 end CoAP_SPARK.Options;
