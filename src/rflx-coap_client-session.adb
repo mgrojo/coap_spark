@@ -556,7 +556,7 @@ is
 
             Read_Options :
             loop
-               pragma Invariant (RFLX.CoAP.Option_Sequence.Has_Buffer
+               pragma Loop_Invariant (RFLX.CoAP.Option_Sequence.Has_Buffer
                                     (Option_Sequence_Cxt));
                RFLX.CoAP.Option_Sequence.Switch
                  (Ctx => Option_Sequence_Cxt, Element_Ctx => Option_Cxt);
