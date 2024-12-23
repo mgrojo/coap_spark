@@ -1,10 +1,14 @@
 with Interfaces;
 with RFLX.CoAP;
 with RFLX.RFLX_Types;
+with RFLX.RFLX_Builtin_Types;
 
 package CoAP_SPARK.Options
   with SPARK_Mode
 is
+
+   use type RFLX.CoAP.Option_Numbers;
+   use type RFLX.RFLX_Builtin_Types.Bytes_Ptr;
 
    -- According to Section 5.10. Option Definitions "Table 4: Options"
    -- the maximum size for uint options is 4 bytes.
@@ -14,7 +18,7 @@ is
    Max_Option_Value_Length : constant := 1034;
    
    subtype UInt_Bytes is RFLX.RFLX_Types.Bytes
-                           with Dynamic_Predicate => UInt_Bytes'Length <= Max_Uint_Length;
+      with Dynamic_Predicate => UInt_Bytes'Length <= Max_Uint_Length;
 
    type Option_Format is (Unknown, Empty, Opaque, UInt, UTF8_String);
 
@@ -122,6 +126,70 @@ is
          Repeatable     => True,
          Maximum_Length => Max_Option_Value_Length));
 
+   type Option is private;
+
+   function Get_Number (Opt : Option) return RFLX.CoAP.Option_Numbers;
+
+   function Get_Length (Opt : Option) return Natural;
+
+   function Has_Buffer (Opt : Option) return Boolean;
+
+   procedure New_String_Option
+     (Number : RFLX.CoAP.Option_Numbers;
+      Value  : String;
+      Result : out Option)
+   with
+      Pre  =>
+         Value'Length <= Option_Properties_Table (Number).Maximum_Length
+         and then Option_Properties_Table (Number).Format = UTF8_String,
+      Post =>
+         Has_Buffer (Result)
+         and then Get_Number (Result) = Number
+         and then Get_Length (Result) = Value'Length;
+
+   procedure New_UInt_Option
+     (Number : RFLX.CoAP.Option_Numbers;
+      Value  : Interfaces.Unsigned_32;
+      Result : out Option)
+   with
+      Pre  => Option_Properties_Table (Number).Format = UInt,
+      Post =>
+         Has_Buffer (Result)
+         and then Get_Number (Result) = Number
+         and then Get_Length (Result) <= Max_Uint_Length;
+
+   procedure New_Opaque_Option
+     (Number : RFLX.CoAP.Option_Numbers;
+      Value  : RFLX.RFLX_Types.Bytes;
+      Result : out Option)
+   with
+     Pre  =>
+      Value'Length <= Option_Properties_Table (Number).Maximum_Length
+      and then Option_Properties_Table (Number).Format = Opaque,
+     Post =>
+      Has_Buffer (Result)
+      and then Get_Number (Result) = Number
+      and then Get_Length (Result) = Value'Length;
+
+   procedure New_Empty_Option
+     (Number : RFLX.CoAP.Option_Numbers;
+      Result : out Option) with
+     Pre  =>
+         Option_Properties_Table (Number).Format = Empty,
+     Post =>
+         Has_Buffer (Result)
+         and then Get_Number (Result) = Number
+         and then Get_Length (Result) = 0;
+
+   procedure Take_Buffer (Opt   : in out Option;
+                          Value : out RFLX.RFLX_Types.Bytes_Ptr)
+   with
+      Pre  => Has_Buffer (Opt),
+      Post => not Has_Buffer (Opt) and then Value /= null;
+
+   procedure Free (Opt : in out Option)
+   with Post => not Has_Buffer (Opt);
+
    function Image
      (Format : Option_Format; Value : RFLX.RFLX_Types.Bytes)
       return String
@@ -133,7 +201,8 @@ is
          when Empty => Value'Length = 0,
          when Unknown => Value'Length in 0 .. Max_Option_Value_Length),
      Post =>
-      (case Format is
+     Image'Result'First = 1 and then
+     (case Format is
          when UInt => Image'Result'Length <= Interfaces.Unsigned_32'Width,
          when UTF8_String => Image'Result'Length = Value'Length,
          when Empty => Image'Result'Length = 0,
@@ -141,5 +210,21 @@ is
            Image'Result'Length = Value'Length * RFLX.RFLX_Types.Byte'Width);
 
    function To_UInt (Value : UInt_Bytes) return Interfaces.Unsigned_32;
+
+private
+
+   type Option is record
+      Number : RFLX.CoAP.Option_Numbers;
+      Value  : RFLX.RFLX_Types.Bytes_Ptr;
+   end record;
+
+   function Get_Number (Opt : Option) return RFLX.CoAP.Option_Numbers
+   is (Opt.Number);
+
+   function Has_Buffer (Opt : Option) return Boolean
+   is (Opt.Value /= null);
+   
+   function Get_Length (Opt : Option) return Natural is
+     (if Opt.Value = null then 0 else Opt.Value.all'Length);
 
 end CoAP_SPARK.Options;
