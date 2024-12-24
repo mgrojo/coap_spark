@@ -263,6 +263,7 @@ is
             >= To_Bit_Size (Option_Byte_Size (Option, Value'Length)),
      Post =>
        To_Option_Extended16_Type (Option) = Current_Delta
+       and then RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt)
        and then RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
    is
       Opt : CoAP_SPARK.Options.Option;
@@ -275,6 +276,7 @@ is
         (Opt                 => Opt,
          Current_Delta       => Current_Delta,
          Option_Sequence_Cxt => Option_Sequence_Cxt);
+      pragma Unreferenced (Opt);
 
    end Add_String_Option;
 
@@ -297,6 +299,7 @@ is
                    Interfaces.Unsigned_32'Max_Size_In_Storage_Elements)),
      Post =>
        RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
+       and then RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt)
        and then To_Option_Extended16_Type (Option) = Current_Delta
        and then RFLX.CoAP.Option_Sequence.Byte_Size (Option_Sequence_Cxt) > 0
    is
@@ -310,6 +313,7 @@ is
         (Opt                 => Opt,
          Current_Delta       => Current_Delta,
          Option_Sequence_Cxt => Option_Sequence_Cxt);
+      pragma Unreferenced (Opt);
 
    end Add_Uint_Option;
 
@@ -361,7 +365,7 @@ is
       pragma Unreferenced (Current_Delta);
 
       declare
-         Last : constant RFLX.RFLX_Builtin_Types.Index :=
+         Last : constant RFLX.RFLX_Builtin_Types.Index'Base :=
            RFLX.RFLX_Builtin_Types.Index
              (RFLX.CoAP.Option_Sequence.Byte_Size (Option_Sequence_Cxt));
       begin
@@ -460,7 +464,8 @@ is
             null;
       end case;
 
-      if Option_Length >
+      if not RFLX.CoAP.Valid_Option_Numbers (Option_Delta) or else
+         Option_Length >
          CoAP_SPARK.Options.Option_Properties_Table
             (RFLX.CoAP.To_Actual (Option_Delta)).Maximum_Length
       then
@@ -504,7 +509,7 @@ is
                   (Option_Number).Format,
                 Value  => Option_Value.all));
 
-            if CoAP.To_Actual (Option_Delta) = CoAP.Content_Format then
+            if Option_Number = CoAP.Content_Format then
                State.Content_Format :=
                   CoAP_SPARK.Options.To_UInt (Value => Option_Value.all);
             end if;
