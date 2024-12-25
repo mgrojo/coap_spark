@@ -5,7 +5,7 @@ package Channel with
    SPARK_Mode
 is
 
-   Default_Port : constant := 5683;
+   Default_Port : constant := 5683; -- TODO: use constant in COAP_SPARK
 
    procedure Initialize (Socket : out GNAT.Sockets.Socket_Type;
                          Port : GNAT.Sockets.Port_Type := Default_Port;

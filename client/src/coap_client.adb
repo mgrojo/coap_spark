@@ -1,16 +1,22 @@
 pragma SPARK_Mode;
 
 with Ada.Text_IO;
-with GNAT.Sockets;
-
-with RFLX.RFLX_Types;
-with RFLX.RFLX_Builtin_Types;
-with RFLX.CoAP_Client.Session.FSM;
 
 with Channel;
 
+with CoAP_SPARK;
+
+with GNAT.Sockets;
+
+with RFLX.CoAP;
+with RFLX.RFLX_Types;
+with RFLX.RFLX_Builtin_Types;
+with RFLX.CoAP_Client.Session.FSM;
+with RFLX.CoAP_Client.Session_Environment;
+
 procedure CoAP_Client is
    package FSM renames RFLX.CoAP_Client.Session.FSM;
+   package Session_Environment renames RFLX.CoAP_Client.Session_Environment;
    package Types renames RFLX.RFLX_Types;
 
    procedure Read (Ctx : FSM.Context;
@@ -71,10 +77,21 @@ procedure CoAP_Client is
 
    Skt : GNAT.Sockets.Socket_Type;
    Ctx : FSM.Context;
+
+   Hostname     : constant String := "coap.me";
+   Path         : constant String := "test";
+
 begin
    Channel.Initialize (Skt);
+   Session_Environment.Initialize
+      (Method        => RFLX.CoAP.Get,
+       Server        => Hostname,
+       Port          => CoAP_SPARK.Default_Port,
+       Path          => Path,
+       Session_State => Ctx.E);
+
    FSM.Initialize (Ctx);
-   Channel.Connect (Skt, "coap.me");
+   Channel.Connect (Skt, Hostname);
    while FSM.Active (Ctx) loop
       pragma Loop_Invariant (FSM.Initialized (Ctx));
       for C in FSM.Channel'Range loop

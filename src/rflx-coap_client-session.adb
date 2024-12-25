@@ -2,7 +2,7 @@ with Ada.Numerics.Discrete_Random;
 with Ada.Strings.UTF_Encoding;
 with Ada.Text_IO;
 with CoAP_SPARK.Content_Formats;
-with CoAP_SPARK.Options;
+with CoAP_SPARK.Options.Lists;
 with CoAP_SPARK.Utils;
 with Interfaces;
 with RFLX.CoAP.Option_Sequence;
@@ -20,6 +20,10 @@ is
    use type CoAP_SPARK.Options.Option_Format;
    use type RFLX.CoAP.Option_Numbers;
 
+   package Option_Sorting is new CoAP_SPARK.Options.Lists.Generic_Sorting
+                                   ("<" => CoAP_SPARK.Options."<");
+
+   
    -- The random number generators cannot be proved by SPARK.
    package Random
      with SPARK_Mode => Off
@@ -327,11 +331,6 @@ is
         new RFLX.RFLX_Types.Bytes'
           (1 .. RFLX.RFLX_Builtin_Types.Index (Max_Option_Length) => 0);
 
-      Hostname     : constant Ada.Strings.UTF_Encoding.UTF_8_String :=
-        "coap.me";
-      Path         : constant Ada.Strings.UTF_Encoding.UTF_8_String := "test";
-      Default_Port : constant := 5683; -- TODO move to an appropiate place
-
       Current_Delta : RFLX.CoAP.Option_Extended16_Type := 0;
    begin
 
@@ -339,29 +338,19 @@ is
 
       RFLX.CoAP.Option_Sequence.Initialize
         (Ctx => Option_Sequence_Cxt, Buffer => Option_Sequence_Buffer);
+     
+      Option_Sorting.Sort (State.Request_Options);
 
-      Add_String_Option
-        (Option              => RFLX.CoAP.Uri_Host,
-         Value               => Hostname,
-         Current_Delta       => Current_Delta,
-         Option_Sequence_Cxt => Option_Sequence_Cxt);
-
-      pragma Assert (RFLX.CoAP.Uri_Port > RFLX.CoAP.Uri_Host);
-
-      Add_Uint_Option
-        (Option              => RFLX.CoAP.Uri_Port,
-         Value               => Default_Port,
-         Current_Delta       => Current_Delta,
-         Option_Sequence_Cxt => Option_Sequence_Cxt);
-
-      pragma Assert (RFLX.CoAP.Uri_Path > RFLX.CoAP.Uri_Port);
-
-      Add_String_Option
-        (Option              => RFLX.CoAP.Uri_Path,
-         Value               => Path,
-         Current_Delta       => Current_Delta,
-         Option_Sequence_Cxt => Option_Sequence_Cxt);
-
+      for Option of State.Request_Options loop
+         declare
+            Option_Copy : CoAP_SPARK.Options.Option := Option;
+         begin
+            Add_Option
+               (Opt                => Option_Copy,
+               Current_Delta       => Current_Delta,
+               Option_Sequence_Cxt => Option_Sequence_Cxt);
+         end;
+      end loop;
       pragma Unreferenced (Current_Delta);
 
       declare

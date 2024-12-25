@@ -13,4 +13,5 @@ tags = ["spark", "coap", "iot", "protocol"]
 gnatprove = "^14.1.1"
 
 [build-switches]
-"*".style_checks = ["-gnatyC"]
+"*".Style_Checks = ["-gnatyC"]
+"*".Ada_Version = "Ada2022"

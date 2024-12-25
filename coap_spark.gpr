@@ -1,4 +1,9 @@
+-- SPARKLib will be installed by Alire when installing the
+-- gnatprove dependency.
+with "sparklib.gpr";
+
 with "config/coap_spark_config.gpr";
+
 project Coap_Spark is
 
    for Library_Name use "Coap_Spark";

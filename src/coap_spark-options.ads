@@ -16,7 +16,7 @@ is
    -- Maximum size in general is 1034 bytes.
    Max_Uint_Length : constant := 4;
    Max_Option_Value_Length : constant := 1034;
-   
+
    subtype UInt_Bytes is RFLX.RFLX_Types.Bytes
       with Dynamic_Predicate => UInt_Bytes'Length <= Max_Uint_Length;
 
@@ -131,6 +131,8 @@ is
 
    type Option is private;
 
+   function "<" (Left, Right : Option) return Boolean;
+
    function Get_Number (Opt : Option) return RFLX.CoAP.Option_Numbers;
 
    function Get_Length (Opt : Option) return Option_Value_Length;
@@ -214,6 +216,8 @@ is
 
    function To_UInt (Value : UInt_Bytes) return Interfaces.Unsigned_32;
 
+   subtype Option_Index is Positive range 1 .. Max_Number_Of_Options;
+
 private
 
    type Option is record
@@ -221,12 +225,15 @@ private
       Value  : RFLX.RFLX_Types.Bytes_Ptr;
    end record;
 
+   function "<" (Left, Right : Option) return Boolean is
+    (Left.Number < Right.Number);
+
    function Get_Number (Opt : Option) return RFLX.CoAP.Option_Numbers
    is (Opt.Number);
 
    function Has_Buffer (Opt : Option) return Boolean
    is (Opt.Value /= null);
-   
+
    function Get_Length (Opt : Option) return Option_Value_Length is
      (if Opt.Value = null then 0 else Opt.Value.all'Length);
 

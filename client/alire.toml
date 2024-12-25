@@ -18,4 +18,6 @@ coap_spark = "*"
 coap_spark = { path='..' }
 
 [build-switches]
-"*".style_checks = ["-gnatyC"]
+"*".Style_Checks = ["-gnatyC"]
+"*".Ada_Version = "Ada2022"
+
