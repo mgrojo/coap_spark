@@ -343,12 +343,18 @@ is
 
       for Option of State.Request_Options loop
          declare
-            Option_Copy : CoAP_SPARK.Options.Option := Option;
+            Option_Copy : CoAP_SPARK.Options.Option;
          begin
+            -- Make a copy of the option to comply with the SPARK requrirements
+            -- on pointers.
+            -- 
+            CoAP_SPARK.Options.Copy (Source => Option, Target => Option_Copy);
+
             Add_Option
                (Opt                => Option_Copy,
                Current_Delta       => Current_Delta,
                Option_Sequence_Cxt => Option_Sequence_Cxt);
+            pragma Unreferenced (Option_Copy);
          end;
       end loop;
       pragma Unreferenced (Current_Delta);

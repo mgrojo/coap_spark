@@ -132,6 +132,7 @@ is
    type Option is private;
 
    function "<" (Left, Right : Option) return Boolean;
+   overriding function "=" (Left, Right : Option) return Boolean;
 
    function Get_Number (Opt : Option) return RFLX.CoAP.Option_Numbers;
 
@@ -192,6 +193,13 @@ is
       Pre  => Has_Buffer (Opt),
       Post => not Has_Buffer (Opt) and then Value /= null;
 
+   -- Make a deep copy of the Source option.
+    procedure Copy (Source : Option; Target : out Option) with
+     Pre  => Has_Buffer (Source),
+     Post =>
+      Has_Buffer (Target) and then Get_Number (Target) = Get_Number (Source)
+      and then Get_Length (Target) = Get_Length (Source);
+
    procedure Free (Opt : in out Option)
    with Post => not Has_Buffer (Opt);
 
@@ -220,6 +228,8 @@ is
 
 private
 
+   use type RFLX.RFLX_Types.Bytes;
+
    type Option is record
       Number : RFLX.CoAP.Option_Numbers;
       Value  : RFLX.RFLX_Types.Bytes_Ptr;
@@ -227,6 +237,13 @@ private
 
    function "<" (Left, Right : Option) return Boolean is
     (Left.Number < Right.Number);
+
+   -- Compare option on values, not on the default (pointer values)
+   overriding function "=" (Left, Right : Option) return Boolean is
+      (Left.Number = Right.Number and then
+      ((Left.Value = null and then Right.Value = null) or else
+         (Left.Value /= null and then Right.Value /= null and then
+         Left.Value.all = Right.Value.all)));
 
    function Get_Number (Opt : Option) return RFLX.CoAP.Option_Numbers
    is (Opt.Number);

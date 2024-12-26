@@ -117,6 +117,15 @@ is
       RFLX.RFLX_Types.Free (Opt.Value);
    end Free;
 
+   procedure Copy (Source : Option; Target : out Option)
+   is
+   begin
+      Target :=
+        (Number => Source.Number,
+         Value  => new RFLX.RFLX_Types.Bytes'(Source.Value.all));
+   end Copy;
+
+
    function Image
      (Format : Option_Format; Value : RFLX.RFLX_Types.Bytes) return String
    is
