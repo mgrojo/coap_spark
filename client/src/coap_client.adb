@@ -1,12 +1,15 @@
 pragma SPARK_Mode;
 
+with Ada.Command_Line;
 with Ada.Text_IO;
 
 with Channel;
 
-with CoAP_SPARK;
+with CoAP_SPARK.URI;
 
 with GNAT.Sockets;
+
+with Interfaces;
 
 with RFLX.CoAP;
 with RFLX.RFLX_Types;
@@ -78,20 +81,44 @@ procedure CoAP_Client is
    Skt : GNAT.Sockets.Socket_Type;
    Ctx : FSM.Context;
 
-   Hostname     : constant String := "coap.me";
-   Path         : constant String := "test";
+   Default_URI : constant String := "coap://coap.me/test";
 
 begin
-   Channel.Initialize (Skt);
-   Session_Environment.Initialize
-      (Method        => RFLX.CoAP.Get,
-       Server        => Hostname,
-       Port          => CoAP_SPARK.Default_Port,
-       Path          => Path,
-       Session_State => Ctx.E);
+   
+   if Ada.Command_Line.Argument_Count /= 1 then
+      Ada.Text_IO.Put_Line ("Usage: coap_client <URI>");
+      -- return; TODO
+   end if;
+      
+   declare
+      URI_String : constant String :=
+       (if Ada.Command_Line.Argument_Count = 1
+         then Ada.Command_Line.Argument (1)
+         else Default_URI); -- TODO for debugging
+      URI : constant CoAP_SPARK.URI.URI := CoAP_SPARK.URI.Create (URI_String);
+   begin
+      Ada.Text_IO.Put_Line ("Scheme: " & CoAP_SPARK.URI.Scheme (URI));
+      Ada.Text_IO.Put_Line ("Host: " & CoAP_SPARK.URI.Host (URI));
+      Ada.Text_IO.Put_Line ("Port:" & Interfaces.Unsigned_16'Image
+                            (CoAP_SPARK.URI.Port (URI)));
+      Ada.Text_IO.Put_Line ("Path: " & CoAP_SPARK.URI.Path (URI));
+      Ada.Text_IO.Put_Line ("Query: " & CoAP_SPARK.URI.Query (URI));
 
-   FSM.Initialize (Ctx);
-   Channel.Connect (Skt, Hostname);
+      Channel.Initialize (Skt);
+      Session_Environment.Initialize
+        (Method        => RFLX.CoAP.Get,
+         Server        => CoAP_SPARK.URI.Host (URI),
+         Port          => CoAP_SPARK.URI.Port (URI),
+         Path          => CoAP_SPARK.URI.Path (URI),
+         Session_State => Ctx.E);
+      
+      FSM.Initialize (Ctx);
+      Channel.Connect (Socket => Skt,
+                       Server => CoAP_SPARK.URI.Host (URI),
+                       Port   => GNAT.Sockets.Port_Type 
+                                   (CoAP_SPARK.URI.Port (URI)));
+   end;
+      
    while FSM.Active (Ctx) loop
       pragma Loop_Invariant (FSM.Initialized (Ctx));
       for C in FSM.Channel'Range loop

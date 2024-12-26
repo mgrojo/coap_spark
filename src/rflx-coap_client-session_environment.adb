@@ -1,3 +1,6 @@
+with Ada.Strings.Fixed;
+with Ada.Strings.Maps;
+
 package body RFLX.CoAP_Client.Session_Environment with
   SPARK_Mode
 is
@@ -32,12 +35,36 @@ is
          CoAP_SPARK.Options.Lists.Append (Session_State.Request_Options,
                                                    Option);
 
-         CoAP_SPARK.Options.New_String_Option
-           (Number => RFLX.CoAP.Uri_Path,
-            Value  => Path,
-            Result => Option);
-         CoAP_SPARK.Options.Lists.Append (Session_State.Request_Options,
-                                                   Option);
+         -- RFC7252: each Uri-Path Option specifies one segment of the absolute
+         --  path to the resource.
+         declare
+            Segment_First : Natural := Path'First;
+            Segment_Last : Natural := Path'First - 1;
+         begin
+
+            while Segment_Last + 1 in Path'Range loop
+
+               Ada.Strings.Fixed.Find_Token
+                 (Source => Path,
+                  Set => Ada.Strings.Maps.To_Set("/"),
+                  From => Segment_Last + 1,
+                  Test => Ada.Strings.Outside,
+                  First => Segment_First,
+                  Last => Segment_Last);
+
+               exit when Segment_Last = 0;
+
+               CoAP_SPARK.Options.New_String_Option
+                 (Number => RFLX.CoAP.Uri_Path,
+                  Value  => Path (Segment_First .. Segment_Last),
+                  Result => Option);
+
+               CoAP_SPARK.Options.Lists.Append (Session_State.Request_Options,
+                                                         Option);
+            end loop;
+         end;
+
+         -- TODO Query part
       end;
 
    end Initialize;

@@ -15,7 +15,7 @@ is
    -- The other registered options by IANA are also not larger than 4 bytes.
    -- Maximum size in general is 1034 bytes.
    Max_Uint_Length : constant := 4;
-   Max_Option_Value_Length : constant := 1034;
+   Max_Option_Value_Length : constant := Max_URI_Length;
 
    subtype UInt_Bytes is RFLX.RFLX_Types.Bytes
       with Dynamic_Predicate => UInt_Bytes'Length <= Max_Uint_Length;
