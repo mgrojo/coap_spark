@@ -23,6 +23,8 @@ is
    subtype Option_Value_Length is
      Natural range 0 .. CoAP_SPARK.Options.Max_Option_Value_Length;
 
+   subtype Option_Index is Positive range 1 .. Max_Number_Of_Options;
+
    type Option_Format is (Unknown, Empty, Opaque, UInt, UTF8_String);
 
    type Option_Properties is record
@@ -141,13 +143,17 @@ is
    function Has_Buffer (Opt : Option) return Boolean;
 
    procedure New_String_Option
-     (Number : RFLX.CoAP.Option_Numbers;
-      Value  : String;
-      Result : out Option)
+     (Number      : RFLX.CoAP.Option_Numbers;
+      Value       : String;
+      Order_Index : Option_Index := 1;
+      Result      : out Option)
    with
       Pre  =>
          Value'Length <= Option_Properties_Table (Number).Maximum_Length
-         and then Option_Properties_Table (Number).Format = UTF8_String,
+         and then Option_Properties_Table (Number).Format = UTF8_String
+         and then (if Option_Properties_Table (Number).Repeatable
+                   then Order_Index >= 1
+                   else Order_Index = 1),
       Post =>
          Has_Buffer (Result)
          and then Get_Number (Result) = Number
@@ -156,9 +162,13 @@ is
    procedure New_UInt_Option
      (Number : RFLX.CoAP.Option_Numbers;
       Value  : Interfaces.Unsigned_32;
+      Order_Index : Option_Index := 1;
       Result : out Option)
    with
-      Pre  => Option_Properties_Table (Number).Format = UInt,
+      Pre  => Option_Properties_Table (Number).Format = UInt
+         and then (if Option_Properties_Table (Number).Repeatable
+                   then Order_Index >= 1
+                   else Order_Index = 1),
       Post =>
          Has_Buffer (Result)
          and then Get_Number (Result) = Number
@@ -167,11 +177,15 @@ is
    procedure New_Opaque_Option
      (Number : RFLX.CoAP.Option_Numbers;
       Value  : RFLX.RFLX_Types.Bytes;
+      Order_Index : Option_Index := 1;      
       Result : out Option)
    with
      Pre  =>
       Value'Length <= Option_Properties_Table (Number).Maximum_Length
-      and then Option_Properties_Table (Number).Format = Opaque,
+      and then Option_Properties_Table (Number).Format = Opaque
+      and then (if Option_Properties_Table (Number).Repeatable
+                  then Order_Index >= 1
+                  else Order_Index = 1),
      Post =>
       Has_Buffer (Result)
       and then Get_Number (Result) = Number
@@ -224,19 +238,20 @@ is
 
    function To_UInt (Value : UInt_Bytes) return Interfaces.Unsigned_32;
 
-   subtype Option_Index is Positive range 1 .. Max_Number_Of_Options;
-
 private
 
    use type RFLX.RFLX_Types.Bytes;
 
    type Option is record
-      Number : RFLX.CoAP.Option_Numbers;
-      Value  : RFLX.RFLX_Types.Bytes_Ptr;
+      Number      : RFLX.CoAP.Option_Numbers;
+      Value       : RFLX.RFLX_Types.Bytes_Ptr;
+      Order_Index : Option_Index;
    end record;
 
    function "<" (Left, Right : Option) return Boolean is
-    (Left.Number < Right.Number);
+    (if Left.Number = Right.Number
+      then Left.Order_Index < Right.Order_Index
+      else Left.Number < Right.Number);
 
    -- Compare option on values, not on the default (pointer values)
    overriding function "=" (Left, Right : Option) return Boolean is

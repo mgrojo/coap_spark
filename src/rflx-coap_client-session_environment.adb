@@ -40,6 +40,7 @@ is
          declare
             Segment_First : Natural := Path'First;
             Segment_Last : Natural := Path'First - 1;
+            Order_Index : CoAP_SPARK.Options.Option_Index := 1;
          begin
 
             while Segment_Last + 1 in Path'Range loop
@@ -55,12 +56,14 @@ is
                exit when Segment_Last = 0;
 
                CoAP_SPARK.Options.New_String_Option
-                 (Number => RFLX.CoAP.Uri_Path,
-                  Value  => Path (Segment_First .. Segment_Last),
-                  Result => Option);
+                 (Number      => RFLX.CoAP.Uri_Path,
+                  Value       => Path (Segment_First .. Segment_Last),
+                  Order_Index => Order_Index,
+                  Result      => Option);
 
                CoAP_SPARK.Options.Lists.Append (Session_State.Request_Options,
                                                          Option);
+               Order_Index := Order_Index + 1;
             end loop;
          end;
 

@@ -9,7 +9,10 @@ is
    use type RFLX.RFLX_Builtin_Types.Index;
 
    procedure New_String_Option
-     (Number : RFLX.CoAP.Option_Numbers; Value : String; Result : out Option)
+     (Number : RFLX.CoAP.Option_Numbers;
+      Value : String;
+      Order_Index : Option_Index := 1;
+      Result : out Option)
    is
    begin
 
@@ -19,7 +22,8 @@ is
            new RFLX.RFLX_Types.Bytes'
              (RFLX.RFLX_Builtin_Types.Index'Base (Value'First) ..
                   RFLX.RFLX_Builtin_Types.Index'Base (Value'Last) =>
-                0));
+                0),
+         Order_Index => Order_Index);
 
       for I in Result.Value.all'Range loop
 
@@ -36,6 +40,7 @@ is
    procedure New_UInt_Option
      (Number : RFLX.CoAP.Option_Numbers;
       Value  : Interfaces.Unsigned_32;
+      Order_Index : Option_Index := 1;
       Result : out Option)
    is
       use type Interfaces.Unsigned_32;
@@ -81,18 +86,21 @@ is
         (Number => Number,
          Value  =>
            new RFLX.RFLX_Types.Bytes'
-             (Bytes_Value (Bytes_Value'First .. Size_In_Bytes)));
+             (Bytes_Value (Bytes_Value'First .. Size_In_Bytes)),
+         Order_Index => Order_Index);
 
    end New_UInt_Option;
 
    procedure New_Opaque_Option
      (Number : RFLX.CoAP.Option_Numbers; Value : RFLX.RFLX_Types.Bytes;
+      Order_Index : Option_Index := 1;
       Result : out Option)
    is
    begin
       Result :=
         (Number => Number,
-         Value  => new RFLX.RFLX_Types.Bytes'(Value));
+         Value  => new RFLX.RFLX_Types.Bytes'(Value),
+         Order_Index => Order_Index);
    end New_Opaque_Option;
 
    procedure New_Empty_Option
@@ -100,7 +108,8 @@ is
    is
    begin
       Result := (Number => Number,
-                 Value  => new RFLX.RFLX_Types.Bytes'(1 .. 0 => 0));
+                 Value  => new RFLX.RFLX_Types.Bytes'(1 .. 0 => 0),
+                 Order_Index => 1);
    end New_Empty_Option;
 
    procedure Take_Buffer (Opt : in out Option;
@@ -122,7 +131,8 @@ is
    begin
       Target :=
         (Number => Source.Number,
-         Value  => new RFLX.RFLX_Types.Bytes'(Source.Value.all));
+         Value  => new RFLX.RFLX_Types.Bytes'(Source.Value.all),
+         Order_Index => Source.Order_Index);
    end Copy;
 
 
