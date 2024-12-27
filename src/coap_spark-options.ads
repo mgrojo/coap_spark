@@ -119,7 +119,9 @@ is
       RFLX.CoAP.Request_Tag                       =>
         (Format => Opaque, Repeatable => True, Maximum_Length => 8),
 
-      -- https://datatracker.ietf.org/meeting/interim-2022-core-10/materials/slides-interim-2022-core-10-sessa-pramtrzd-pramtrzd-content-format-for-coap-03-00.pdf
+      -- https://datatracker.ietf.org/meeting/interim-2022-core-10/materials
+      -- /slides-interim-2022-core-10-sessa-pramtrzd-pramtrzd-content-format
+      -- -for-coap-03-00.pdf
       RFLX.CoAP.OCF_Accept_Content_Format_Version =>
         (Format => UInt, Repeatable => False, Maximum_Length => 2),
       RFLX.CoAP.OCF_Content_Format_Version        =>

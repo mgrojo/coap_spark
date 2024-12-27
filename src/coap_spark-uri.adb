@@ -120,7 +120,7 @@ is
             URI_Object.Path_Last := Aux_Index - 1;
          end if;
       end if;
-         
+
       return URI_Object;
    end Create;
 

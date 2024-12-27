@@ -13,5 +13,27 @@ tags = ["spark", "coap", "iot", "protocol"]
 gnatprove = "^14.1.1"
 
 [build-switches]
-"*".Style_Checks = ["-gnatyC"]
+"*".Style_Checks = [
+    "-gnaty3" # Specify indentation level of 3
+    ,"-gnatya" # Check attribute casing
+    ,"-gnatyA" # Use of array index numbers in array attributes
+    ,"-gnatyB" # Check Boolean operators
+    ,"-gnatyb" # Blanks not allowed at statement end
+    ,"-gnatyC" # Check comments (1 space after --)
+    ,"-gnatye" # Check end/exit labels
+    ,"-gnatyf" # No form feeds or vertical tabs
+    ,"-gnatyh" # No horizontal tabs
+    ,"-gnatyi" # Check if-then layout
+    ,"-gnatyI" # check mode IN keywords
+    ,"-gnatyk" # Check keyword casing
+    ,"-gnatyl" # Check layout
+    ,"-gnatyM100" # Check maximum line length
+    ,"-gnatyn" # Check casing of entities in Standard
+    ,"-gnatyO" # Check that overriding subprograms are explicitly marked as such
+    ,"-gnatyp" # Check pragma casing
+    ,"-gnatyr" # Check identifier references casing
+    ,"-gnatyS" # Check no statements after THEN/ELSE
+    ,"-gnatyt" # Check token spacing
+    ,"-gnatyx" # Check extra parentheses
+    ]
 "*".Ada_Version = "Ada2022"

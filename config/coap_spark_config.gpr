@@ -18,7 +18,27 @@ abstract project Coap_Spark_Config is
            ,"-gnatwa" -- Enable all warnings
            ,"-gnatw.X" -- Disable warnings for No_Exception_Propagation
            ,"-gnatVa" -- All validity checks
+           ,"-gnaty3" -- Specify indentation level of 3
+           ,"-gnatya" -- Check attribute casing
+           ,"-gnatyA" -- Use of array index numbers in array attributes
+           ,"-gnatyB" -- Check Boolean operators
+           ,"-gnatyb" -- Blanks not allowed at statement end
            ,"-gnatyC"
+           ,"-gnatye" -- Check end/exit labels
+           ,"-gnatyf" -- No form feeds or vertical tabs
+           ,"-gnatyh" -- No horizontal tabs
+           ,"-gnatyi" -- Check if-then layout
+           ,"-gnatyI" -- check mode IN keywords
+           ,"-gnatyk" -- Check keyword casing
+           ,"-gnatyl" -- Check layout
+           ,"-gnatyM100"
+           ,"-gnatyn" -- Check casing of entities in Standard
+           ,"-gnatyO" -- Check that overriding subprograms are explicitly marked as such
+           ,"-gnatyp" -- Check pragma casing
+           ,"-gnatyr" -- Check identifier references casing
+           ,"-gnatyS" -- Check no statements after THEN/ELSE
+           ,"-gnatyt" -- Check token spacing
+           ,"-gnatyx" -- Check extra parentheses
            ,"-gnat2022" -- Ada 2022 Mode
            ,"-gnatW8" -- UTF-8 encoding for wide characters
           );

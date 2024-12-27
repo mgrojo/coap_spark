@@ -47,7 +47,7 @@ is
 
                Ada.Strings.Fixed.Find_Token
                  (Source => Path,
-                  Set => Ada.Strings.Maps.To_Set("/"),
+                  Set => Ada.Strings.Maps.To_Set ("/"),
                   From => Segment_Last + 1,
                   Test => Ada.Strings.Outside,
                   First => Segment_First,

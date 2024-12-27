@@ -7,7 +7,7 @@ is
    subtype URI_Length is Natural range 0 .. CoAP_SPARK.Max_URI_Length;
 
    type URI (Length : URI_Length) is private;
-   
+
    Scheme_Suffix : constant String := "://";
    Host_Suffix   : constant String := ":";
 
@@ -20,11 +20,13 @@ is
    with
       Pre =>
          Scheme'Length in 0 .. Default_Secure_Scheme'Length and then
-         (Scheme = Default_Scheme or Scheme = Default_Secure_Scheme or Scheme = "") and then
+         (Scheme = Default_Scheme or else
+          Scheme = Default_Secure_Scheme or else
+          Scheme = "") and then
          Host'Length in 1 .. Max_URI_Part_Length and then
          Path'Length in 1 .. Max_URI_Part_Length and then
          Query'Length in 0 .. Max_URI_Part_Length and then
-         Scheme'Length + Host'Length + 
+         Scheme'Length + Host'Length +
          Port'Image'Length + Path'Length +
          Query'Length <= CoAP_SPARK.Max_URI_Length,
       Post => Create'Result.Length =
@@ -47,7 +49,7 @@ is
    function Query (Self : URI) return String;
 
 private
-   
+
    type URI (Length : URI_Length) is record
       URI_String  : String (1 .. Length);
       Scheme_Last : URI_Length;

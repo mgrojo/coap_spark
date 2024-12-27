@@ -23,7 +23,6 @@ is
    package Option_Sorting is new CoAP_SPARK.Options.Lists.Generic_Sorting
                                    ("<" => CoAP_SPARK.Options."<");
 
-   
    -- The random number generators cannot be proved by SPARK.
    package Random
      with SPARK_Mode => Off
@@ -338,7 +337,7 @@ is
 
       RFLX.CoAP.Option_Sequence.Initialize
         (Ctx => Option_Sequence_Cxt, Buffer => Option_Sequence_Buffer);
-     
+
       Option_Sorting.Sort (State.Request_Options);
 
       for Option of State.Request_Options loop
@@ -347,7 +346,7 @@ is
          begin
             -- Make a copy of the option to comply with the SPARK requrirements
             -- on pointers.
-            -- 
+            --
             CoAP_SPARK.Options.Copy (Source => Option, Target => Option_Copy);
 
             Add_Option
@@ -488,13 +487,13 @@ is
              CoAP_SPARK.Options.Option_Properties_Table
               (Option_Number).Maximum_Length
             then
-              Ada.Text_IO.Put
-               ("Option value is too long for option");
-              Ada.Text_IO.Put_Line (Option_Number'Image);
+               Ada.Text_IO.Put
+                  ("Option value is too long for option");
+               Ada.Text_IO.Put_Line (Option_Number'Image);
 
-              State.Current_Status :=
-                RFLX.CoAP_Client.Session_Environment.Malformed_Message;
-              return;
+               State.Current_Status :=
+                  RFLX.CoAP_Client.Session_Environment.Malformed_Message;
+               return;
             end if;
 
             Ada.Text_IO.Put_Line
