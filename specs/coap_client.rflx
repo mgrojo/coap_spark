@@ -82,7 +82,9 @@ package CoAP_Client is
       end Receive_Response;
 
       state Treat_Error_Response is
+         OK : Boolean;
       begin
+         OK := Put_Options_And_Payload (Response.Options_And_Payload);
       transition
          goto Treat_Client_Error_Response
             if Response.Class = CoAP::Client_Error
