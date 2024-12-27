@@ -174,8 +174,15 @@ is
    -----------
 
    function Query (Self : URI) return String is
+      Query_Separator : constant Character := '?';
    begin
-      return Self.URI_String (Self.Path_Last + 1 .. Self.URI_String'Last);
+      if Self.Path_Last /= Self.URI_String'Last and then
+         Self.URI_String (Self.Path_Last + 1) = Query_Separator
+      then
+         return Self.URI_String (Self.Path_Last + 2 .. Self.URI_String'Last);
+      else
+         return "";
+      end if;
    end Query;
 
 end CoAP_SPARK.URI;

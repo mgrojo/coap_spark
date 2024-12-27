@@ -23,11 +23,13 @@ is
    --  This procedure must be called before the start of the state machine to
    --  ensure that State is initialized.
    --
-   procedure Initialize (Method         : RFLX.CoAP.Method_Code;
-                         Server         : String;
-                         Port           : Interfaces.Unsigned_16;
-                         Path           : String;
-                         Session_State  : out State) with
-      Always_Terminates;
+   procedure Initialize
+     (Method        : RFLX.CoAP.Method_Code;
+      Server        : String;
+      Port          : Interfaces.Unsigned_16;
+      Path          : String;
+      Query         : String;
+      Session_State : out State)
+   with Always_Terminates;
 
 end RFLX.CoAP_Client.Session_Environment;

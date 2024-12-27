@@ -109,7 +109,8 @@ begin
         (Method        => RFLX.CoAP.Get,
          Server        => CoAP_SPARK.URI.Host (URI),
          Port          => CoAP_SPARK.URI.Port (URI),
-         Path          => CoAP_SPARK.URI.Path (URI),
+         Path          => CoAP_SPARK.URI.Path (URI),         
+         Query         => CoAP_SPARK.URI.Query (URI),
          Session_State => Ctx.E);
       
       FSM.Initialize (Ctx);

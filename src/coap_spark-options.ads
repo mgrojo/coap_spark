@@ -179,7 +179,7 @@ is
    procedure New_Opaque_Option
      (Number : RFLX.CoAP.Option_Numbers;
       Value  : RFLX.RFLX_Types.Bytes;
-      Order_Index : Option_Index := 1;      
+      Order_Index : Option_Index := 1;
       Result : out Option)
    with
      Pre  =>
@@ -210,7 +210,7 @@ is
       Post => not Has_Buffer (Opt) and then Value /= null;
 
    -- Make a deep copy of the Source option.
-    procedure Copy (Source : Option; Target : out Option) with
+   procedure Copy (Source : Option; Target : out Option) with
      Pre  => Has_Buffer (Source),
      Post =>
       Has_Buffer (Target) and then Get_Number (Target) = Get_Number (Source)
