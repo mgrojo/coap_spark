@@ -3,7 +3,7 @@ pragma SPARK_Mode;
 with Ada.Command_Line;
 with Ada.Text_IO;
 
-with Channel;
+with CoAP_SPARK.Channel;
 
 with CoAP_SPARK.URI;
 
@@ -21,6 +21,7 @@ procedure CoAP_Client is
    package FSM renames RFLX.CoAP_Client.Session.FSM;
    package Session_Environment renames RFLX.CoAP_Client.Session_Environment;
    package Types renames RFLX.RFLX_Types;
+   package Channel renames CoAP_SPARK.Channel;
 
    procedure Read (Ctx : FSM.Context;
                    Skt : in out GNAT.Sockets.Socket_Type) with
@@ -84,12 +85,12 @@ procedure CoAP_Client is
    Default_URI : constant String := "coap://coap.me/test";
 
 begin
-   
+
    if Ada.Command_Line.Argument_Count /= 1 then
       Ada.Text_IO.Put_Line ("Usage: coap_client <URI>");
       -- return; TODO
    end if;
-      
+
    declare
       URI_String : constant String :=
        (if Ada.Command_Line.Argument_Count = 1
@@ -109,17 +110,17 @@ begin
         (Method        => RFLX.CoAP.Get,
          Server        => CoAP_SPARK.URI.Host (URI),
          Port          => CoAP_SPARK.URI.Port (URI),
-         Path          => CoAP_SPARK.URI.Path (URI),         
+         Path          => CoAP_SPARK.URI.Path (URI),
          Query         => CoAP_SPARK.URI.Query (URI),
          Session_State => Ctx.E);
-      
+
       FSM.Initialize (Ctx);
       Channel.Connect (Socket => Skt,
                        Server => CoAP_SPARK.URI.Host (URI),
-                       Port   => GNAT.Sockets.Port_Type 
+                       Port   => GNAT.Sockets.Port_Type
                                    (CoAP_SPARK.URI.Port (URI)));
    end;
-      
+
    while FSM.Active (Ctx) loop
       pragma Loop_Invariant (FSM.Initialized (Ctx));
       for C in FSM.Channel'Range loop

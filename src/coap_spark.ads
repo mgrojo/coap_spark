@@ -1,5 +1,3 @@
-with Channel;
-
 package CoAP_SPARK
    with SPARK_Mode
 is

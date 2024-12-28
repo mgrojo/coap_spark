@@ -1,11 +1,9 @@
 with GNAT.Sockets;
 with RFLX.RFLX_Builtin_Types;
 
-package Channel with
+package CoAP_SPARK.Channel with
    SPARK_Mode
 is
-
-   Default_Port : constant := 5683; -- TODO: use constant in COAP_SPARK
 
    procedure Initialize (Socket : out GNAT.Sockets.Socket_Type;
                          Port : GNAT.Sockets.Port_Type := Default_Port;
@@ -34,4 +32,4 @@ is
       Global =>
          null;
 
-end Channel;
+end CoAP_SPARK.Channel;

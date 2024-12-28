@@ -1,6 +1,6 @@
 with Ada.Streams;
 
-package body Channel
+package body CoAP_SPARK.Channel
   with SPARK_Mode
 is
 
@@ -115,5 +115,5 @@ is
       Length := RFLX.RFLX_Builtin_Types.Length (Last);
    end Receive;
 
-end Channel;
+end CoAP_SPARK.Channel;
 
