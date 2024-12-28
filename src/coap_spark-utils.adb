@@ -1,4 +1,5 @@
 with Ada.Strings.Fixed;
+with RFLX.RFLX_Types.Operations;
 
 package body CoAP_SPARK.Utils
   with SPARK_Mode
@@ -17,5 +18,20 @@ is
            Count  => Count,
            Pad    => Pad);
    end Padded_Image;
+
+   procedure Copy_String
+     (Source : String; Target : out RFLX.RFLX_Types.Bytes)
+   is
+   begin
+      for I in Target'Range loop
+
+         RFLX.RFLX_Types.Operations.Insert
+           (Val    =>
+              RFLX.RFLX_Types.Base_Integer
+                (Character'Pos (Source (Natural (I)))),
+            Buffer => Target, First => I, Last => I, Off => 0,
+            Size   => Character'Size, BO => RFLX.RFLX_Types.High_Order_First);
+      end loop;
+   end Copy_String;
 
 end CoAP_SPARK.Utils;

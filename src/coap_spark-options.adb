@@ -1,4 +1,5 @@
 with Ada.Strings.Fixed;
+with CoAP_SPARK.Utils;
 with RFLX.RFLX_Arithmetic;
 with RFLX.RFLX_Types.Operations;
 
@@ -25,15 +26,9 @@ is
                 0),
          Order_Index => Order_Index);
 
-      for I in Result.Value.all'Range loop
-
-         RFLX.RFLX_Types.Operations.Insert
-           (Val    =>
-              RFLX.RFLX_Types.Base_Integer
-                (Character'Pos (Value (Natural (I)))),
-            Buffer => Result.Value.all, First => I, Last => I, Off => 0,
-            Size   => Character'Size, BO => RFLX.RFLX_Types.High_Order_First);
-      end loop;
+      CoAP_SPARK.Utils.Copy_String
+        (Source => Value,
+         Target => Result.Value.all);
 
    end New_String_Option;
 

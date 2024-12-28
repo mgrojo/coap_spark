@@ -16,6 +16,7 @@ is
       Is_First_Message : Boolean := True;
       Current_Message_ID : RFLX.CoAP.Message_ID_Type := 0;
       Content_Format : Interfaces.Unsigned_32 := 0;
+      Payload : RFLX.RFLX_Types.Bytes_Ptr;
    end record;
 
    --  Initialize State.
@@ -29,6 +30,7 @@ is
       Port          : Interfaces.Unsigned_16;
       Path          : String;
       Query         : String;
+      Payload       : RFLX.RFLX_Types.Bytes_Ptr;
       Session_State : out State)
    with Always_Terminates;
 

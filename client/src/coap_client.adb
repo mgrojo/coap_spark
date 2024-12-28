@@ -7,6 +7,7 @@ with CoAP_SPARK.Channel;
 
 with CoAP_SPARK.URI;
 
+with CoAP_SPARK.Utils;
 with GNAT.Sockets;
 
 with Interfaces;
@@ -81,7 +82,7 @@ procedure CoAP_Client is
 
    procedure Usage is
    begin
-      Ada.Text_IO.Put_Line ("Usage: coap_client [-m METHOD] <URI>");
+      Ada.Text_IO.Put_Line ("Usage: coap_client [-m METHOD] [-e Payload] <URI>");
       Ada.Text_IO.Put ("  METHOD:");
       for I in RFLX.CoAP.Method_Code'Range loop
          Ada.Text_IO.Put (" " & RFLX.CoAP.Method_Code'Image (I));
@@ -93,18 +94,20 @@ procedure CoAP_Client is
    Ctx : FSM.Context;
 
    Method : RFLX.CoAP.Method_Code := RFLX.CoAP.Get;
+   Payload : RFLX.RFLX_Types.Bytes_Ptr := null;
 
-   Argument_Index : Positive := 1;
+   Argument_Index : Natural := 0;
 begin
 
-   if Ada.Command_Line.Argument_Count /= 1
-     and then Ada.Command_Line.Argument_Count /= 3
+   if Ada.Command_Line.Argument_Count = 0 or else
+      Ada.Command_Line.Argument (1) = "-h"
    then
       Usage;
       return;
    end if;
 
-   if Ada.Command_Line.Argument_Count = 3 then
+   while Argument_Index < Ada.Command_Line.Argument_Count loop
+      Argument_Index := @ + 1;
       if Ada.Command_Line.Argument (Argument_Index) = "-m" then
          Argument_Index := @ + 1;
          begin
@@ -117,16 +120,41 @@ begin
                Usage;
                return;
          end;
+      elsif Ada.Command_Line.Argument (Argument_Index) = "-e" then
          Argument_Index := @ + 1;
+         declare
+            Payload_String : constant String :=
+             Ada.Command_Line.Argument (Argument_Index);
+         begin
+            Payload := new RFLX.RFLX_Types.Bytes'(1 .. Payload_String'Length => 0);
+            CoAP_SPARK.Utils.Copy_String (Source => Payload_String,
+                                          Target => Payload.all);
+         exception
+            when Constraint_Error =>
+               Ada.Text_IO.Put_Line ("Error: Invalid payload");
+               Usage;
+               return;
+         end;
+      elsif Argument_Index = Ada.Command_Line.Argument_Count then
+         -- We will handle the URI later
+         null;
       else
+         Ada.Text_IO.Put ("Error: Invalid option: ");
+         Ada.Text_IO.Put_Line (Ada.Command_Line.Argument (Argument_Index));
          Usage;
          return;
       end if;
+   end loop;
+
+   if Argument_Index > Ada.Command_Line.Argument_Count then
+      Ada.Text_IO.Put_Line ("Error: URI is missing");
+      Usage;
+      return;
    end if;
 
    declare
       URI_String : constant String :=
-       Ada.Command_Line.Argument (Argument_Index);
+        Ada.Command_Line.Argument (Argument_Index);
       URI : constant CoAP_SPARK.URI.URI := CoAP_SPARK.URI.Create (URI_String);
    begin
       Ada.Text_IO.Put_Line ("Method: " & RFLX.CoAP.Method_Code'Image (Method));
@@ -144,6 +172,7 @@ begin
          Port          => CoAP_SPARK.URI.Port (URI),
          Path          => CoAP_SPARK.URI.Path (URI),
          Query         => CoAP_SPARK.URI.Query (URI),
+         Payload       => Payload,
          Session_State => Ctx.E);
 
       FSM.Initialize (Ctx);
@@ -170,6 +199,7 @@ begin
    --  pragma Warnings
    --     (Off, """Ctx"" is set by ""Finalize"" but not used after the call");
    FSM.Finalize (Ctx);
+   RFLX.RFLX_Types.Free (Payload);
    --  pragma Warnings (On, "statement has no effect");
    --  pragma Warnings
    --     (On, """Ctx"" is set by ""Finalize"" but not used after the call");

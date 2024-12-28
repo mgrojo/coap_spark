@@ -17,6 +17,7 @@ is
    use type RFLX.RFLX_Builtin_Types.Index;
    use type RFLX.RFLX_Builtin_Types.Length;
    use type RFLX.RFLX_Builtin_Types.Bit_Length;
+   use type RFLX.RFLX_Types.Bytes_Ptr;
    use type CoAP_SPARK.Options.Option_Format;
    use type RFLX.CoAP.Option_Numbers;
 
@@ -324,6 +325,8 @@ is
      (State       : in out RFLX.CoAP_Client.Session_Environment.State;
       RFLX_Result : out RFLX.CoAP_Client.Options_And_Payload_Data.Structure)
    is
+      use type RFLX.CoAP_Client.Session_Environment.Status_Type;
+      use type RFLX.CoAP.Length_16;
 
       Option_Sequence_Cxt    : RFLX.CoAP.Option_Sequence.Context;
       Option_Sequence_Buffer : RFLX.RFLX_Types.Bytes_Ptr :=
@@ -381,6 +384,38 @@ is
       pragma Unreferenced (Option_Sequence_Cxt);
 
       RFLX.RFLX_Types.Free (Option_Sequence_Buffer);
+
+      if State.Current_Status = RFLX.CoAP_Client.Session_Environment.OK
+         and then
+         State.Payload /= null and then
+         State.Payload.all'Length > 0
+      then
+
+         if RFLX_Result.Length + 1 + State.Payload.all'Length <=
+           RFLX_Result.Options_And_Payload'Length
+         then
+            RFLX_Result.Length := @ + 1;
+
+            declare
+               Marker_Index : constant RFLX.RFLX_Builtin_Types.Index :=
+                  RFLX.RFLX_Builtin_Types.Index (RFLX_Result.Length);
+               Payload_Last : constant RFLX.RFLX_Builtin_Types.Index :=
+                 Marker_Index +
+                    RFLX.RFLX_Builtin_Types.Index (State.Payload.all'Length);
+            begin
+               -- Add payload marker
+               RFLX_Result.Options_And_Payload (Marker_Index) := 16#FF#;
+
+               -- Add payload
+               RFLX_Result.Options_And_Payload
+                 (Marker_Index + 1 .. Payload_Last) := State.Payload.all;
+               RFLX_Result.Length := @ + State.Payload.all'Length;
+            end;
+         else
+            State.Current_Status :=
+              RFLX.CoAP_Client.Session_Environment.Capacity_Error;
+         end if;
+      end if;
 
    end Get_Options_And_Payload;
 

@@ -53,6 +53,7 @@ is
       Port          : Interfaces.Unsigned_16;
       Path          : String;
       Query         : String;
+      Payload       : RFLX.RFLX_Types.Bytes_Ptr;
       Session_State : out State)
    is
    begin
@@ -61,7 +62,7 @@ is
       Session_State.Is_First_Message := True;
       Session_State.Current_Message_ID := 0;
       Session_State.Content_Format := 0;
-
+      Session_State.Payload := Payload;
       declare
          Option : CoAP_SPARK.Options.Option;
       begin

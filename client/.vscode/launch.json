@@ -1,0 +1,30 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "type": "cppdbg",
+            "name": "Ada: Debug main - src/coap_client.adb",
+            "request": "launch",
+            "targetArchitecture": "x64",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/bin/coap_client",
+            "stopAtEntry": false,
+            "externalConsole": false,
+            "args": ["-m", "put", "-e", "Hola", "coap://coap.me/test"],
+            "MIMode": "gdb",
+            "preLaunchTask": "ada: Build main - src/coap_client.adb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ],
+            "miDebuggerPath": "/usr/bin/gdb"
+        }
+    ]
+}
