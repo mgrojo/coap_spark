@@ -79,25 +79,57 @@ procedure CoAP_Client is
       end if;
    end Write;
 
+   procedure Usage is
+   begin
+      Ada.Text_IO.Put_Line ("Usage: coap_client [-m METHOD] <URI>");
+      Ada.Text_IO.Put ("  METHOD:");
+      for I in RFLX.CoAP.Method_Code'Range loop
+         Ada.Text_IO.Put (" " & RFLX.CoAP.Method_Code'Image (I));
+      end loop;
+      Ada.Text_IO.New_Line;
+   end Usage;
+
    Skt : GNAT.Sockets.Socket_Type;
    Ctx : FSM.Context;
 
-   Default_URI : constant String := "coap://coap.me/test";
+   Method : RFLX.CoAP.Method_Code := RFLX.CoAP.Get;
 
+   Argument_Index : Positive := 1;
 begin
 
-   if Ada.Command_Line.Argument_Count /= 1 then
-      Ada.Text_IO.Put_Line ("Usage: coap_client <URI>");
-      -- return; TODO
+   if Ada.Command_Line.Argument_Count /= 1
+     and then Ada.Command_Line.Argument_Count /= 3
+   then
+      Usage;
+      return;
+   end if;
+
+   if Ada.Command_Line.Argument_Count = 3 then
+      if Ada.Command_Line.Argument (Argument_Index) = "-m" then
+         Argument_Index := @ + 1;
+         begin
+            Method :=
+              RFLX.CoAP.Method_Code'Value
+               (Ada.Command_Line.Argument (Argument_Index));
+         exception
+            when Constraint_Error =>
+               Ada.Text_IO.Put_Line ("Error: Invalid method");
+               Usage;
+               return;
+         end;
+         Argument_Index := @ + 1;
+      else
+         Usage;
+         return;
+      end if;
    end if;
 
    declare
       URI_String : constant String :=
-       (if Ada.Command_Line.Argument_Count = 1
-         then Ada.Command_Line.Argument (1)
-         else Default_URI); -- TODO for debugging
+       Ada.Command_Line.Argument (Argument_Index);
       URI : constant CoAP_SPARK.URI.URI := CoAP_SPARK.URI.Create (URI_String);
    begin
+      Ada.Text_IO.Put_Line ("Method: " & RFLX.CoAP.Method_Code'Image (Method));
       Ada.Text_IO.Put_Line ("Scheme: " & CoAP_SPARK.URI.Scheme (URI));
       Ada.Text_IO.Put_Line ("Host: " & CoAP_SPARK.URI.Host (URI));
       Ada.Text_IO.Put_Line ("Port:" & Interfaces.Unsigned_16'Image
@@ -107,7 +139,7 @@ begin
 
       Channel.Initialize (Skt);
       Session_Environment.Initialize
-        (Method        => RFLX.CoAP.Get,
+        (Method        => Method,
          Server        => CoAP_SPARK.URI.Host (URI),
          Port          => CoAP_SPARK.URI.Port (URI),
          Path          => CoAP_SPARK.URI.Path (URI),
@@ -134,11 +166,11 @@ begin
       end loop;
       FSM.Run (Ctx);
    end loop;
-   pragma Warnings (Off, "statement has no effect");
-   pragma Warnings
-      (Off, """Ctx"" is set by ""Finalize"" but not used after the call");
+   --  pragma Warnings (Off, "statement has no effect");
+   --  pragma Warnings
+   --     (Off, """Ctx"" is set by ""Finalize"" but not used after the call");
    FSM.Finalize (Ctx);
-   pragma Warnings (On, "statement has no effect");
-   pragma Warnings
-      (On, """Ctx"" is set by ""Finalize"" but not used after the call");
+   --  pragma Warnings (On, "statement has no effect");
+   --  pragma Warnings
+   --     (On, """Ctx"" is set by ""Finalize"" but not used after the call");
 end CoAP_Client;
