@@ -169,6 +169,7 @@ is
       and then To_Option_Extended16_Type
          (CoAP_SPARK.Options.Get_Number (Opt)) = Current_Delta
       and then RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
+      and then RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt)
    is
       Option_Number : constant RFLX.CoAP.Option_Numbers :=
          CoAP_SPARK.Options.Get_Number (Opt);
@@ -248,79 +249,6 @@ is
 
    end Add_Option;
 
-   procedure Add_String_Option
-     (Option              : RFLX.CoAP.Option_Numbers;
-      Value               : Ada.Strings.UTF_Encoding.UTF_8_String;
-      Current_Delta       : in out RFLX.CoAP.Option_Extended16_Type;
-      Option_Sequence_Cxt : in out RFLX.CoAP.Option_Sequence.Context)
-   with
-      Pre =>
-         CoAP_SPARK.Options.Option_Properties_Table (Option).Format
-            = CoAP_SPARK.Options.UTF8_String
-         and then Value'Length <=
-            CoAP_SPARK.Options.Option_Properties_Table (Option).Maximum_Length
-         and then RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt)
-         and then RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
-         and then To_Option_Extended16_Type (Option) >= Current_Delta
-         and then Value'First <= Value'Last
-         and then RFLX.CoAP.Option_Sequence.Available_Space (Option_Sequence_Cxt)
-            >= To_Bit_Size (Option_Byte_Size (Option, Value'Length)),
-     Post =>
-       To_Option_Extended16_Type (Option) = Current_Delta
-       and then RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt)
-       and then RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
-   is
-      Opt : CoAP_SPARK.Options.Option;
-   begin
-
-      CoAP_SPARK.Options.New_String_Option
-         (Number => Option, Value => Value, Result => Opt);
-
-      Add_Option
-        (Opt                 => Opt,
-         Current_Delta       => Current_Delta,
-         Option_Sequence_Cxt => Option_Sequence_Cxt);
-      pragma Unreferenced (Opt);
-
-   end Add_String_Option;
-
-   procedure Add_Uint_Option
-     (Option              : RFLX.CoAP.Option_Numbers;
-      Value               : Interfaces.Unsigned_32;
-      Current_Delta       : in out RFLX.CoAP.Option_Extended16_Type;
-      Option_Sequence_Cxt : in out RFLX.CoAP.Option_Sequence.Context)
-   with
-     Pre =>
-       CoAP_SPARK.Options.Option_Properties_Table (Option).Format
-         = CoAP_SPARK.Options.UInt
-       and then RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt)
-       and then RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
-       and then To_Option_Extended16_Type (Option) >= Current_Delta
-       and then RFLX.CoAP.Option_Sequence.Available_Space (Option_Sequence_Cxt)
-         >= To_Bit_Size
-               (Option_Byte_Size
-                  (Option,
-                   Interfaces.Unsigned_32'Max_Size_In_Storage_Elements)),
-     Post =>
-       RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
-       and then RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt)
-       and then To_Option_Extended16_Type (Option) = Current_Delta
-       and then RFLX.CoAP.Option_Sequence.Byte_Size (Option_Sequence_Cxt) > 0
-   is
-      Opt : CoAP_SPARK.Options.Option;
-   begin
-
-      CoAP_SPARK.Options.New_UInt_Option
-         (Number => Option, Value => Value, Result => Opt);
-
-      Add_Option
-        (Opt                 => Opt,
-         Current_Delta       => Current_Delta,
-         Option_Sequence_Cxt => Option_Sequence_Cxt);
-      pragma Unreferenced (Opt);
-
-   end Add_Uint_Option;
-
    procedure Get_Options_And_Payload
      (State       : in out RFLX.CoAP_Client.Session_Environment.State;
       RFLX_Result : out RFLX.CoAP_Client.Options_And_Payload_Data.Structure)
@@ -341,6 +269,7 @@ is
       RFLX.CoAP.Option_Sequence.Initialize
         (Ctx => Option_Sequence_Cxt, Buffer => Option_Sequence_Buffer);
 
+      -- The options must be sorted by option number before they are encoded
       Option_Sorting.Sort (State.Request_Options);
 
       for Option of State.Request_Options loop
@@ -353,7 +282,7 @@ is
             CoAP_SPARK.Options.Copy (Source => Option, Target => Option_Copy);
 
             Add_Option
-               (Opt                => Option_Copy,
+              (Opt                 => Option_Copy,
                Current_Delta       => Current_Delta,
                Option_Sequence_Cxt => Option_Sequence_Cxt);
             pragma Unreferenced (Option_Copy);
@@ -363,7 +292,7 @@ is
 
       declare
          Last : constant RFLX.RFLX_Builtin_Types.Index'Base :=
-           RFLX.RFLX_Builtin_Types.Index
+           RFLX.RFLX_Builtin_Types.Index'Base
              (RFLX.CoAP.Option_Sequence.Byte_Size (Option_Sequence_Cxt));
       begin
          if Last in RFLX_Result.Options_And_Payload'Range then
@@ -388,11 +317,12 @@ is
       if State.Current_Status = RFLX.CoAP_Client.Session_Environment.OK
          and then
          State.Payload /= null and then
-         State.Payload.all'Length > 0
+         State.Payload.all'Length in 1 .. RFLX.RFLX_Builtin_Types.Index'Last - 1
       then
 
-         if RFLX_Result.Length + 1 + State.Payload.all'Length <=
-           RFLX_Result.Options_And_Payload'Length
+         -- Is there space for the payload and the payload marker (1 byte)?
+         if State.Payload.all'Length + 1 <=
+           RFLX_Result.Options_And_Payload'Length - RFLX_Result.Length
          then
             RFLX_Result.Length := @ + 1;
 
@@ -437,8 +367,9 @@ is
    begin
       End_Of_Options := False;
 
-      Encoded_Option_Delta := RFLX.CoAP.To_Base_Integer
-            (RFLX.CoAP.Option_Type.Get_Option_Delta (Option_Cxt));
+      Encoded_Option_Delta :=
+        RFLX.CoAP.To_Base_Integer
+          (RFLX.CoAP.Option_Type.Get_Option_Delta (Option_Cxt));
 
       Option_Length :=
         Option_Value_Length
@@ -479,11 +410,20 @@ is
                      (Option_Cxt));
 
          when 14 =>
-            Option_Length := 269
-              + Option_Value_Length
-                  (RFLX.CoAP.Option_Type.Get_Option_Length_Extended16
-                     (Option_Cxt));
-
+            declare
+               Length16 : constant RFLX.CoAP.Option_Extended16_Type :=
+                 RFLX.CoAP.Option_Type.Get_Option_Length_Extended16
+                   (Option_Cxt);
+            begin
+               if Option_Value_Length'Base (Length16) + 269
+                 not in Option_Value_Length
+               then
+                  State.Current_Status :=
+                    CoAP_Client.Session_Environment.Malformed_Message;
+                  return;
+               end if;
+               Option_Length := 269 + Option_Value_Length (Length16);
+            end;
          when 15 =>
             State.Current_Status :=
               CoAP_Client.Session_Environment.Malformed_Message;

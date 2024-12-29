@@ -162,7 +162,7 @@ is
             declare
                Result :
                  String (1 .. Value'Length * RFLX.RFLX_Types.Byte'Width) :=
-                 (others => ' ');
+                   (others => ' ');
                Index  : Positive := Result'First;
             begin
                for I in Value'Range loop
@@ -173,6 +173,9 @@ is
                   if I /= Value'Last then
                      Index := Index + RFLX.RFLX_Types.Byte'Width;
                   end if;
+                  pragma Loop_Invariant
+                    (Index <= Positive ((I - Value'First + 1) * RFLX.RFLX_Types.Byte'Width)
+                       + Result'First);
                end loop;
                return Result;
             end;
