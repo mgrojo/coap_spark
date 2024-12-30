@@ -11,6 +11,8 @@ is
    Scheme_Suffix : constant String := "://";
    Host_Suffix   : constant String := ":";
 
+   function Valid_URI_Object (Self : URI) return Boolean;
+
    function Create
      (Scheme : String := Default_Scheme;
       Host   : String;
@@ -19,10 +21,8 @@ is
       Query  : String := "") return URI
    with
       Pre =>
-         Scheme'Length in 0 .. Default_Secure_Scheme'Length and then
          (Scheme = Default_Scheme or else
-          Scheme = Default_Secure_Scheme or else
-          Scheme = "") and then
+          Scheme = Default_Secure_Scheme) and then
          Host'Length in 1 .. Max_URI_Part_Length and then
          Path'Length in 1 .. Max_URI_Part_Length and then
          Query'Length in 0 .. Max_URI_Part_Length and then
@@ -31,12 +31,14 @@ is
          Query'Length <= CoAP_SPARK.Max_URI_Length,
       Post => Create'Result.Length =
        Scheme'Length + Scheme_Suffix'Length + Host'Length +
-       Port'Image'Length + Path'Length + Query'Length;
+       Port'Image'Length + Path'Length + Query'Length and then
+       Valid_URI_Object (Create'Result);
 
    function Create (URI_String : String) return URI
      with
       Pre => URI_String'Length <= CoAP_SPARK.Max_URI_Length,
-      Post => Create'Result.Length = URI_String'Length;
+      Post => Create'Result.Length = URI_String'Length and then
+       Valid_URI_Object (Create'Result);
 
    function Scheme (Self : URI) return String;
 
@@ -57,5 +59,11 @@ private
       Port_Last   : URI_Length;
       Path_Last   : URI_Length;
    end record;
+
+   function Valid_URI_Object (Self : URI) return Boolean
+     is (Self.Scheme_Last < Self.Host_Last
+         and then Self.Host_Last <= Self.Port_Last
+         and then Self.Port_Last <= Self.Path_Last
+         and then Self.Path_Last <= Self.URI_String'Last);
 
 end CoAP_SPARK.URI;

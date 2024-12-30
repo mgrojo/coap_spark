@@ -1,10 +1,8 @@
 with Ada.Numerics.Discrete_Random;
-with Ada.Strings.UTF_Encoding;
 with Ada.Text_IO;
 with CoAP_SPARK.Content_Formats;
 with CoAP_SPARK.Options.Lists;
 with CoAP_SPARK.Utils;
-with Interfaces;
 with RFLX.CoAP.Option_Sequence;
 with RFLX.CoAP.Option_Type;
 with RFLX.RFLX_Builtin_Types;
@@ -99,6 +97,7 @@ is
       RFLX_Result : out RFLX.CoAP_Client.Token_Data.Structure)
    with SPARK_Mode => Off
    is
+      pragma Unreferenced (State);
    begin
       for I in RFLX_Result.Token'Range loop
          RFLX_Result.Token (I) := Random.Bytes.Random (Random.Byte_Generator);
@@ -259,12 +258,12 @@ is
       Option_Sequence_Cxt    : RFLX.CoAP.Option_Sequence.Context;
       Option_Sequence_Buffer : RFLX.RFLX_Types.Bytes_Ptr :=
         new RFLX.RFLX_Types.Bytes'
-          (1 .. RFLX.RFLX_Builtin_Types.Index (Max_Option_Length) => 0);
+          [1 .. RFLX.RFLX_Builtin_Types.Index (Max_Option_Length) => 0];
 
       Current_Delta : RFLX.CoAP.Option_Extended16_Type := 0;
    begin
 
-      RFLX_Result := (Length => 0, Options_And_Payload => (others => 0));
+      RFLX_Result := (Length => 0, Options_And_Payload => [others => 0]);
 
       RFLX.CoAP.Option_Sequence.Initialize
         (Ctx => Option_Sequence_Cxt, Buffer => Option_Sequence_Buffer);
@@ -276,7 +275,7 @@ is
          declare
             Option_Copy : CoAP_SPARK.Options.Option;
          begin
-            -- Make a copy of the option to comply with the SPARK requrirements
+            -- Make a copy of the option to comply with the SPARK requirements
             -- on pointers.
             --
             CoAP_SPARK.Options.Copy (Source => Option, Target => Option_Copy);
@@ -637,6 +636,7 @@ is
       Error_Code  : RFLX.CoAP.Client_Error_Response;
       RFLX_Result : out Boolean)
    is
+      pragma Unreferenced (State);
    begin
       Ada.Text_IO.Put_Line
         ("Server answered with client error: 4."
@@ -654,6 +654,7 @@ is
       Error_Code  : RFLX.CoAP.Server_Error_Response;
       RFLX_Result : out Boolean)
    is
+      pragma Unreferenced (State);
    begin
       Ada.Text_IO.Put_Line
         ("Server answered with server error: 5."

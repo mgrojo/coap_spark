@@ -38,7 +38,7 @@ is
    -- See RFC7252, Section 5.10. Option Definitions "Table 4: Options"
    -- except otherwise noted by another reference.
    Option_Properties_Table : constant Option_Table :=
-     (RFLX.CoAP.If_Match                          =>
+     [RFLX.CoAP.If_Match                          =>
         (Format => Opaque, Repeatable => True, Maximum_Length => 8),
       RFLX.CoAP.Uri_Host                          =>
         (Format => UTF8_String, Repeatable => False, Maximum_Length => 255),
@@ -131,7 +131,7 @@ is
       RFLX.CoAP.SCP82_Params                      =>
         (Format         => Unknown,
          Repeatable     => True,
-         Maximum_Length => Max_Option_Value_Length));
+         Maximum_Length => Max_Option_Value_Length)];
 
    type Option is private;
 

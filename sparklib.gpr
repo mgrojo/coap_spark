@@ -14,6 +14,16 @@ project SPARKlib extends "sparklib_external" is
 
    for Source_Dirs use SPARKlib_External'Source_Dirs;
 
+   Ada_Compiler_Switches := 
+      Sparklib_External.Compiler'Default_Switches ("Ada") & (
+         "-ffunction-sections" -- Separate ELF section for each function
+         ,"-fdata-sections" -- Separate ELF section for each variable
+         );
+   
+   package Compiler is
+      for Default_Switches ("Ada") use Ada_Compiler_Switches;
+   end Compiler;
+
    for Excluded_Source_Files use SPARKlib_External'Excluded_Source_Files;
       -- Uncomment the files you want to exclude from your project
       -- & (

@@ -17,32 +17,24 @@ is
       Query  : String := "") return URI
    is
       Port_Image : String := Port'Image;
-      Result     :
-        URI
-          (Scheme'Length + Scheme_Suffix'Length + Host'Length
-           + Port_Image'Length
-           + Path'Length
-           + Query'Length);
    begin
       -- Replace the padding space with a colon
       Port_Image (Port_Image'First) := ':';
 
-      Result.URI_String :=
-        Scheme
-        & Scheme_Suffix
-        & Host
-        & Host_Suffix
-        & Port_Image
-        & Path
-        & Query;
-      Result.Scheme_Last := Scheme'Length;
-      Result.Host_Last :=
-        Result.Scheme_Last + Scheme_Suffix'Length + Host'Length;
-      Result.Port_Last :=
-        Result.Host_Last + Host_Suffix'Length + Port'Image'Length;
-      Result.Path_Last := Result.Port_Last + Path'Length;
-
-      return Result;
+      declare
+         Result_String : constant String :=
+            Scheme & Scheme_Suffix & Host & Port_Image & Path & Query;
+      begin
+         return
+           (Length      => Result_String'Length,
+            URI_String  => Result_String,
+            Scheme_Last => Scheme'Length,
+            Host_Last   => Scheme'Length + Scheme_Suffix'Length + Host'Length,
+            Port_Last   => Scheme'Length + Scheme_Suffix'Length + Host'Length +
+              Host_Suffix'Length + Port'Image'Length,
+            Path_Last   => Scheme'Length + Scheme_Suffix'Length + Host'Length +
+              Host_Suffix'Length + Port'Image'Length + Path'Length);
+      end;
    end Create;
 
    ------------
@@ -95,7 +87,6 @@ is
          if URI_Object.Host_Last = 0 then
             URI_Object.Host_Last := URI_Object.URI_String'Last;
          end if;
-         URI_Object.Port_Last := URI_Object.URI_String'Last;
          URI_Object.Path_Last := URI_Object.URI_String'Last;
          URI_Object.Port_Last := URI_Object.URI_String'Last;
       else

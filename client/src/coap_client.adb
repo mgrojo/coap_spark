@@ -35,7 +35,7 @@ procedure CoAP_Client is
       use type Types.Index;
       use type Types.Length;
       Buffer : Types.Bytes (Types.Index'First .. Types.Index'First + 4095)
-         := (others => 0);
+         := [others => 0];
       Size : constant Types.Length := FSM.Read_Buffer_Size (Ctx, FSM.C_Transport);
    begin
       if Size = 0 then

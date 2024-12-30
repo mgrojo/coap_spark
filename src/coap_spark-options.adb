@@ -44,7 +44,7 @@ is
         RFLX.RFLX_Builtin_Types.Index range 1 ..
             Interfaces.Unsigned_32'Max_Size_In_Storage_Elements;
       subtype Bytes_Subtype is RFLX.RFLX_Types.Bytes (Possible_Sizes_In_Bytes);
-      Bytes_Value   : Bytes_Subtype                 := (others => 0);
+      Bytes_Value   : Bytes_Subtype                 := [others => 0];
       Size_In_Bytes : RFLX.RFLX_Builtin_Types.Index := 1;
    begin
 
