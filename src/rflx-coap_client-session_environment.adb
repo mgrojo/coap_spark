@@ -12,11 +12,11 @@ is
       Option_List   : in out CoAP_SPARK.Options.Lists.Vector)
    with Pre => CoAP_SPARK.Options.Option_Properties_Table (Number).Repeatable,
         Post =>
-           Natural (CoAP_SPARK.Options.Lists.Length (Option_List)) =
-             Natural (CoAP_SPARK.Options.Lists.Length (Option_List'Old))
-             -- Ignore the first element of Source, since it could be '/'
-             + Ada.Strings.Fixed.Count (Source (Source'First + 1 .. Source'Last),
-                                         Ada.Strings.Maps.To_Set (Separator)) + 1
+           Natural (CoAP_SPARK.Options.Lists.Length (Option_List)) -
+             Natural (CoAP_SPARK.Options.Lists.Length (Option_List'Old)) in
+             0 .. Ada.Strings.Fixed.Count
+                    (Source => Source,
+                     Set => Ada.Strings.Maps.To_Set (Separator)) + 1
    is
       Segment_First : Natural := Source'First;
       Segment_Last  : Natural := Source'First - 1;

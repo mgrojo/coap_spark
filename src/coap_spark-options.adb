@@ -146,11 +146,12 @@ is
          when UTF8_String =>
             declare
                Result :
-                 String (Integer (Value'First) .. Integer (Value'Last)) :=
+                 String (1 .. Value'Length) :=
                  (others => ' ');
             begin
                for I in Value'Range loop
-                  Result (Positive (I)) := Character'Val (Value (I));
+                  Result (Positive (I - Value'First + 1)) :=
+                    Character'Val (Value (I));
                end loop;
                return Result;
             end;

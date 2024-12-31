@@ -18,6 +18,8 @@ with RFLX.RFLX_Builtin_Types;
 with RFLX.CoAP_Client.Session.FSM;
 with RFLX.CoAP_Client.Session_Environment;
 
+with Workarounds;
+
 procedure CoAP_Client is
    package FSM renames RFLX.CoAP_Client.Session.FSM;
    package Session_Environment renames RFLX.CoAP_Client.Session_Environment;
@@ -205,4 +207,7 @@ begin
 
    RFLX.RFLX_Types.Free (Payload);
 
+   -- This has no effect, but it is needed to avoid a linking error in the
+   -- validation profile.
+   Workarounds.Check_Or_Fail;
 end CoAP_Client;
