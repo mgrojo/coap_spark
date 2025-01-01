@@ -1,5 +1,8 @@
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
+with Ada.Text_IO;
+
+with CoAP_SPARK.Options.Text_IO;
 
 package body RFLX.CoAP_Client.Session_Environment with
   SPARK_Mode
@@ -53,7 +56,9 @@ is
       Port          : Interfaces.Unsigned_16;
       Path          : String;
       Query         : String;
-      Payload       : RFLX.RFLX_Types.Bytes_Ptr;
+      Format        : Interfaces.Unsigned_32 :=
+        CoAP_SPARK.Content_Formats.text.plain_charset_utf_8;
+      Payload       : RFLX.RFLX_Types.Bytes_Ptr := null;
       Session_State : out State)
    is
    begin
@@ -61,8 +66,8 @@ is
       Session_State.Current_Status := OK;
       Session_State.Is_First_Message := True;
       Session_State.Current_Message_ID := 0;
-      Session_State.Content_Format := 0;
-      Session_State.Payload := Payload;
+      Session_State.Request_Content.Format := Format;
+      Session_State.Request_Content.Payload := Payload;
       declare
          Option : CoAP_SPARK.Options.Option;
       begin
@@ -72,7 +77,7 @@ is
             Result => Option);
 
          CoAP_SPARK.Options.Lists.Append
-           (Session_State.Request_Options, Option);
+           (Session_State.Request_Content.Options, Option);
 
          CoAP_SPARK.Options.New_UInt_Option
            (Number => RFLX.CoAP.Uri_Port,
@@ -80,7 +85,7 @@ is
             Result => Option);
 
          CoAP_SPARK.Options.Lists.Append
-           (Session_State.Request_Options, Option);
+           (Session_State.Request_Content.Options, Option);
 
          -- RFC7252: each Uri-Path Option specifies one segment of the absolute
          --  path to the resource.
@@ -88,7 +93,7 @@ is
            (Source      => Path,
             Separator   => '/',
             Number      => RFLX.CoAP.Uri_Path,
-            Option_List => Session_State.Request_Options);
+            Option_List => Session_State.Request_Content.Options);
 
          -- RFC7252: each Uri-Query Option specifies one argument parameterizing the
          -- resource.
@@ -96,9 +101,42 @@ is
            (Source      => Query,
             Separator   => '&',
             Number      => RFLX.CoAP.Uri_Query,
-            Option_List => Session_State.Request_Options);
+            Option_List => Session_State.Request_Content.Options);
+
+         if Payload not in null then
+            CoAP_SPARK.Options.New_UInt_Option
+            (Number => RFLX.CoAP.Content_Format,
+               Value  => Session_State.Request_Content.Format,
+               Result => Option);
+
+            CoAP_SPARK.Options.Lists.Append
+            (Session_State.Request_Content.Options, Option);
+         end if;
       end;
 
    end Initialize;
+
+   procedure Print_Content (Item : Content)
+   is
+      Payload_Format : constant CoAP_SPARK.Options.Option_Format :=
+        (if CoAP_SPARK.Content_Formats.Is_Text (Item.Format)
+         then CoAP_SPARK.Options.UTF8_String
+         else CoAP_SPARK.Options.Opaque);
+   begin
+      for Option of Item.Options loop
+         CoAP_SPARK.Options.Text_IO.Print (Option);
+      end loop;
+
+      if Item.Payload not in null then
+         Ada.Text_IO.Put ("Content-Format: ");
+         Ada.Text_IO.Put_Line
+           (CoAP_SPARK.Content_Formats.To_String (Item.Format));
+
+         Ada.Text_IO.Put ("Payload: ");
+         Ada.Text_IO.Put_Line
+           (CoAP_SPARK.Options.Image
+              (Format => Payload_Format, Value => Item.Payload.all));
+      end if;
+   end Print_Content;
 
 end RFLX.CoAP_Client.Session_Environment;

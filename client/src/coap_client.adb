@@ -184,6 +184,9 @@ begin
                                    (CoAP_SPARK.URI.Port (URI)));
    end;
 
+   Ada.Text_IO.Put_Line ("REQUEST: ");
+   RFLX.CoAP_Client.Session_Environment.Print_Content (Ctx.E.Request_Content);
+
    while FSM.Active (Ctx) loop
       pragma Loop_Invariant (FSM.Initialized (Ctx));
       for C in FSM.Channel'Range loop
@@ -197,6 +200,16 @@ begin
       end loop;
       FSM.Run (Ctx);
    end loop;
+      
+   Ada.Text_IO.New_Line;
+   if Ctx.E.Current_Status in RFLX.CoAP_Client.Session_Environment.OK then
+      Ada.Text_IO.Put_Line ("RESPONSE: ");
+      RFLX.CoAP_Client.Session_Environment.Print_Content (Ctx.E.Response_Content);
+   else
+      Ada.Text_IO.Put ("Error: ");
+      Ada.Text_IO.Put_Line (Ctx.E.Current_Status'Image);
+   end if;
+      
    pragma Warnings (Off, "statement has no effect");
    pragma Warnings
       (Off, """Ctx"" is set by ""Finalize"" but not used after the call");

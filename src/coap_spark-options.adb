@@ -98,6 +98,19 @@ is
          Order_Index => Order_Index);
    end New_Opaque_Option;
 
+   procedure New_Encoded_Option
+     (Number : RFLX.CoAP.Option_Numbers;
+      Value  : in out RFLX.RFLX_Types.Bytes_Ptr;
+      Result : out Option)
+   is
+   begin
+      Result :=
+        (Number => Number,
+         Value  => Value,
+         Order_Index => 1);
+      Value := null;
+   end New_Encoded_Option;
+
    procedure New_Empty_Option
      (Number : RFLX.CoAP.Option_Numbers; Result : out Option)
    is
@@ -183,6 +196,14 @@ is
       end case;
 
    end Image;
+
+   function Value_Image (Opt : Option) return String
+   is
+   begin
+      return Image
+        (Format => Option_Properties_Table (Opt.Number).Format,
+         Value  => Opt.Value.all);
+   end Value_Image;
 
    -- See RFC7252, Section "3.2. Option Value Formats"
    function To_UInt (Value : UInt_Bytes) return Interfaces.Unsigned_32 is

@@ -1,6 +1,5 @@
 with Ada.Numerics.Discrete_Random;
 with Ada.Text_IO;
-with CoAP_SPARK.Content_Formats;
 with CoAP_SPARK.Options.Lists;
 with CoAP_SPARK.Utils;
 with RFLX.CoAP.Option_Sequence;
@@ -269,9 +268,9 @@ is
         (Ctx => Option_Sequence_Cxt, Buffer => Option_Sequence_Buffer);
 
       -- The options must be sorted by option number before they are encoded
-      Option_Sorting.Sort (State.Request_Options);
+      Option_Sorting.Sort (State.Request_Content.Options);
 
-      for Option of State.Request_Options loop
+      for Option of State.Request_Content.Options loop
          declare
             Option_Copy : CoAP_SPARK.Options.Option;
          begin
@@ -315,12 +314,12 @@ is
 
       if State.Current_Status = RFLX.CoAP_Client.Session_Environment.OK
          and then
-         State.Payload /= null and then
-         State.Payload.all'Length in 1 .. RFLX.RFLX_Builtin_Types.Index'Last - 1
+         State.Request_Content.Payload /= null and then
+         State.Request_Content.Payload.all'Length in 1 .. RFLX.RFLX_Builtin_Types.Index'Last - 1
       then
 
          -- Is there space for the payload and the payload marker (1 byte)?
-         if State.Payload.all'Length + 1 <=
+         if State.Request_Content.Payload.all'Length + 1 <=
            RFLX_Result.Options_And_Payload'Length - RFLX_Result.Length
          then
             RFLX_Result.Length := @ + 1;
@@ -330,15 +329,15 @@ is
                   RFLX.RFLX_Builtin_Types.Index (RFLX_Result.Length);
                Payload_Last : constant RFLX.RFLX_Builtin_Types.Index :=
                  Marker_Index +
-                    RFLX.RFLX_Builtin_Types.Index (State.Payload.all'Length);
+                    RFLX.RFLX_Builtin_Types.Index (State.Request_Content.Payload.all'Length);
             begin
                -- Add payload marker
                RFLX_Result.Options_And_Payload (Marker_Index) := 16#FF#;
 
                -- Add payload
                RFLX_Result.Options_And_Payload
-                 (Marker_Index + 1 .. Payload_Last) := State.Payload.all;
-               RFLX_Result.Length := @ + State.Payload.all'Length;
+                 (Marker_Index + 1 .. Payload_Last) := State.Request_Content.Payload.all;
+               RFLX_Result.Length := @ + State.Request_Content.Payload.all'Length;
             end;
          else
             State.Current_Status :=
@@ -447,15 +446,10 @@ is
                 (1 .. RFLX_Builtin_Types.Index (Option_Length) => 0);
             Option_Number : constant RFLX.CoAP.Option_Numbers :=
               RFLX.CoAP.To_Actual (Option_Delta);
+            Option : CoAP_SPARK.Options.Option;
          begin
             RFLX.CoAP.Option_Type.Get_Option_Value
               (Ctx => Option_Cxt, Data => Option_Value.all);
-
-            Ada.Text_IO.Put ("Option: ");
-            Ada.Text_IO.Put_Line (Option_Number'Image);
-            Ada.Text_IO.Put ("  - Length: ");
-            Ada.Text_IO.Put_Line (Option_Length'Image);
-            Ada.Text_IO.Put ("  - Value: ");
 
             if Option_Value.all'Length >
              CoAP_SPARK.Options.Option_Properties_Table
@@ -470,27 +464,41 @@ is
                return;
             end if;
 
-            Ada.Text_IO.Put_Line
-             (CoAP_SPARK.Options.Image
-               (Format =>
-                 CoAP_SPARK.Options.Option_Properties_Table
-                  (Option_Number).Format,
-                Value  => Option_Value.all));
-
             if Option_Number = CoAP.Content_Format then
-               State.Content_Format :=
+               State.Response_Content.Format :=
                   CoAP_SPARK.Options.To_UInt (Value => Option_Value.all);
             end if;
 
-            RFLX.RFLX_Types.Free (Option_Value);
+            CoAP_SPARK.Options.New_Encoded_Option
+              (Number => Option_Number,
+               Value  => Option_Value,
+               Result => Option);
+
+            CoAP_SPARK.Options.Lists.Append
+              (Container => State.Response_Content.Options,
+               New_Item => Option);
+
          end;
       else
-         Ada.Text_IO.Put_Line ("Option: " & CoAP.Option_Numbers'Image
-                            (CoAP.To_Actual (Option_Delta)));
-         Ada.Text_IO.Put_Line ("  - Value: empty");
+         declare
+            Empty_Value : RFLX.RFLX_Types.Bytes_Ptr :=
+               new RFLX.RFLX_Types.Bytes'([]);
+            Option_Number : constant RFLX.CoAP.Option_Numbers :=
+               RFLX.CoAP.To_Actual (Option_Delta);
+            Option : CoAP_SPARK.Options.Option;
+         begin
+            CoAP_SPARK.Options.New_Encoded_Option
+              (Number => Option_Number,
+               Value  => Empty_Value,
+               Result => Option);
+
+            CoAP_SPARK.Options.Lists.Append
+              (Container => State.Response_Content.Options,
+               New_Item => Option);
+         end;
 
          if CoAP.To_Actual (Option_Delta) = CoAP.Content_Format then
-            State.Content_Format := 0;
+            State.Response_Content.Format := 0;
          end if;
       end if;
 
@@ -579,12 +587,6 @@ is
                   Last                  :
                     constant RFLX.RFLX_Builtin_Types.Index :=
                       RFLX.RFLX_Builtin_Types.Index (Option_Cxt.Last / 8);
-                  Payload_Format        :
-                    constant CoAP_SPARK.Options.Option_Format :=
-                      (if CoAP_SPARK.Content_Formats.Is_Text
-                            (State.Content_Format)
-                       then CoAP_SPARK.Options.UTF8_String
-                       else CoAP_SPARK.Options.Opaque);
                begin
 
                   RFLX.CoAP.Option_Type.Take_Buffer
@@ -609,16 +611,9 @@ is
                      return;
                   end if;
 
-                  Ada.Text_IO.Put
-                    ("Content-Format: ");
-                  Ada.Text_IO.Put_Line (CoAP_SPARK.Content_Formats.To_String
-                         (State.Content_Format));
-
-                  Ada.Text_IO.Put ("Payload: ");
-                  Ada.Text_IO.Put_Line (CoAP_SPARK.Options.Image
-                         (Format => Payload_Format,
-                          Value  => Buffer (First + 1 ..
-                                            Last)));
+                  State.Response_Content.Payload :=
+                    new RFLX.RFLX_Types.Bytes'
+                      (Buffer (First + 1 .. Last));
 
                   RFLX.RFLX_Types.Free (Buffer);
                end Print_Payload;

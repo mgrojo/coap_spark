@@ -193,6 +193,20 @@ is
       and then Get_Number (Result) = Number
       and then Get_Length (Result) = Value'Length;
 
+   -- For options where we already have the encoded value, like in responses.
+   procedure New_Encoded_Option
+     (Number : RFLX.CoAP.Option_Numbers;
+      Value  : in out RFLX.RFLX_Types.Bytes_Ptr;
+      Result : out Option)
+   with
+     Pre  =>
+      Value'Length <= Option_Properties_Table (Number).Maximum_Length
+      and then Value /= null,
+     Post =>
+      Has_Buffer (Result)
+      and then Value = null
+      and then Get_Number (Result) = Number;
+
    procedure New_Empty_Option
      (Number : RFLX.CoAP.Option_Numbers;
       Result : out Option) with
@@ -237,6 +251,17 @@ is
          when Empty => Image'Result'Length = 0,
          when Opaque | Unknown =>
            Image'Result'Length = Value'Length * RFLX.RFLX_Types.Byte'Width);
+
+   function Value_Image (Opt : Option) return String
+   with
+     Pre  => Has_Buffer (Opt),
+     Post => Value_Image'Result'First = 1 and then
+     (case Option_Properties_Table (Get_Number (Opt)).Format  is
+         when UInt => Value_Image'Result'Length <= Interfaces.Unsigned_32'Width,
+         when UTF8_String => Value_Image'Result'Length = Get_Length (Opt),
+         when Empty => Value_Image'Result'Length = 0,
+         when Opaque | Unknown =>
+           Value_Image'Result'Length = Get_Length (Opt) * RFLX.RFLX_Types.Byte'Width);
 
    function To_UInt (Value : UInt_Bytes) return Interfaces.Unsigned_32;
 
