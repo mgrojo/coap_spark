@@ -1,7 +1,6 @@
 with Ada.Numerics.Discrete_Random;
 with Ada.Text_IO;
 with CoAP_SPARK.Options.Lists;
-with CoAP_SPARK.Utils;
 with RFLX.CoAP.Option_Sequence;
 with RFLX.CoAP.Option_Type;
 with RFLX.RFLX_Builtin_Types;
@@ -631,15 +630,10 @@ is
       Error_Code  : RFLX.CoAP.Client_Error_Response;
       RFLX_Result : out Boolean)
    is
-      pragma Unreferenced (State);
    begin
-      Ada.Text_IO.Put_Line
-        ("Server answered with client error: 4."
-         & CoAP_SPARK.Utils.Padded_Image
-            (Source => Error_Code'Enum_Rep, Count => 2)
-         & " ("
-         & RFLX.CoAP.Client_Error_Response'Image (Error_Code)
-         & ")");
+      State.Response_Codes :=
+        (Code_Class => RFLX.CoAP.Client_Error,
+         Client_Error_Code => Error_Code);
 
          RFLX_Result := True;
    end Put_Client_Error;
@@ -649,15 +643,10 @@ is
       Error_Code  : RFLX.CoAP.Server_Error_Response;
       RFLX_Result : out Boolean)
    is
-      pragma Unreferenced (State);
    begin
-      Ada.Text_IO.Put_Line
-        ("Server answered with server error: 5."
-         & CoAP_SPARK.Utils.Padded_Image
-             (Source => Error_Code'Enum_Rep, Count => 2)
-         & " ("
-         & RFLX.CoAP.Server_Error_Response'Image (Error_Code)
-         & ")");
+      State.Response_Codes :=
+        (Code_Class => RFLX.CoAP.Server_Error,
+         Server_Error_Code => Error_Code);
 
       RFLX_Result := True;
    end Put_Server_Error;

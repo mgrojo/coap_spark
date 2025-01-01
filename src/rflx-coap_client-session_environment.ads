@@ -1,5 +1,5 @@
 with CoAP_SPARK.Content_Formats;
-with CoAP_SPARK.Options.Lists;
+with CoAP_SPARK.Messages;
 with Interfaces;
 with RFLX.CoAP;
 
@@ -9,20 +9,15 @@ is
 
    type Status_Type is (OK, Capacity_Error, Invalid_Request, Malformed_Message);
 
-   type Content is record
-      Options : CoAP_SPARK.Options.Lists.Vector
-                          (CoAP_SPARK.Max_Number_Of_Options);
-      Format : Interfaces.Unsigned_32 := 0;
-      Payload : RFLX.RFLX_Types.Bytes_Ptr;
-   end record;
 
    type State is record
       Method : RFLX.CoAP.Method_Code := RFLX.CoAP.Get;
       Current_Status : Status_Type := OK;
       Is_First_Message : Boolean := True;
       Current_Message_ID : RFLX.CoAP.Message_ID_Type := 0;
-      Request_Content : Content;
-      Response_Content : Content;
+      Request_Content : CoAP_SPARK.Messages.Content;
+      Response_Codes : CoAP_SPARK.Messages.Response_Kind;
+      Response_Content : CoAP_SPARK.Messages.Content;
    end record;
 
    --  Initialize State.
@@ -41,7 +36,5 @@ is
       Payload       : RFLX.RFLX_Types.Bytes_Ptr := null;
       Session_State : out State)
    with Always_Terminates;
-
-   procedure Print_Content (Item : Content);
 
 end RFLX.CoAP_Client.Session_Environment;

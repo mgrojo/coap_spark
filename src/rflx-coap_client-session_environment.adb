@@ -1,8 +1,6 @@
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
-with Ada.Text_IO;
-
-with CoAP_SPARK.Options.Text_IO;
+with CoAP_SPARK.Options.Lists;
 
 package body RFLX.CoAP_Client.Session_Environment with
   SPARK_Mode
@@ -115,28 +113,5 @@ is
       end;
 
    end Initialize;
-
-   procedure Print_Content (Item : Content)
-   is
-      Payload_Format : constant CoAP_SPARK.Options.Option_Format :=
-        (if CoAP_SPARK.Content_Formats.Is_Text (Item.Format)
-         then CoAP_SPARK.Options.UTF8_String
-         else CoAP_SPARK.Options.Opaque);
-   begin
-      for Option of Item.Options loop
-         CoAP_SPARK.Options.Text_IO.Print (Option);
-      end loop;
-
-      if Item.Payload not in null then
-         Ada.Text_IO.Put ("Content-Format: ");
-         Ada.Text_IO.Put_Line
-           (CoAP_SPARK.Content_Formats.To_String (Item.Format));
-
-         Ada.Text_IO.Put ("Payload: ");
-         Ada.Text_IO.Put_Line
-           (CoAP_SPARK.Options.Image
-              (Format => Payload_Format, Value => Item.Payload.all));
-      end if;
-   end Print_Content;
 
 end RFLX.CoAP_Client.Session_Environment;

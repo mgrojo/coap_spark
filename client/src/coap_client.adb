@@ -4,10 +4,10 @@ with Ada.Command_Line;
 with Ada.Text_IO;
 
 with CoAP_SPARK.Channel;
-
 with CoAP_SPARK.URI;
-
+with CoAP_SPARK.Messages;
 with CoAP_SPARK.Utils;
+
 with GNAT.Sockets;
 
 with Interfaces;
@@ -101,8 +101,8 @@ procedure CoAP_Client is
    Argument_Index : Natural := 0;
 begin
 
-   if Ada.Command_Line.Argument_Count = 0 or else
-      Ada.Command_Line.Argument (1) = "-h"
+   if Ada.Command_Line.Argument_Count = 0
+     or else Ada.Command_Line.Argument (1) = "-h"
    then
       Usage;
       return;
@@ -115,7 +115,7 @@ begin
          begin
             Method :=
               RFLX.CoAP.Method_Code'Value
-               (Ada.Command_Line.Argument (Argument_Index));
+                (Ada.Command_Line.Argument (Argument_Index));
          exception
             when Constraint_Error =>
                Ada.Text_IO.Put_Line ("Error: Invalid method");
@@ -126,11 +126,12 @@ begin
          Argument_Index := @ + 1;
          declare
             Payload_String : constant String :=
-             Ada.Command_Line.Argument (Argument_Index);
+              Ada.Command_Line.Argument (Argument_Index);
          begin
-            Payload := new RFLX.RFLX_Types.Bytes'(1 .. Payload_String'Length => 0);
-            CoAP_SPARK.Utils.Copy_String (Source => Payload_String,
-                                          Target => Payload.all);
+            Payload :=
+              new RFLX.RFLX_Types.Bytes'(1 .. Payload_String'Length => 0);
+            CoAP_SPARK.Utils.Copy_String
+              (Source => Payload_String, Target => Payload.all);
          exception
             when Constraint_Error =>
                Ada.Text_IO.Put_Line ("Error: Invalid payload");
@@ -157,13 +158,14 @@ begin
    declare
       URI_String : constant String :=
         Ada.Command_Line.Argument (Argument_Index);
-      URI : constant CoAP_SPARK.URI.URI := CoAP_SPARK.URI.Create (URI_String);
+      URI        : constant CoAP_SPARK.URI.URI :=
+        CoAP_SPARK.URI.Create (URI_String);
    begin
       Ada.Text_IO.Put_Line ("Method: " & RFLX.CoAP.Method_Code'Image (Method));
       Ada.Text_IO.Put_Line ("Scheme: " & CoAP_SPARK.URI.Scheme (URI));
       Ada.Text_IO.Put_Line ("Host: " & CoAP_SPARK.URI.Host (URI));
-      Ada.Text_IO.Put_Line ("Port:" & Interfaces.Unsigned_16'Image
-                            (CoAP_SPARK.URI.Port (URI)));
+      Ada.Text_IO.Put_Line
+        ("Port:" & Interfaces.Unsigned_16'Image (CoAP_SPARK.URI.Port (URI)));
       Ada.Text_IO.Put_Line ("Path: " & CoAP_SPARK.URI.Path (URI));
       Ada.Text_IO.Put_Line ("Query: " & CoAP_SPARK.URI.Query (URI));
 
@@ -178,14 +180,14 @@ begin
          Session_State => Ctx.E);
 
       FSM.Initialize (Ctx);
-      Channel.Connect (Socket => Skt,
-                       Server => CoAP_SPARK.URI.Host (URI),
-                       Port   => GNAT.Sockets.Port_Type
-                                   (CoAP_SPARK.URI.Port (URI)));
+      Channel.Connect
+        (Socket => Skt,
+         Server => CoAP_SPARK.URI.Host (URI),
+         Port   => GNAT.Sockets.Port_Type (CoAP_SPARK.URI.Port (URI)));
    end;
 
    Ada.Text_IO.Put_Line ("REQUEST: ");
-   RFLX.CoAP_Client.Session_Environment.Print_Content (Ctx.E.Request_Content);
+   CoAP_SPARK.Messages.Print_Content (Ctx.E.Request_Content);
 
    while FSM.Active (Ctx) loop
       pragma Loop_Invariant (FSM.Initialized (Ctx));
@@ -200,23 +202,40 @@ begin
       end loop;
       FSM.Run (Ctx);
    end loop;
-      
+
    Ada.Text_IO.New_Line;
    if Ctx.E.Current_Status in RFLX.CoAP_Client.Session_Environment.OK then
       Ada.Text_IO.Put_Line ("RESPONSE: ");
-      RFLX.CoAP_Client.Session_Environment.Print_Content (Ctx.E.Response_Content);
+
+      case Ctx.E.Response_Codes.Code_Class is
+         when RFLX.CoAP.Success =>
+            Ada.Text_IO.Put_Line
+              ("Server answered with success.");
+         when RFLX.CoAP.Client_Error =>
+            Ada.Text_IO.Put_Line
+              ("Server answered with client error: "
+               & CoAP_SPARK.Messages.Image (Ctx.E.Response_Codes));
+         when RFLX.CoAP.Server_Error =>
+            Ada.Text_IO.Put_Line
+              ("Server answered with server error: "
+               & CoAP_SPARK.Messages.Image (Ctx.E.Response_Codes));
+      end case;
+
+      CoAP_SPARK.Messages.Print_Content (Ctx.E.Response_Content);
    else
       Ada.Text_IO.Put ("Error: ");
       Ada.Text_IO.Put_Line (Ctx.E.Current_Status'Image);
    end if;
-      
+
    pragma Warnings (Off, "statement has no effect");
-   pragma Warnings
-      (Off, """Ctx"" is set by ""Finalize"" but not used after the call");
+   pragma
+     Warnings
+       (Off, """Ctx"" is set by ""Finalize"" but not used after the call");
    FSM.Finalize (Ctx);
    pragma Warnings (On, "statement has no effect");
-   pragma Warnings
-      (On, """Ctx"" is set by ""Finalize"" but not used after the call");
+   pragma
+     Warnings
+       (On, """Ctx"" is set by ""Finalize"" but not used after the call");
 
    RFLX.RFLX_Types.Free (Payload);
 
