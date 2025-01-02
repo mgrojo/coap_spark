@@ -10,6 +10,8 @@ is
 
    Max_URI_Part_Length : constant := 255;
 
+   Max_Payload_Length : constant := 1024;
+
    Default_Scheme : constant String := "coap";
 
    Default_Secure_Scheme : constant String := "coaps";

@@ -103,7 +103,7 @@ is
 
          if Payload not in null then
             CoAP_SPARK.Options.New_UInt_Option
-            (Number => RFLX.CoAP.Content_Format,
+              (Number => RFLX.CoAP.Content_Format,
                Value  => Session_State.Request_Content.Format,
                Result => Option);
 
@@ -113,5 +113,12 @@ is
       end;
 
    end Initialize;
+
+   procedure Finalize (Session_State : in out State)
+   is
+   begin
+      CoAP_SPARK.Messages.Finalize (Session_State.Request_Content);
+      CoAP_SPARK.Messages.Finalize (Session_State.Response_Content);
+   end Finalize;
 
 end RFLX.CoAP_Client.Session_Environment;

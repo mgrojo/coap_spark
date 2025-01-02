@@ -22,15 +22,23 @@ is
          end case;
       end record;
 
+   subtype Payload_Ptr is RFLX.RFLX_Types.Bytes_Ptr
+   with
+     Dynamic_Predicate =>
+       Payload_Ptr in null
+       or else Payload_Ptr'Length <= CoAP_SPARK.Max_Payload_Length;
+
    type Content is record
       Options : CoAP_SPARK.Options.Lists.Vector
                           (CoAP_SPARK.Max_Number_Of_Options);
       Format : Interfaces.Unsigned_32 := 0;
-      Payload : RFLX.RFLX_Types.Bytes_Ptr;
+      Payload : Payload_Ptr;
    end record;
 
    procedure Print_Content (Item : Content);
 
    function Image (Item : Response_Kind) return String;
+
+   procedure Finalize (Item : in out Content);
 
 end CoAP_SPARK.Messages;

@@ -37,4 +37,6 @@ is
       Session_State : out State)
    with Always_Terminates;
 
+   procedure Finalize (Session_State : in out State);
+
 end RFLX.CoAP_Client.Session_Environment;

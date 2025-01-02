@@ -58,5 +58,30 @@ is
         & CoAP_SPARK.Utils.Padded_Image (Source => Detail_Number, Count => 2)
         & " (" & Detail_Image & ")";
    end Image;
+
+   procedure Finalize (Item : in out Content)
+   is
+   begin
+      for I in
+         CoAP_SPARK.Options.Lists.First_Index (Item.Options) ..
+         CoAP_SPARK.Options.Lists.Last_Index (Item.Options)
+      loop
+         declare
+            Option_Copy : CoAP_SPARK.Options.Option :=
+              CoAP_SPARK.Options.Lists.Element (Item.Options, I);
+         begin
+            -- Make a swallow copy of the option to be able to use a variable
+            -- to free the stored Option.
+            --
+            CoAP_SPARK.Options.Free (Option_Copy);
+            pragma Unreferenced (Option_Copy);
+         end;
+      end loop;
+      CoAP_SPARK.Options.Lists.Clear (Item.Options);
+      if Item.Payload not in null then
+         RFLX.RFLX_Types.Free (Item.Payload);
+      end if;
+   end Finalize;
+
 end CoAP_SPARK.Messages;
 

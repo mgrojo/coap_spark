@@ -1,3 +1,4 @@
+with Ada.Containers;
 with Ada.Numerics.Discrete_Random;
 with Ada.Text_IO;
 with CoAP_SPARK.Options.Lists;
@@ -16,6 +17,7 @@ is
    use type RFLX.RFLX_Types.Bytes_Ptr;
    use type CoAP_SPARK.Options.Option_Format;
    use type RFLX.CoAP.Option_Numbers;
+   use type Ada.Containers.Count_Type;
 
    package Option_Sorting is new CoAP_SPARK.Options.Lists.Generic_Sorting
                                    ("<" => CoAP_SPARK.Options."<");
@@ -353,7 +355,9 @@ is
       End_Of_Options : out Boolean)
    with
      Pre =>
-       RFLX.CoAP.Option_Type.Has_Buffer (Option_Cxt)
+       CoAP_SPARK.Options.Lists.Length (State.Response_Content.Options) <
+         CoAP_SPARK.Options.Lists.Capacity (State.Response_Content.Options)
+       and then RFLX.CoAP.Option_Type.Has_Buffer (Option_Cxt)
        and then RFLX.CoAP.Option_Type.Well_Formed_Message (Option_Cxt)
        and then Option_Delta <
          RFLX.CoAP.Option_Numbers'Enum_Rep (RFLX.CoAP.Option_Numbers'Last)
@@ -476,7 +480,6 @@ is
             CoAP_SPARK.Options.Lists.Append
               (Container => State.Response_Content.Options,
                New_Item => Option);
-
          end;
       else
          declare
@@ -635,7 +638,7 @@ is
         (Code_Class => RFLX.CoAP.Client_Error,
          Client_Error_Code => Error_Code);
 
-         RFLX_Result := True;
+      RFLX_Result := True;
    end Put_Client_Error;
 
    procedure Put_Server_Error

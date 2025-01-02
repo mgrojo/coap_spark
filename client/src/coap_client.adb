@@ -3,6 +3,7 @@ pragma SPARK_Mode;
 with Ada.Command_Line;
 with Ada.Text_IO;
 
+with CoAP_SPARK;
 with CoAP_SPARK.Channel;
 with CoAP_SPARK.URI;
 with CoAP_SPARK.Messages;
@@ -237,9 +238,9 @@ begin
      Warnings
        (On, """Ctx"" is set by ""Finalize"" but not used after the call");
 
-   RFLX.RFLX_Types.Free (Payload);
+   RFLX.CoAP_Client.Session_Environment.Finalize (Ctx.E);
 
-   -- This has no effect, but it is needed to avoid a linking error in the
-   -- validation profile.
+   -- This has no effect, but it is needed to avoid a linking error with 
+   -- SPARKLib in the validation profile.
    Workarounds.Check_Or_Fail;
 end CoAP_Client;
