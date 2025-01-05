@@ -142,7 +142,12 @@ is
    function Port (Self : URI) return Interfaces.Unsigned_16 is
    begin
       if Self.Host_Last = Self.Port_Last then
-         return CoAP_SPARK.Default_Port;
+         return (if Scheme (Self) = Default_Scheme then
+                     CoAP_SPARK.Default_Port
+                  elsif Scheme (Self) = Secure_Scheme then
+                     CoAP_SPARK.Secure_Port
+                  else
+                     0);
       end if;
 
       return

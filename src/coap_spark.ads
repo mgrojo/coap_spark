@@ -5,6 +5,7 @@ is
    Max_Number_Of_Options : constant := 255;
 
    Default_Port : constant := 5683;
+   Secure_Port : constant := 5684;
 
    Max_URI_Length : constant := 1034;
 
@@ -14,5 +15,5 @@ is
 
    Default_Scheme : constant String := "coap";
 
-   Default_Secure_Scheme : constant String := "coaps";
+   Secure_Scheme : constant String := "coaps";
 end CoAP_SPARK;

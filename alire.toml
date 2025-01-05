@@ -37,3 +37,9 @@ gnatprove = "^14.1.1"
     ,"-gnatyx" # Check extra parentheses
     ]
 "*".Ada_Version = "Ada2022"
+
+[[depends-on]]
+wolfssl = "^5.7.6"
+
+[[pins]]
+wolfssl = { path='libs/wolfssl/wrapper/Ada' }

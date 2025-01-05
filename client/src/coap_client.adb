@@ -9,8 +9,6 @@ with CoAP_SPARK.URI;
 with CoAP_SPARK.Messages;
 with CoAP_SPARK.Utils;
 
-with GNAT.Sockets;
-
 with Interfaces;
 
 with RFLX.CoAP;
@@ -28,7 +26,7 @@ procedure CoAP_Client is
    package Channel renames CoAP_SPARK.Channel;
 
    procedure Read (Ctx : FSM.Context;
-                   Skt : in out GNAT.Sockets.Socket_Type) with
+                   Skt : in out CoAP_SPARK.Channel.Socket_Type) with
       Pre =>
          FSM.Initialized (Ctx)
          and then FSM.Has_Data (Ctx, FSM.C_Transport),
@@ -59,7 +57,7 @@ procedure CoAP_Client is
    end Read;
 
    procedure Write (Ctx : in out FSM.Context;
-                    Skt : in out GNAT.Sockets.Socket_Type) with
+                    Skt : in out CoAP_SPARK.Channel.Socket_Type) with
       Pre =>
          FSM.Initialized (Ctx)
          and then FSM.Needs_Data (Ctx, FSM.C_Transport),
@@ -93,7 +91,6 @@ procedure CoAP_Client is
       Ada.Text_IO.New_Line;
    end Usage;
 
-   Skt : GNAT.Sockets.Socket_Type;
    Ctx : FSM.Context;
 
    Method : RFLX.CoAP.Method_Code := RFLX.CoAP.Get;
@@ -161,6 +158,8 @@ begin
         Ada.Command_Line.Argument (Argument_Index);
       URI        : constant CoAP_SPARK.URI.URI :=
         CoAP_SPARK.URI.Create (URI_String);
+      Skt : CoAP_SPARK.Channel.Socket_Type
+            (Is_Secure => CoAP_SPARK.URI.Scheme (URI) = CoAP_SPARK.Secure_Scheme);
    begin
       Ada.Text_IO.Put_Line ("Method: " & RFLX.CoAP.Method_Code'Image (Method));
       Ada.Text_IO.Put_Line ("Scheme: " & CoAP_SPARK.URI.Scheme (URI));
@@ -184,25 +183,27 @@ begin
       Channel.Connect
         (Socket => Skt,
          Server => CoAP_SPARK.URI.Host (URI),
-         Port   => GNAT.Sockets.Port_Type (CoAP_SPARK.URI.Port (URI)));
-   end;
+         Port   => CoAP_SPARK.Channel.Port_Type (CoAP_SPARK.URI.Port (URI)));
 
-   Ada.Text_IO.Put_Line ("REQUEST: ");
-   CoAP_SPARK.Messages.Print_Content (Ctx.E.Request_Content);
+      Ada.Text_IO.Put_Line ("REQUEST: ");
+      CoAP_SPARK.Messages.Print_Content (Ctx.E.Request_Content);
 
-   while FSM.Active (Ctx) loop
-      pragma Loop_Invariant (FSM.Initialized (Ctx));
-      for C in FSM.Channel'Range loop
+      while FSM.Active (Ctx) loop
          pragma Loop_Invariant (FSM.Initialized (Ctx));
-         if FSM.Has_Data (Ctx, C) then
-            Read (Ctx, Skt);
-         end if;
-         if FSM.Needs_Data (Ctx, C) then
-            Write (Ctx, Skt);
-         end if;
+         for C in FSM.Channel'Range loop
+            pragma Loop_Invariant (FSM.Initialized (Ctx));
+            if FSM.Has_Data (Ctx, C) then
+               Read (Ctx, Skt);
+            end if;
+            if FSM.Needs_Data (Ctx, C) then
+               Write (Ctx, Skt);
+            end if;
+         end loop;
+         FSM.Run (Ctx);
       end loop;
-      FSM.Run (Ctx);
-   end loop;
+
+      CoAP_SPARK.Channel.Finalize (Skt);
+   end;
 
    Ada.Text_IO.New_Line;
    if Ctx.E.Current_Status in RFLX.CoAP_Client.Session_Environment.OK then

@@ -22,7 +22,7 @@ is
    with
       Pre =>
          (Scheme = Default_Scheme or else
-          Scheme = Default_Secure_Scheme) and then
+          Scheme = Secure_Scheme) and then
          Host'Length in 1 .. Max_URI_Part_Length and then
          Path'Length in 1 .. Max_URI_Part_Length and then
          Query'Length in 0 .. Max_URI_Part_Length and then
