@@ -18,7 +18,9 @@ project CoAP_Client is
    end Binder;
 
    package Linker is
-      for Default_Switches ("Ada") use ("-Wl,-gc-sections");
+      for Default_Switches ("Ada") use
+        ("-Wl,-gc-sections",
+         "-lm"); -- TODO Add to WolfSSL library GPR and make pull request
    end Linker;
 
    package Install is

@@ -9,6 +9,8 @@ with CoAP_SPARK.URI;
 with CoAP_SPARK.Messages;
 with CoAP_SPARK.Utils;
 
+with CoAP_Secure;
+
 with Interfaces;
 
 with RFLX.CoAP;
@@ -24,7 +26,7 @@ procedure CoAP_Client is
    package Session_Environment renames RFLX.CoAP_Client.Session_Environment;
    package Types renames RFLX.RFLX_Types;
    package Channel renames CoAP_SPARK.Channel;
-
+   
    procedure Read (Ctx : FSM.Context;
                    Skt : in out CoAP_SPARK.Channel.Socket_Type) with
       Pre =>
@@ -77,7 +79,7 @@ procedure CoAP_Client is
          FSM.Write
             (Ctx,
              FSM.C_Transport,
-             Buffer (Buffer'First .. Buffer'First +  RFLX.RFLX_Builtin_Types.Index (Length) - 1));
+             Buffer (Buffer'First .. Buffer'First + RFLX.RFLX_Builtin_Types.Index (Length) - 1));
       end if;
    end Write;
 
@@ -169,7 +171,10 @@ begin
       Ada.Text_IO.Put_Line ("Path: " & CoAP_SPARK.URI.Path (URI));
       Ada.Text_IO.Put_Line ("Query: " & CoAP_SPARK.URI.Query (URI));
 
-      Channel.Initialize (Skt);
+      Channel.Initialize
+        (Socket       => Skt,
+         PSK_Callback => CoAP_Secure.PSK_Client_Callback'Access);
+
       Session_Environment.Initialize
         (Method        => Method,
          Server        => CoAP_SPARK.URI.Host (URI),
@@ -202,6 +207,9 @@ begin
          FSM.Run (Ctx);
       end loop;
 
+      if not CoAP_SPARK.Channel.Is_Valid (Skt) then
+         Ada.Text_IO.Put_Line ("Communication problems.");
+      end if;
       CoAP_SPARK.Channel.Finalize (Skt);
    end;
 

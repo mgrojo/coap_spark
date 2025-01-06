@@ -1,4 +1,6 @@
 with Ada.Streams;
+with Ada.Unchecked_Conversion;
+with Interfaces.C;
 
 package body CoAP_SPARK.Channel
   with SPARK_Mode
@@ -6,6 +8,7 @@ is
 
    use type RFLX.RFLX_Builtin_Types.Index;
    use type Ada.Streams.Stream_Element_Offset;
+   use type Interfaces.C.size_t;
 
    -- Ada.Streams.Stream_Element_Array is not yet supported as buffer type and
    -- thus a conversion is needed.
@@ -28,6 +31,32 @@ is
       return Result;
    end To_Ada_Stream;
 
+   function To_Char is new Ada.Unchecked_Conversion
+     (Source => RFLX.RFLX_Builtin_Types.Byte,
+      Target => Interfaces.C.char);
+
+   function To_RFLX_Byte is new Ada.Unchecked_Conversion
+     (Source => Interfaces.C.char,
+      Target => RFLX.RFLX_Builtin_Types.Byte);
+
+   function To_C
+     (Buffer : RFLX.RFLX_Builtin_Types.Bytes)
+      return WolfSSL.Byte_Array
+   with
+     Pre =>
+       Buffer'First = 1
+       and then Buffer'Length <= Interfaces.C.size_t'Last
+   is
+      Result : WolfSSL.Byte_Array (1 .. Buffer'Length);
+   begin
+      for I in Result'Range loop
+         Result (I) :=
+           To_Char
+             (Buffer (RFLX.RFLX_Builtin_Types.Index (I)));
+      end loop;
+      return Result;
+   end To_C;
+
    function To_RFLX_Bytes
      (Buffer : Ada.Streams.Stream_Element_Array)
       return RFLX.RFLX_Builtin_Types.Bytes
@@ -48,11 +77,31 @@ is
       return Result;
    end To_RFLX_Bytes;
 
+   function To_RFLX_Bytes
+     (Buffer : WolfSSL.Byte_Array)
+      return RFLX.RFLX_Builtin_Types.Bytes
+   with
+     Pre =>
+       Buffer'First = 1
+       and then Buffer'Length
+                <= Natural
+                     (RFLX.RFLX_Builtin_Types.Index'Last)
+   is
+      Result : RFLX.RFLX_Builtin_Types.Bytes (1 .. Buffer'Length);
+   begin
+      for I in Result'Range loop
+         Result (I) :=
+           To_RFLX_Byte
+             (Buffer (Interfaces.C.size_t (I)));
+      end loop;
+      return Result;
+   end To_RFLX_Bytes;
+
    procedure Initialize
-     (Socket : out Socket_Type;
-      Port   : Port_Type := Default_Port;
+     (Socket       : out Socket_Type;
+      Port         : Port_Type := Default_Port;
       PSK_Callback : WolfSSL.PSK_Client_Callback := null;
-      Server : Boolean := False)
+      Server       : Boolean := False)
    with SPARK_Mode => Off
    is
    begin
@@ -103,7 +152,7 @@ is
    with SPARK_Mode => Off
    is
       Address : constant GNAT.Sockets.Sock_Addr_Type :=
-         (Family => GNAT.Sockets.Family_Inet,
+        (Family => GNAT.Sockets.Family_Inet,
          Addr   => GNAT.Sockets.Addresses
                       (GNAT.Sockets.Get_Host_By_Name (Server)),
          Port   => GNAT.Sockets.Port_Type (Port));
@@ -129,19 +178,33 @@ is
       Buffer : RFLX.RFLX_Builtin_Types.Bytes)
    with SPARK_Mode => Off
    is
-      Data        :
-        constant Ada.Streams.Stream_Element_Array (1 .. Buffer'Length) :=
-          To_Ada_Stream (Buffer);
-      Unused_Last : Ada.Streams.Stream_Element_Offset;
    begin
       if Socket.Is_Secure then
-         null; -- TODO
-
+         declare
+            Data : constant WolfSSL.Byte_Array (1 .. Buffer'Length) :=
+              To_C (Buffer);
+            Output : WolfSSL.Write_Result;
+         begin
+            Output := WolfSSL.Write (Ssl  => Socket.Ssl,
+                                     Data => Data);
+            if not Output.Success then
+               Socket.Result := Output.Code;
+            elsif Output.Bytes_Written /= Buffer'Length then
+               Socket.Result := WolfSSL.Failure;
+            end if;
+         end;
       else
-         GNAT.Sockets.Send_Socket
-           (Socket => Socket.Attached_Socket,
-            Item   => Data,
-            Last   => Unused_Last);
+         declare
+            Data        :
+              constant Ada.Streams.Stream_Element_Array (1 .. Buffer'Length) :=
+                To_Ada_Stream (Buffer);
+            Unused_Last : Ada.Streams.Stream_Element_Offset;
+         begin
+            GNAT.Sockets.Send_Socket
+              (Socket => Socket.Attached_Socket,
+               Item   => Data,
+               Last   => Unused_Last);
+         end;
       end if;
    end Send;
 
@@ -151,17 +214,38 @@ is
       Length : out RFLX.RFLX_Builtin_Types.Length)
    with SPARK_Mode => Off
    is
-      Data : Ada.Streams.Stream_Element_Array (1 .. Buffer'Length);
-      Last : Ada.Streams.Stream_Element_Offset;
+
    begin
       if Socket.Is_Secure then
-         null; -- TODO
+         declare
+            Input : WolfSSL.Read_Result;
+         begin
+            Input := WolfSSL.Read (Socket.Ssl);
+            if Input.Success and then
+               Input.Buffer'Length <= Buffer'Length
+            then
+               Length := RFLX.RFLX_Builtin_Types.Length (Input.Last);
+               Buffer (1 .. RFLX.RFLX_Builtin_Types.Index (Length)) :=
+                 To_RFLX_Bytes (Input.Buffer);
+            else
+               Socket.Result :=
+                 (if not Input.Success then Input.Code else WolfSSL.Failure);
+               Length := 0;
+            end if;
+         end;
       else
-         GNAT.Sockets.Receive_Socket
-           (Socket => Socket.Attached_Socket, Item => Data, Last => Last);
+         declare
+            Data : Ada.Streams.Stream_Element_Array (1 .. Buffer'Length);
+            Last : Ada.Streams.Stream_Element_Offset;
+         begin
+
+            GNAT.Sockets.Receive_Socket
+              (Socket => Socket.Attached_Socket, Item => Data, Last => Last);
+
+            Buffer := To_RFLX_Bytes (Data);
+            Length := RFLX.RFLX_Builtin_Types.Length (Last);
+         end;
       end if;
-      Buffer := To_RFLX_Bytes (Data);
-      Length := RFLX.RFLX_Builtin_Types.Length (Last);
    end Receive;
 
    procedure Finalize
@@ -176,4 +260,3 @@ is
    end Finalize;
 
 end CoAP_SPARK.Channel;
-
