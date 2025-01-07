@@ -85,7 +85,8 @@ procedure CoAP_Client is
 
    procedure Usage is
    begin
-      Ada.Text_IO.Put_Line ("Usage: coap_client [-m METHOD] [-e Payload] <URI>");
+      Ada.Text_IO.Put ("Usage: coap_client [-m METHOD] [-e <Payload>] ");
+      Ada.Text_IO.Put_Line (" [-k <PSK>] [-u <Identity>] <URI>");
       Ada.Text_IO.Put ("  METHOD:");
       for I in RFLX.CoAP.Method_Code'Range loop
          Ada.Text_IO.Put (" " & RFLX.CoAP.Method_Code'Image (I));
@@ -138,6 +139,18 @@ begin
                Usage;
                return;
          end;
+      elsif Ada.Command_Line.Argument (Argument_Index) = "-k" or else
+         Ada.Command_Line.Argument (Argument_Index) = "-u"
+      then
+         Argument_Index := @ + 1;
+
+         if Argument_Index = Ada.Command_Line.Argument_Count  then
+            Ada.Text_IO.Put ("Error: Missing argument for ");
+            Ada.Text_IO.Put_Line (Ada.Command_Line.Argument (Argument_Index - 1));
+            Usage;
+            return;
+         end if;
+         -- We will handle the PSK and Identity later, in the PSK_Callback
       elsif Argument_Index = Ada.Command_Line.Argument_Count then
          -- We will handle the URI later
          null;

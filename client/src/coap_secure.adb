@@ -1,3 +1,4 @@
+with Ada.Command_Line;
 with Ada.Text_IO;
 
 package body CoAP_Secure
@@ -15,27 +16,48 @@ is
       use type Interfaces.C.unsigned;
 
       Hint_String     : constant String := Interfaces.C.Strings.Value (Hint);
-      -- TODO Pass through the command line.
-      Identity_String : constant String := "Client_identity";
-      Key_String      : constant String := "1234abcd567890";
+ 
+      Identity_Index, Key_Index : Natural := 0;
    begin
 
       Ada.Text_IO.Put_Line ("Hint: " & Hint_String);
 
-      pragma Assert (Id_Max_Length >= Identity_String'Length);
+      for I in 1 .. Ada.Command_Line.Argument_Count - 2 loop
 
-      Interfaces.C.Strings.Update
-        (Item   => Identity,
-         Offset => 0,
-         Str    => Identity_String,
-         Check  => False);
+         if Ada.Command_Line.Argument (I) = "-u" then
+            Identity_Index := I + 1;
+         elsif Ada.Command_Line.Argument (I) = "-k" then
+            Key_Index := I + 1;
+         end if;
+      end loop;
 
-      pragma Assert (Key_Max_Length >= Key_String'Length);
+      if Identity_Index = 0 or Key_Index = 0 then
+         -- Missing arguments for key or identity, nothing is returned
+         return 0;
+      end if;
 
-      Interfaces.C.Strings.Update
-        (Item => Key, Offset => 0, Str => Key_String, Check => False);
+      declare
+         Identity_String : constant String :=
+           Ada.Command_Line.Argument (Identity_Index);
+         Key_String      : constant String :=
+           Ada.Command_Line.Argument (Key_Index);
+      begin
 
-      return Key_String'Length;
+         pragma Assert (Id_Max_Length >= Identity_String'Length);
+
+         Interfaces.C.Strings.Update
+           (Item   => Identity,
+            Offset => 0,
+            Str    => Identity_String,
+            Check  => False);
+
+         pragma Assert (Key_Max_Length >= Key_String'Length);
+
+         Interfaces.C.Strings.Update
+           (Item => Key, Offset => 0, Str => Key_String, Check => False);
+
+         return Key_String'Length;
+      end;
    end PSK_Client_Callback;
 
 end CoAP_Secure;
