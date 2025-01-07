@@ -1,0 +1,27 @@
+-- Extend the wolfssl.gpr project file to customize the build for the CoAP_SPARK
+-- library.
+project WolfSSL_CoAP extends "libs/wolfssl/wrapper/Ada/wolfssl.gpr" is
+
+   for Object_Dir use "obj/wolfssl_coap";
+
+   -- TODO: find a way to not repeat the source dirs from wolfssl.gpr
+   for Source_Dirs use ("libs/wolfssl/wrapper/Ada",
+                        "libs/wolfssl/",
+                        "libs/wolfssl/src",
+                        "libs/wolfssl/wolfcrypt/src");
+
+   for Library_Dir use "lib/wolfssl_coap";
+
+   C_Compiler_Switches :=
+      WolfSSL.Compiler'Switches ("C") & (
+         "-DWOLFSSL_STATIC_PSK" -- Enable the static PSK cipher support
+                                -- (necessary for TRADFRI interoperability)
+         );
+
+   package Compiler is
+      for Switches ("C") use C_Compiler_Switches;
+   end Compiler;
+
+   for Excluded_Source_Files use WolfSSL'Excluded_Source_Files;
+
+end WolfSSL_CoAP;

@@ -27,11 +27,13 @@ is
    procedure Connect (Socket : in out Socket_Type;
                       Server : String;
                       Port : Port_Type := Default_Port) with
-   Global =>
+      Pre => Is_Valid (Socket),
+      Global =>
       null;
 
    procedure Send (Socket : in out Socket_Type;
                    Buffer :        RFLX.RFLX_Builtin_Types.Bytes) with
+      Pre => Is_Valid (Socket),
       Global =>
          null;
 
@@ -40,6 +42,7 @@ is
    procedure Receive (Socket : in out Socket_Type;
                       Buffer :    out RFLX.RFLX_Builtin_Types.Bytes;
                       Length :    out RFLX.RFLX_Builtin_Types.Length) with
+      Pre => Is_Valid (Socket),
       Post =>
          Length <= Buffer'Length,
       Global =>
