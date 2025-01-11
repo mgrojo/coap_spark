@@ -18,9 +18,22 @@ project CoAP_Client is
    end Binder;
 
    package Linker is
-      for Default_Switches ("Ada") use
-        ("-Wl,-gc-sections",
-         "-lm"); -- TODO Add to WolfSSL library GPR and make pull request
+      --  To include the math library (used by WolfSSL).
+      -- TODO Add to WolfSSL library GPR and make pull request
+      Linker_Options := ("-lm");
+
+      case CoAP_Client_Config.Alire_Host_OS is
+      when "windows" =>
+         Linker_Options := Linker_Options & ("-lcrypt32", "-Wl,-gc-sections");
+      when "macos" =>
+         --  -gc-sections isn’t supported on macOS
+         null;
+      when others =>
+         Linker_Options := Linker_Options & ("-Wl,-gc-sections");
+      end case;
+
+      for Default_Switches ("Ada") use Linker_Options;
+
    end Linker;
 
    package Install is

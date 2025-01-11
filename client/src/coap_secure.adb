@@ -1,5 +1,5 @@
 with Ada.Command_Line;
-with Ada.Text_IO;
+with CoAP_SPARK.Log;
 
 package body CoAP_Secure
    with SPARK_Mode => Off
@@ -15,12 +15,12 @@ is
    is
       use type Interfaces.C.unsigned;
 
-      Hint_String     : constant String := Interfaces.C.Strings.Value (Hint);
+      Hint_String : constant String := Interfaces.C.Strings.Value (Hint);
  
       Identity_Index, Key_Index : Natural := 0;
    begin
 
-      Ada.Text_IO.Put_Line ("Hint: " & Hint_String);
+      CoAP_SPARK.Log.Put_Line ("Hint: " & Hint_String);
 
       for I in 1 .. Ada.Command_Line.Argument_Count - 2 loop
 

@@ -1,6 +1,6 @@
 with Ada.Containers;
 with Ada.Numerics.Discrete_Random;
-with Ada.Text_IO;
+with CoAP_SPARK.Log;
 with CoAP_SPARK.Options.Lists;
 with RFLX.CoAP.Option_Sequence;
 with RFLX.CoAP.Option_Type;
@@ -458,9 +458,9 @@ is
              CoAP_SPARK.Options.Option_Properties_Table
               (Option_Number).Maximum_Length
             then
-               Ada.Text_IO.Put
+               CoAP_SPARK.Log.Put
                   ("Option value is too long for option");
-               Ada.Text_IO.Put_Line (Option_Number'Image);
+               CoAP_SPARK.Log.Put_Line (Option_Number'Image);
 
                State.Current_Status :=
                   RFLX.CoAP_Client.Session_Environment.Malformed_Message;
@@ -476,6 +476,7 @@ is
               (Number => Option_Number,
                Value  => Option_Value,
                Result => Option);
+            pragma Assert (Option_Value = null);
 
             CoAP_SPARK.Options.Lists.Append
               (Container => State.Response_Content.Options,
@@ -493,6 +494,7 @@ is
               (Number => Option_Number,
                Value  => Empty_Value,
                Result => Option);
+            pragma Assert (Empty_Value = null);
 
             CoAP_SPARK.Options.Lists.Append
               (Container => State.Response_Content.Options,
@@ -516,11 +518,11 @@ is
 
       if Data'Length = 0 then
 
-         Ada.Text_IO.Put_Line ("Options and payload are empty");
+         CoAP_SPARK.Log.Put_Line ("Options and payload are empty");
 
       elsif Data'Last = RFLX_Types.Index'Last then
 
-         Ada.Text_IO.Put_Line ("Data is too long");
+         CoAP_SPARK.Log.Put_Line ("Data is too long");
          State.Current_Status :=
            RFLX.CoAP_Client.Session_Environment.Capacity_Error;
 
@@ -593,15 +595,17 @@ is
 
                   RFLX.CoAP.Option_Type.Take_Buffer
                     (Ctx => Option_Cxt, Buffer => Buffer);
+                  pragma Assert (not RFLX.CoAP.Option_Type.Has_Buffer
+                                    (Option_Cxt));
 
                   if First >= Last or else
                      Buffer (First) /= Payload_Marker
                   then
-                     Ada.Text_IO.Put_Line
+                     CoAP_SPARK.Log.Put_Line
                        ("Error: Payload marker not found before the payload");
-                     Ada.Text_IO.Put_Line
+                     CoAP_SPARK.Log.Put_Line
                        ("Remaining bytes: ");
-                     Ada.Text_IO.Put_Line (CoAP_SPARK.Options.Image
+                     CoAP_SPARK.Log.Put_Line (CoAP_SPARK.Options.Image
                          (Format => CoAP_SPARK.Options.Opaque,
                           Value  => Buffer (First .. Last)));
 

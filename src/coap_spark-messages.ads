@@ -1,3 +1,4 @@
+with CoAP_SPARK.Log;
 with CoAP_SPARK.Options.Lists;
 with Interfaces;
 with RFLX.CoAP;
@@ -35,7 +36,13 @@ is
       Payload : Payload_Ptr;
    end record;
 
-   procedure Print_Content (Item : Content);
+   --  Log the content of a message according to the log levels for options and
+   --  payload.
+   procedure Print_Content
+     (Item              : Content;
+      General_Log_Level : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Debug;
+      Log_Level_Payload : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Info)
+      with Pre => CoAP_SPARK.Log."<=" (General_Log_Level, Log_Level_Payload);
 
    function Image (Item : Response_Kind) return String;
 

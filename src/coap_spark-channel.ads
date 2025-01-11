@@ -69,8 +69,10 @@ private
    use type WolfSSL.Subprogram_Result;
 
    function Is_Valid (Socket : Socket_Type) return Boolean is
-      (Socket.Result = WolfSSL.Success and then
-       (if Socket.Is_Secure then WolfSSL.Is_Valid (Socket.Ssl) and then
+      (GNAT.Sockets."/=" (Socket.Attached_Socket, GNAT.Sockets.No_Socket)
+       and then
+       (if Socket.Is_Secure then Socket.Result = WolfSSL.Success and then
+          WolfSSL.Is_Valid (Socket.Ssl) and then
           WolfSSL.Is_Valid (Socket.Ctx)));
 
 end CoAP_SPARK.Channel;

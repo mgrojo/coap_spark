@@ -1,4 +1,3 @@
-with Ada.Text_IO;
 
 with CoAP_SPARK.Content_Formats;
 with CoAP_SPARK.Options.Text_IO;
@@ -11,25 +10,31 @@ is
    -------------------
    -- Print_Content --
    -------------------
-   procedure Print_Content (Item : Content) is
+   procedure Print_Content
+     (Item              : Content;
+      General_Log_Level : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Debug;
+      Log_Level_Payload : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Info)
+   is
       Payload_Format : constant CoAP_SPARK.Options.Option_Format :=
         (if CoAP_SPARK.Content_Formats.Is_Text (Item.Format)
          then CoAP_SPARK.Options.UTF8_String
          else CoAP_SPARK.Options.Opaque);
    begin
       for Option of Item.Options loop
-         CoAP_SPARK.Options.Text_IO.Print (Option);
+         CoAP_SPARK.Options.Text_IO.Print (Option, General_Log_Level);
       end loop;
 
       if Item.Payload not in null then
-         Ada.Text_IO.Put ("Content-Format: ");
-         Ada.Text_IO.Put_Line
-           (CoAP_SPARK.Content_Formats.To_String (Item.Format));
+         CoAP_SPARK.Log.Put ("Content-Format: ", Level => General_Log_Level);
+         CoAP_SPARK.Log.Put_Line
+           (CoAP_SPARK.Content_Formats.To_String (Item.Format),
+            Level => General_Log_Level);
 
-         Ada.Text_IO.Put ("Payload: ");
-         Ada.Text_IO.Put_Line
+         CoAP_SPARK.Log.Put ("Payload: ", Level => General_Log_Level);
+         CoAP_SPARK.Log.Put_Line
            (CoAP_SPARK.Options.Image
-              (Format => Payload_Format, Value => Item.Payload.all));
+              (Format => Payload_Format, Value => Item.Payload.all),
+            Level => Log_Level_Payload);
       end if;
    end Print_Content;
 
