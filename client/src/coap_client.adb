@@ -25,7 +25,7 @@ procedure CoAP_Client is
    package Session_Environment renames RFLX.CoAP_Client.Session_Environment;
    package Types renames RFLX.RFLX_Types;
    package Channel renames CoAP_SPARK.Channel;
-   
+
    procedure Read (Ctx : FSM.Context;
                    Skt : in out CoAP_SPARK.Channel.Socket_Type) with
       Pre =>
@@ -41,11 +41,11 @@ procedure CoAP_Client is
       Size : constant Types.Length := FSM.Read_Buffer_Size (Ctx, FSM.C_Transport);
    begin
       if Size = 0 then
-         CoAP_SPARK.Log.Put_Line ("Error: read buffer size is 0");
+         CoAP_SPARK.Log.Put_Line ("Read buffer size is 0", CoAP_SPARK.Log.Error);
          return;
       end if;
       if Buffer'Length < Size then
-         CoAP_SPARK.Log.Put_Line ("Error: buffer too small");
+         CoAP_SPARK.Log.Put_Line ("Buffer too small", CoAP_SPARK.Log.Error);
          return;
       end if;
       FSM.Read
@@ -83,14 +83,21 @@ procedure CoAP_Client is
    end Write;
 
    procedure Usage is
+      procedure Put (Text : String;
+                     Level : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Info)
+         renames CoAP_SPARK.Log.Put;
+      procedure Put_Line (Text : String;
+                          Level : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Info)
+         renames CoAP_SPARK.Log.Put_Line;
    begin
-      CoAP_SPARK.Log.Put ("Usage: coap_client [-m METHOD] [-e <Payload>] ");
-      CoAP_SPARK.Log.Put_Line (" [-k <PSK>] [-u <Identity>] <URI>");
-      CoAP_SPARK.Log.Put ("  METHOD:");
+      Put ("Usage: coap_client [-m METHOD] [-e <Payload>] ");
+      Put ("[-k <PSK>] [-u <Identity>] [-v <verbosity>] ");
+      Put_Line ("<URI>");
+      Put ("  METHOD:");
       for I in RFLX.CoAP.Method_Code'Range loop
-         CoAP_SPARK.Log.Put (" " & RFLX.CoAP.Method_Code'Image (I));
+         Put (" " & RFLX.CoAP.Method_Code'Image (I));
       end loop;
-      CoAP_SPARK.Log.New_Line;
+      CoAP_SPARK.Log.New_Line (Level => CoAP_SPARK.Log.Info);
    end Usage;
 
    Ctx : FSM.Context;
@@ -118,7 +125,7 @@ begin
                 (Ada.Command_Line.Argument (Argument_Index));
          exception
             when Constraint_Error =>
-               CoAP_SPARK.Log.Put_Line ("Error: Invalid method");
+               CoAP_SPARK.Log.Put_Line ("Invalid method", CoAP_SPARK.Log.Error);
                Usage;
                return;
          end;
@@ -134,17 +141,35 @@ begin
               (Source => Payload_String, Target => Payload.all);
          exception
             when Constraint_Error =>
-               CoAP_SPARK.Log.Put_Line ("Error: Invalid payload");
+               CoAP_SPARK.Log.Put_Line ("Invalid payload", CoAP_SPARK.Log.Error);
                Usage;
                return;
          end;
+      elsif Ada.Command_Line.Argument (Argument_Index) = "-v" then
+         Argument_Index := @ + 1;
+         begin
+            CoAP_SPARK.Log.Set_Level
+              (CoAP_SPARK.Log.Level_Type'Val
+                 (CoAP_SPARK.Log.Level_Type'Pos (CoAP_SPARK.Log.Level_Type'Last) -
+                    Integer'Value (Ada.Command_Line.Argument (Argument_Index))));
+         exception
+            when Constraint_Error =>
+               CoAP_SPARK.Log.Put_Line ("Invalid verbosity level", CoAP_SPARK.Log.Error);
+               Usage;
+               return;
+         end;
+      elsif Ada.Command_Line.Argument (Argument_Index) = "-B" then
+         -- This is allowed but not implemented. For compatibility to
+         -- libcoap's coap-client, which uses this switch for specifying a
+         -- timeout.
+         Argument_Index := @ + 1;
       elsif Ada.Command_Line.Argument (Argument_Index) = "-k" or else
          Ada.Command_Line.Argument (Argument_Index) = "-u"
       then
          Argument_Index := @ + 1;
 
          if Argument_Index = Ada.Command_Line.Argument_Count  then
-            CoAP_SPARK.Log.Put ("Error: Missing argument for ");
+            CoAP_SPARK.Log.Put ("Missing argument for ", CoAP_SPARK.Log.Error);
             CoAP_SPARK.Log.Put_Line (Ada.Command_Line.Argument (Argument_Index - 1));
             Usage;
             return;
@@ -154,7 +179,7 @@ begin
          -- We will handle the URI later
          null;
       else
-         CoAP_SPARK.Log.Put ("Error: Invalid option: ");
+         CoAP_SPARK.Log.Put ("Invalid option: ", CoAP_SPARK.Log.Error);
          CoAP_SPARK.Log.Put_Line (Ada.Command_Line.Argument (Argument_Index));
          Usage;
          return;
@@ -162,7 +187,7 @@ begin
    end loop;
 
    if Argument_Index > Ada.Command_Line.Argument_Count then
-      CoAP_SPARK.Log.Put_Line ("Error: URI is missing");
+      CoAP_SPARK.Log.Put_Line ("URI is missing", CoAP_SPARK.Log.Error);
       Usage;
       return;
    end if;
@@ -220,7 +245,7 @@ begin
       end loop;
 
       if not CoAP_SPARK.Channel.Is_Valid (Skt) then
-         CoAP_SPARK.Log.Put_Line ("Communication problems.");
+         CoAP_SPARK.Log.Put_Line ("Communication problems.", CoAP_SPARK.Log.Error);
       end if;
       CoAP_SPARK.Channel.Finalize (Skt);
    end;
@@ -245,8 +270,7 @@ begin
 
       CoAP_SPARK.Messages.Print_Content (Ctx.E.Response_Content);
    else
-      CoAP_SPARK.Log.Put ("Error: ");
-      CoAP_SPARK.Log.Put_Line (Ctx.E.Current_Status'Image);
+      CoAP_SPARK.Log.Put_Line (Ctx.E.Current_Status'Image, CoAP_SPARK.Log.Error);
    end if;
 
    pragma Warnings (Off, "statement has no effect");
@@ -261,7 +285,7 @@ begin
 
    RFLX.CoAP_Client.Session_Environment.Finalize (Ctx.E);
 
-   -- This has no effect, but it is needed to avoid a linking error with 
+   -- This has no effect, but it is needed to avoid a linking error with
    -- SPARKLib in the validation profile.
    Workarounds.Check_Or_Fail;
 end CoAP_Client;
