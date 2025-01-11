@@ -228,8 +228,25 @@ is
    function Is_Text (Content_Type : Interfaces.Unsigned_32) return Boolean
    is (case Content_Type is
 
-          when text.css => True,
+          when application.yang_sid_Plus_json => True,
+          when application.coap_group_Plus_json => True,
+          when application.td_Plus_json => True,
+          when application.json_deflate => True,
+          when application.senml_Plus_xml => True,
+          when image.svg_Plus_xml => True,
+          when application.tm_Plus_json => True,
+          when application.json_patch_Plus_json => True,
+          when application.json => True,
           when text.plain_charset_utf_8 => True,
+          when application.senml_etch_Plus_json => True,
+          when application.aif_Plus_json => True,
+          when application.xml => True,
+          when application.sensml_Plus_json => True,
+          when application.sensml_Plus_xml => True,
+          when application.merge_patch_Plus_json => True,
+          when text.css => True,
+          when application.vnd_Dot_oma_Dot_lwm2m_Plus_json => True,
+          when application.senml_Plus_json => True,
           when others => False);
 
    function To_String (Content_Type : Interfaces.Unsigned_32) return String

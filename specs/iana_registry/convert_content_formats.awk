@@ -56,8 +56,8 @@ BEGIN {
     if (contenttype && match($3, /^[0-9]+$/)) {
         full_id = identifier contentcoding
         full_constant = package "." full_id
-        if (package == "text") {
-            text_list[identifier] = full_constant
+        if (package == "text" || identifier ~ /xml/ || identifier ~ /json/) {
+            text_list[full_constant] = full_constant
         }
         package_list[package] = package_list[package] \
             sprintf("      -- %s\n", comment) \
