@@ -170,7 +170,8 @@ begin
 
          if Argument_Index = Ada.Command_Line.Argument_Count  then
             CoAP_SPARK.Log.Put ("Missing argument for ", CoAP_SPARK.Log.Error);
-            CoAP_SPARK.Log.Put_Line (Ada.Command_Line.Argument (Argument_Index - 1));
+            CoAP_SPARK.Log.Put_Line (Ada.Command_Line.Argument (Argument_Index - 1),
+                                     CoAP_SPARK.Log.Error);
             Usage;
             return;
          end if;
@@ -180,7 +181,8 @@ begin
          null;
       else
          CoAP_SPARK.Log.Put ("Invalid option: ", CoAP_SPARK.Log.Error);
-         CoAP_SPARK.Log.Put_Line (Ada.Command_Line.Argument (Argument_Index));
+         CoAP_SPARK.Log.Put_Line (Ada.Command_Line.Argument (Argument_Index),
+                                  CoAP_SPARK.Log.Error);
          Usage;
          return;
       end if;
@@ -200,6 +202,13 @@ begin
       Skt : CoAP_SPARK.Channel.Socket_Type
             (Is_Secure => CoAP_SPARK.URI.Scheme (URI) = CoAP_SPARK.Secure_Scheme);
    begin
+      if not CoAP_SPARK.URI.Is_Valid (URI) then
+         CoAP_SPARK.Log.Put ("Invalid URI: ", CoAP_SPARK.Log.Error);
+         CoAP_SPARK.Log.Put_Line (URI_String, CoAP_SPARK.Log.Error);
+         Usage;
+         return;
+      end if;
+
       CoAP_SPARK.Log.Put_Line ("Method: " & RFLX.CoAP.Method_Code'Image (Method));
       CoAP_SPARK.Log.Put_Line ("Scheme: " & CoAP_SPARK.URI.Scheme (URI));
       CoAP_SPARK.Log.Put_Line ("Host: " & CoAP_SPARK.URI.Host (URI));
