@@ -233,6 +233,7 @@ is
           when application.td_Plus_json => True,
           when application.json_deflate => True,
           when application.senml_Plus_xml => True,
+          when application.link_format => True,
           when image.svg_Plus_xml => True,
           when application.tm_Plus_json => True,
           when application.json_patch_Plus_json => True,
