@@ -33,7 +33,7 @@ is
       Query         : String;
       Format        : Interfaces.Unsigned_32 :=
         CoAP_SPARK.Content_Formats.text.plain_charset_utf_8;
-      Payload       : RFLX.RFLX_Types.Bytes_Ptr := null;
+      Payload       : in out RFLX.RFLX_Types.Bytes_Ptr;
       Session_State : out State)
    with Always_Terminates;
 

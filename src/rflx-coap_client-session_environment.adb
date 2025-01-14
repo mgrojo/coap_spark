@@ -10,16 +10,17 @@ is
      (Source        : String;
       Separator     : Character;
       Number        : RFLX.CoAP.Option_Numbers;
-      Option_List   : in out CoAP_SPARK.Options.Lists.Vector)
-   with Pre => CoAP_SPARK.Options.Option_Properties_Table (Number).Repeatable,
-        Post =>
+      Option_List   : in out CoAP_SPARK.Options.Lists.Vector) with
+       Always_Terminates,
+       Pre => CoAP_SPARK.Options.Option_Properties_Table (Number).Repeatable,
+       Post =>
            Natural (CoAP_SPARK.Options.Lists.Length (Option_List)) -
              Natural (CoAP_SPARK.Options.Lists.Length (Option_List'Old)) in
              0 .. Ada.Strings.Fixed.Count
                     (Source => Source,
                      Set => Ada.Strings.Maps.To_Set (Separator)) + 1
    is
-      Segment_First : Natural := Source'First;
+      Segment_First : Natural;
       Segment_Last  : Natural := Source'First - 1;
       Order_Index   : CoAP_SPARK.Options.Option_Index := 1;
       Option        : CoAP_SPARK.Options.Option;
@@ -45,6 +46,8 @@ is
 
          CoAP_SPARK.Options.Lists.Append (Option_List, Option);
          Order_Index := Order_Index + 1;
+
+         pragma Loop_Variant (Increases => Segment_Last);
       end loop;
    end Split_String_In_Repeatable_Options;
 
@@ -56,16 +59,24 @@ is
       Query         : String;
       Format        : Interfaces.Unsigned_32 :=
         CoAP_SPARK.Content_Formats.text.plain_charset_utf_8;
-      Payload       : RFLX.RFLX_Types.Bytes_Ptr := null;
+      Payload       : in out RFLX.RFLX_Types.Bytes_Ptr;
       Session_State : out State)
    is
+      use type RFLX.RFLX_Types.Bytes_Ptr;
    begin
       Session_State.Method := Method;
       Session_State.Current_Status := OK;
       Session_State.Is_First_Message := True;
       Session_State.Current_Message_ID := 0;
       Session_State.Request_Content.Format := Format;
+      Session_State.Request_Content.Options :=
+        CoAP_SPARK.Options.Lists.Empty_Vector
+          (Capacity => CoAP_SPARK.Max_Number_Of_Options);
+
+      -- Move payload.
       Session_State.Request_Content.Payload := Payload;
+      Payload := null;
+
       declare
          Option : CoAP_SPARK.Options.Option;
       begin
@@ -101,7 +112,7 @@ is
             Number      => RFLX.CoAP.Uri_Query,
             Option_List => Session_State.Request_Content.Options);
 
-         if Payload not in null then
+         if Session_State.Request_Content.Payload /= null then
             CoAP_SPARK.Options.New_UInt_Option
               (Number => RFLX.CoAP.Content_Format,
                Value  => Session_State.Request_Content.Format,
@@ -111,6 +122,13 @@ is
             (Session_State.Request_Content.Options, Option);
          end if;
       end;
+
+      Session_State.Response_Content.Format := 0;
+      Session_State.Response_Content.Options :=
+        CoAP_SPARK.Options.Lists.Empty_Vector
+          (Capacity => CoAP_SPARK.Max_Number_Of_Options);
+      Session_State.Response_Content.Payload := null;
+      Session_State.Response_Codes := (Code_Class => RFLX.CoAP.Success);
 
    end Initialize;
 

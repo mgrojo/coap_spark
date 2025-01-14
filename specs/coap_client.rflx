@@ -87,9 +87,9 @@ package CoAP_Client is
          OK := Put_Options_And_Payload (Response.Options_And_Payload);
       transition
          goto Treat_Client_Error_Response
-            if Response.Class = CoAP::Client_Error
+            if OK and Response.Class = CoAP::Client_Error
          goto Treat_Server_Error_Response
-            if Response.Class = CoAP::Server_Error
+            if OK and Response.Class = CoAP::Server_Error
          goto Failure
       exception
          goto Failure
@@ -100,6 +100,8 @@ package CoAP_Client is
       begin
          OK := Put_Client_Error(Response.Client_Error_Code);
       transition
+         goto null
+            if OK
          goto Failure
       exception
          goto Failure
@@ -110,6 +112,8 @@ package CoAP_Client is
       begin
          OK := Put_Server_Error(Response.Server_Error_Code);
       transition
+         goto null
+            if OK
          goto Failure
       exception
          goto Failure

@@ -79,7 +79,7 @@ is
             -- to free the stored Option.
             --
             CoAP_SPARK.Options.Free (Option_Copy);
-            pragma Unreferenced (Option_Copy);
+            pragma Assert (not CoAP_SPARK.Options.Has_Buffer (Option_Copy));
          end;
       end loop;
       CoAP_SPARK.Options.Lists.Clear (Item.Options);

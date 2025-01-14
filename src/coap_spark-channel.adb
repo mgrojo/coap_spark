@@ -214,7 +214,6 @@ is
       Length : out RFLX.RFLX_Builtin_Types.Length)
    with SPARK_Mode => Off
    is
-
    begin
       if Socket.Is_Secure then
          declare
@@ -250,6 +249,7 @@ is
 
    procedure Finalize
      (Socket : in out Socket_Type)
+   with SPARK_Mode => Off
    is
    begin
       GNAT.Sockets.Close_Socket (Socket => Socket.Attached_Socket);

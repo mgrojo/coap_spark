@@ -1,5 +1,4 @@
 with Ada.Strings.Fixed;
-with RFLX.RFLX_Types.Operations;
 
 package body CoAP_SPARK.Utils
   with SPARK_Mode
@@ -24,13 +23,8 @@ is
    is
    begin
       for I in Target'Range loop
-
-         RFLX.RFLX_Types.Operations.Insert
-           (Val    =>
-              RFLX.RFLX_Types.Base_Integer
-                (Character'Pos (Source (Natural (I)))),
-            Buffer => Target, First => I, Last => I, Off => 0,
-            Size   => Character'Size, BO => RFLX.RFLX_Types.High_Order_First);
+         Target (I) :=
+           RFLX.RFLX_Types.Byte (Character'Pos (Source (Natural (I))));
       end loop;
    end Copy_String;
 
