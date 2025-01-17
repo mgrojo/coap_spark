@@ -6,7 +6,7 @@
 - [ ] Take inspiration from switches for coap-client to implement more
   configurable functionalities.
 - [ ] Consider implementing block transfers (test with coap_client coap://coap.me/large)
-- [ ] Fix assertion error with: bin/coap_client coap://coap.me/query?quees=patatas
+- [X] Fix assertion error with: bin/coap_client coap://coap.me/query?quees=patatas
 - [ ] Support IPs in coap_client's URI
 - [ ] Correctly encode URIs
 - [ ] Set Channel in SPARK_Mode by using SPARK_Sockets from WolfSSL

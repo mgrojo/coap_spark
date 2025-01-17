@@ -129,17 +129,30 @@ package CoAP is
       message
          Option_Delta : Option_Base_Type;
          Option_Length : Option_Base_Type
-            then Option_Value with Size => Option_Length * 8 if Option_Length < 13 and Option_Delta < 13
-            then Option_Delta_Extended8 if Option_Delta = 13
-            then Option_Delta_Extended16 if Option_Delta = 14;
+            then Option_Value with Size => Option_Length * 8
+               if Option_Length < 13 and Option_Delta < 13
+            then Option_Delta_Extended8
+               if Option_Delta = 13
+            then Option_Delta_Extended16
+               if Option_Delta = 14
+            then Option_Length_Extended8
+               if Option_Length = 13 and Option_Delta < 13
+            then Option_Length_Extended16
+               if Option_Length = 14 and Option_Delta < 13;
          Option_Delta_Extended8 : Option_Extended8_Type
-            then Option_Value with Size => Option_Length * 8 if Option_Length < 13
-            then Option_Length_Extended8 if Option_Length = 13
-            then Option_Length_Extended16 if Option_Length = 14;
+            then Option_Value with Size => Option_Length * 8
+               if Option_Length < 13
+            then Option_Length_Extended8
+               if Option_Length = 13
+            then Option_Length_Extended16
+               if Option_Length = 14;
          Option_Delta_Extended16 : Option_Extended16_Type
-            then Option_Value with Size => Option_Length * 8 if Option_Length < 13
-            then Option_Length_Extended8 if Option_Length = 13
-            then Option_Length_Extended16 if Option_Length = 14;
+            then Option_Value with Size => Option_Length * 8
+               if Option_Length < 13
+            then Option_Length_Extended8
+               if Option_Length = 13
+            then Option_Length_Extended16
+               if Option_Length = 14;
          Option_Length_Extended8 : Option_Extended8_Type
             then Option_Value with Size => (13 + Option_Length_Extended8) * 8;
          Option_Length_Extended16 : Option_Extended16_Type
