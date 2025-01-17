@@ -283,6 +283,7 @@ private
    -- Compare option on values, not on the default (pointer values)
    overriding function "=" (Left, Right : Option) return Boolean is
       (Left.Number = Right.Number and then
+       Left.Order_Index = Right.Order_Index and then
       ((Left.Value = null and then Right.Value = null) or else
          (Left.Value /= null and then Right.Value /= null and then
          Left.Value.all = Right.Value.all)));

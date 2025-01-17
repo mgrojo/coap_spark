@@ -1,6 +1,7 @@
 with Ada.Containers;
 with Ada.Numerics.Discrete_Random;
 with CoAP_SPARK.Log;
+with CoAP_SPARK.Messages;
 with CoAP_SPARK.Options.Lists;
 with RFLX.CoAP.Option_Sequence;
 with RFLX.CoAP.Option_Type;
@@ -515,6 +516,9 @@ is
    is
       use type CoAP_Client.Session_Environment.Status_Type;
    begin
+
+      -- Make sure the Response_Content is freed before overwriting it
+      CoAP_SPARK.Messages.Finalize (State.Response_Content);
 
       if Data'Length = 0 then
 

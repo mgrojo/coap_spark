@@ -8,6 +8,8 @@ package CoAP_SPARK.Messages
    with SPARK_Mode
 is
 
+   use type RFLX.RFLX_Types.Bytes_Ptr;
+
    subtype Response_Code is RFLX.CoAP.Code_Class
                               range RFLX.CoAP.Success .. RFLX.CoAP.Server_Error;
 
@@ -26,7 +28,7 @@ is
    subtype Payload_Ptr is RFLX.RFLX_Types.Bytes_Ptr
    with
      Dynamic_Predicate =>
-       Payload_Ptr in null
+       Payload_Ptr = null
        or else Payload_Ptr'Length <= CoAP_SPARK.Max_Payload_Length;
 
    type Content is record
@@ -44,8 +46,14 @@ is
       Log_Level_Payload : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Info)
       with Pre => CoAP_SPARK.Log."<=" (General_Log_Level, Log_Level_Payload);
 
-   function Image (Item : Response_Kind) return String;
+   function Image (Item : Response_Kind) return String
+   with
+     Post => Image'Result'First = 1;
 
-   procedure Finalize (Item : in out Content);
+   procedure Finalize (Item : in out Content)
+   with
+     Post =>
+       CoAP_SPARK.Options.Lists.Is_Empty (Item.Options)
+       and then Item.Payload = null;
 
 end CoAP_SPARK.Messages;
