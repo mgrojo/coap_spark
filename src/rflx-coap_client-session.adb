@@ -1,7 +1,6 @@
 with Ada.Containers;
 with Ada.Numerics.Discrete_Random;
 with CoAP_SPARK.Log;
-with CoAP_SPARK.Messages;
 with CoAP_SPARK.Options.Lists;
 with RFLX.CoAP.Option_Sequence;
 with RFLX.CoAP.Option_Type;
@@ -155,6 +154,8 @@ is
      Option_Sequence_Cxt : in out RFLX.CoAP.Option_Sequence.Context) with
    Pre  =>
       CoAP_SPARK.Options.Has_Buffer (Opt)
+      and then CoAP_SPARK.Options.Get_Length (Opt) <=
+        CoAP_SPARK.Options.Max_Option_Value_Length
       and then RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt)
       and then RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt)
       and then To_Option_Extended16_Type
@@ -273,19 +274,25 @@ is
       Option_Sorting.Sort (State.Request_Content.Options);
 
       for Option of State.Request_Content.Options loop
+         pragma Loop_Invariant (RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt));
          declare
             Option_Copy : CoAP_SPARK.Options.Option;
          begin
-            -- Make a copy of the option to comply with the SPARK requirements
-            -- on pointers.
-            --
-            CoAP_SPARK.Options.Copy (Source => Option, Target => Option_Copy);
+            if CoAP_SPARK.Options.Has_Buffer (Option) then
+               -- Make a copy of the option to comply with the SPARK requirements
+               -- on pointers.
+               --
+               CoAP_SPARK.Options.Copy
+                 (Source => Option, Target => Option_Copy);
 
-            Add_Option
-              (Opt                 => Option_Copy,
-               Current_Delta       => Current_Delta,
-               Option_Sequence_Cxt => Option_Sequence_Cxt);
-            pragma Unreferenced (Option_Copy);
+               Add_Option
+                 (Opt                 => Option_Copy,
+                  Current_Delta       => Current_Delta,
+                  Option_Sequence_Cxt => Option_Sequence_Cxt);
+               pragma Unreferenced (Option_Copy);
+            else
+               CoAP_SPARK.Log.Put_Line ("Discarded option without buffer");
+            end if;
          end;
       end loop;
       pragma Unreferenced (Current_Delta);
@@ -517,9 +524,6 @@ is
       use type CoAP_Client.Session_Environment.Status_Type;
    begin
 
-      -- Make sure the Response_Content is freed before overwriting it
-      CoAP_SPARK.Messages.Finalize (State.Response_Content);
-
       if Data'Length = 0 then
 
          CoAP_SPARK.Log.Put_Line ("Options and payload are empty");
@@ -547,6 +551,8 @@ is
             loop
                pragma Loop_Invariant (RFLX.CoAP.Option_Sequence.Has_Buffer
                                     (Option_Sequence_Cxt));
+               pragma Loop_Invariant (RFLX.CoAP.Option_Sequence.Valid
+                                         (Option_Sequence_Cxt));
                RFLX.CoAP.Option_Sequence.Switch
                  (Ctx => Option_Sequence_Cxt, Element_Ctx => Option_Cxt);
 
@@ -565,6 +571,18 @@ is
 
                RFLX.CoAP.Option_Sequence.Update
                  (Ctx => Option_Sequence_Cxt, Element_Ctx => Option_Cxt);
+               pragma Assert (not RFLX.CoAP.Option_Type.Has_Buffer (Option_Cxt));
+
+               if CoAP_SPARK.Options.Lists.Length (State.Response_Content.Options) =
+                  CoAP_SPARK.Options.Lists.Capacity (State.Response_Content.Options)
+                  and then not End_Of_Options
+               then
+                  CoAP_SPARK.Log.Put_Line
+                    ("Too many options", CoAP_SPARK.Log.Error);
+                  State.Current_Status :=
+                    RFLX.CoAP_Client.Session_Environment.Capacity_Error;
+                  End_Of_Options := True;
+               end if;
 
                exit Read_Options when
                  End_Of_Options
@@ -572,61 +590,92 @@ is
                                (Option_Sequence_Cxt);
             end loop Read_Options;
 
-            if CoAP.Option_Sequence.Sequence_Last (Option_Sequence_Cxt)
-              >= Option_Sequence_Cxt.Last
+            if State.Current_Status = RFLX.CoAP_Client.Session_Environment.OK
+              and then CoAP.Option_Sequence.Sequence_Last (Option_Sequence_Cxt)
+                       < Option_Sequence_Cxt.Last
+              and then RFLX.CoAP.Option_Type.Has_Buffer (Option_Cxt)
             then
-               RFLX.CoAP.Option_Type.Take_Buffer
-                 (Ctx => Option_Cxt, Buffer => Buffer);
-               pragma Assert (not RFLX.CoAP.Option_Type.Has_Buffer
-                                    (Option_Cxt));
-               RFLX.RFLX_Types.Free (Buffer);
-            else
                -- When there is something left to be read, it is the payload
-               Print_Payload :
+               Save_Payload :
                declare
                   use type RFLX.RFLX_Builtin_Types.Byte;
                   Payload_Marker : constant RFLX.RFLX_Builtin_Types.Byte :=
-                     16#FF#;
-                  First          :
-                    constant RFLX.RFLX_Builtin_Types.Index :=
-                      RFLX.RFLX_Builtin_Types.Index
-                        (CoAP.Option_Sequence.Sequence_Last
-                           (Option_Sequence_Cxt) / 8 + 1);
-                  Last                  :
-                    constant RFLX.RFLX_Builtin_Types.Index :=
-                      RFLX.RFLX_Builtin_Types.Index (Option_Cxt.Last / 8);
+                    16#FF#;
+                  First          : constant RFLX.RFLX_Builtin_Types.Index :=
+                    RFLX.RFLX_Builtin_Types.Index
+                      (CoAP.Option_Sequence.Sequence_Last (Option_Sequence_Cxt)
+                       / 8
+                       + 1);
+                  Last           :
+                    constant RFLX.RFLX_Builtin_Types.Index'Base :=
+                      RFLX.RFLX_Builtin_Types.Index'Base (Option_Cxt.Last / 8);
                begin
 
                   RFLX.CoAP.Option_Type.Take_Buffer
                     (Ctx => Option_Cxt, Buffer => Buffer);
-                  pragma Assert (not RFLX.CoAP.Option_Type.Has_Buffer
-                                    (Option_Cxt));
+                  pragma
+                    Assert (not RFLX.CoAP.Option_Type.Has_Buffer (Option_Cxt));
 
-                  if First >= Last or else
-                     Buffer (First) /= Payload_Marker
+                  if First >= Last
+                    or else First not in Buffer'Range
+                    or else Buffer (First) /= Payload_Marker
                   then
                      CoAP_SPARK.Log.Put_Line
-                       ("Error: Payload marker not found before the payload");
-                     CoAP_SPARK.Log.Put_Line
-                       ("Remaining bytes: ");
-                     CoAP_SPARK.Log.Put_Line (CoAP_SPARK.Options.Image
-                         (Format => CoAP_SPARK.Options.Opaque,
-                          Value  => Buffer (First .. Last)));
+                       ("Error: Payload marker not found before the payload",
+                        CoAP_SPARK.Log.Error);
 
+                     if First in Buffer'Range then
+                        CoAP_SPARK.Log.Put_Line
+                          ("Remaining bytes: ", CoAP_SPARK.Log.Error);
+                        CoAP_SPARK.Log.Put_Line
+                          (Item  =>
+                             CoAP_SPARK.Options.Image
+                               (Format => CoAP_SPARK.Options.Opaque,
+                                Value  => Buffer (First .. Last)),
+                           Level => CoAP_SPARK.Log.Error);
+                     else
+                        CoAP_SPARK.Log.Put_Line
+                          ("Unexpected case for payload",
+                           CoAP_SPARK.Log.Error);
+                     end if;
                      RFLX.RFLX_Types.Free (Buffer);
 
                      State.Current_Status :=
                        RFLX.CoAP_Client.Session_Environment.Malformed_Message;
-                     RFLX_Result := False;
-                     return;
+                  else
+                     -- Make sure the Response_Content payload is freed before overwriting it
+                     if State.Response_Content.Payload /= null then
+                        RFLX.RFLX_Types.Free (State.Response_Content.Payload);
+                     end if;
+
+                     if Last - First > CoAP_SPARK.Max_Payload_Length then
+                        CoAP_SPARK.Log.Put_Line
+                          ("Payload is too long", CoAP_SPARK.Log.Error);
+
+                        State.Current_Status :=
+                          RFLX.CoAP_Client.Session_Environment.Capacity_Error;
+                     else
+                        State.Response_Content.Payload :=
+                          new RFLX.RFLX_Types.Bytes'
+                            (Buffer (First + 1 .. Last));
+                     end if;
+                     RFLX.RFLX_Types.Free (Buffer);
                   end if;
-
-                  State.Response_Content.Payload :=
-                    new RFLX.RFLX_Types.Bytes'
-                      (Buffer (First + 1 .. Last));
-
-                  RFLX.RFLX_Types.Free (Buffer);
-               end Print_Payload;
+               end Save_Payload;
+            end if;
+            if RFLX.CoAP.Option_Type.Has_Buffer (Option_Cxt) then
+               RFLX.CoAP.Option_Type.Take_Buffer
+               (Ctx => Option_Cxt, Buffer => Buffer);
+               pragma Assert (not RFLX.CoAP.Option_Type.Has_Buffer
+                                    (Option_Cxt));
+               RFLX.RFLX_Types.Free (Buffer);
+            end if;
+            if RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt) then
+               RFLX.CoAP.Option_Sequence.Take_Buffer
+               (Ctx => Option_Sequence_Cxt, Buffer => Buffer);
+               pragma Assert (not RFLX.CoAP.Option_Sequence.Has_Buffer
+                                    (Option_Sequence_Cxt));
+               RFLX.RFLX_Types.Free (Buffer);
             end if;
          end;
       end if;
