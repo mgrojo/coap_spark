@@ -1,7 +1,7 @@
 with Ada.Containers;
-with Ada.Numerics.Discrete_Random;
 with CoAP_SPARK.Log;
-with CoAP_SPARK.Options.Lists;
+with CoAP_SPARK.Options.Lists.Sorting;
+with CoAP_SPARK.Random;
 with RFLX.CoAP.Option_Sequence;
 with RFLX.CoAP.Option_Type;
 with RFLX.RFLX_Builtin_Types;
@@ -18,29 +18,6 @@ is
    use type CoAP_SPARK.Options.Option_Format;
    use type RFLX.CoAP.Option_Numbers;
    use type Ada.Containers.Count_Type;
-
-   package Option_Sorting is new CoAP_SPARK.Options.Lists.Generic_Sorting
-                                   ("<" => CoAP_SPARK.Options."<");
-
-   -- The random number generators cannot be proved by SPARK.
-   package Random
-     with SPARK_Mode => Off
-   is
-      package Bytes is new Ada.Numerics.Discrete_Random (RFLX_Types.Byte);
-      Byte_Generator : Bytes.Generator;
-
-      package ID is new
-        Ada.Numerics.Discrete_Random (RFLX.CoAP.Message_ID_Type);
-      ID_Generator : ID.Generator;
-   end Random;
-
-   package body Random
-     with SPARK_Mode => Off
-   is
-   begin
-      Bytes.Reset (Byte_Generator);
-      ID.Reset (ID_Generator);
-   end Random;
 
    subtype Base_Delta_Type is RFLX.CoAP.Option_Extended16_Type range 0 .. 12;
    subtype Extended8_Delta_Type is
@@ -73,7 +50,6 @@ is
    procedure Get_New_Message_ID
      (State       : in out RFLX.CoAP_Client.Session_Environment.State;
       RFLX_Result : out RFLX.CoAP.Message_ID_Type)
-   with SPARK_Mode => Off
    is
       use type RFLX.CoAP.Message_ID_Type;
    begin
@@ -83,7 +59,7 @@ is
          --  value of the variable (e.g., on startup) be randomized, in order
          --  to make successful off-path attacks on the protocol less likely.
          State.Is_First_Message := False;
-         State.Current_Message_ID := Random.ID.Random (Random.ID_Generator);
+         CoAP_SPARK.Random.Get_Random_Message_ID (State.Current_Message_ID);
       elsif State.Current_Message_ID = RFLX.CoAP.Message_ID_Type'Last then
          State.Current_Message_ID := RFLX.CoAP.Message_ID_Type'First;
       else
@@ -95,18 +71,19 @@ is
    procedure Get_Random_Token
      (State       : in out RFLX.CoAP_Client.Session_Environment.State;
       RFLX_Result : out RFLX.CoAP_Client.Token_Data.Structure)
-   with SPARK_Mode => Off
    is
       pragma Unreferenced (State);
    begin
-      for I in RFLX_Result.Token'Range loop
-         RFLX_Result.Token (I) := Random.Bytes.Random (Random.Byte_Generator);
-      end loop;
 
       RFLX_Result :=
         (Length => RFLX_Result.Token'Length,
-         Unused => RFLX.CoAP_Client.Unused_4'First,
-         Token  => RFLX_Result.Token);
+         Unused => RFLX.CoAP_Client.Unused_4'Last,
+         Token => [others => 0]);
+
+      for E of RFLX_Result.Token loop
+         CoAP_SPARK.Random.Get_Random_Byte (E);
+      end loop;
+
    end Get_Random_Token;
 
    function To_Option_Extended16_Type
@@ -271,10 +248,11 @@ is
         (Ctx => Option_Sequence_Cxt, Buffer => Option_Sequence_Buffer);
 
       -- The options must be sorted by option number before they are encoded
-      Option_Sorting.Sort (State.Request_Content.Options);
+      CoAP_SPARK.Options.Lists.Sorting.Sort (State.Request_Content.Options);
 
       for Option of State.Request_Content.Options loop
          pragma Loop_Invariant (RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt));
+         pragma Loop_Invariant (RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt));
          declare
             Option_Copy : CoAP_SPARK.Options.Option;
          begin
@@ -581,7 +559,7 @@ is
                     ("Too many options", CoAP_SPARK.Log.Error);
                   State.Current_Status :=
                     RFLX.CoAP_Client.Session_Environment.Capacity_Error;
-                  End_Of_Options := True;
+                  exit Read_Options;
                end if;
 
                exit Read_Options when
