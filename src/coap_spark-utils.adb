@@ -1,4 +1,5 @@
 with Ada.Strings.Fixed;
+with RFLX.RFLX_Builtin_Types;
 
 package body CoAP_SPARK.Utils
   with SPARK_Mode
@@ -18,14 +19,18 @@ is
            Pad    => Pad);
    end Padded_Image;
 
-   procedure Copy_String
-     (Source : String; Target : out RFLX.RFLX_Types.Bytes)
+   procedure Copy_String (Source : String; Target : out RFLX.RFLX_Types.Bytes)
    is
+      use type RFLX.RFLX_Builtin_Types.Index;
    begin
       for I in Target'Range loop
          Target (I) :=
-           RFLX.RFLX_Types.Byte (Character'Pos (Source (Natural (I))));
+           RFLX.RFLX_Types.Byte
+             (Character'Pos (Source (Natural (I - Target'First) + Source'First)));
       end loop;
    end Copy_String;
+
+   function Value (Number : String) return Interfaces.Unsigned_16
+   is (Interfaces.Unsigned_16'Value (Number)) with SPARK_Mode => Off;
 
 end CoAP_SPARK.Utils;

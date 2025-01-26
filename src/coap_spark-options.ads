@@ -14,14 +14,20 @@ is
    -- the maximum size for uint options is 4 bytes.
    -- The other registered options by IANA are also not larger than 4 bytes.
    -- Maximum size in general is 1034 bytes.
-   Max_Uint_Length : constant := 4;
+   Max_Uint_Length         : constant := 4;
    Max_Option_Value_Length : constant := Max_URI_Length;
 
    subtype UInt_Bytes is RFLX.RFLX_Types.Bytes
-      with Dynamic_Predicate => UInt_Bytes'Length <= Max_Uint_Length;
+   with Dynamic_Predicate => UInt_Bytes'Length <= Max_Uint_Length;
 
    subtype Option_Value_Length is
      Natural range 0 .. CoAP_SPARK.Options.Max_Option_Value_Length;
+
+   subtype Option_Value_Ptr is RFLX.RFLX_Types.Bytes_Ptr
+   with
+     Dynamic_Predicate =>
+       (if Option_Value_Ptr /= null
+        then Option_Value_Ptr.all'Length <= Max_Option_Value_Length);
 
    subtype Option_Index is Positive range 1 .. Max_Number_Of_Options;
 
@@ -133,10 +139,16 @@ is
          Repeatable     => True,
          Maximum_Length => Max_Option_Value_Length)];
 
-   type Option is private;
+   type Option is private
+   with
+     Dynamic_Predicate =>
+       Has_Valid_Length
+         (Option_Properties_Table (Option.Number).Format,
+          (if Option.Value = null then 0 else Option.Value.all'Length));
 
    function "<" (Left, Right : Option) return Boolean;
-   overriding function "=" (Left, Right : Option) return Boolean;
+   overriding
+   function "=" (Left, Right : Option) return Boolean;
 
    function Get_Number (Opt : Option) return RFLX.CoAP.Option_Numbers;
 
@@ -150,118 +162,128 @@ is
       Order_Index : Option_Index := 1;
       Result      : out Option)
    with
-      Pre  =>
-         Value'Length <= Option_Properties_Table (Number).Maximum_Length
-         and then Option_Properties_Table (Number).Format = UTF8_String
-         and then (if Option_Properties_Table (Number).Repeatable
-                   then Order_Index >= 1
-                   else Order_Index = 1),
-      Post =>
-         Has_Buffer (Result)
-         and then Get_Number (Result) = Number
-         and then Get_Length (Result) = Value'Length;
+     Pre =>
+       Value'Length <= Option_Properties_Table (Number).Maximum_Length
+       and then Option_Properties_Table (Number).Format = UTF8_String
+       and then (if Option_Properties_Table (Number).Repeatable
+                 then Order_Index >= 1
+                 else Order_Index = 1),
+     Post =>
+       Has_Buffer (Result)
+       and then Get_Number (Result) = Number
+       and then Get_Length (Result) = Value'Length;
 
    procedure New_UInt_Option
-     (Number : RFLX.CoAP.Option_Numbers;
-      Value  : Interfaces.Unsigned_32;
+     (Number      : RFLX.CoAP.Option_Numbers;
+      Value       : Interfaces.Unsigned_32;
       Order_Index : Option_Index := 1;
-      Result : out Option)
+      Result      : out Option)
    with
-      Pre  => Option_Properties_Table (Number).Format = UInt
-         and then (if Option_Properties_Table (Number).Repeatable
-                   then Order_Index >= 1
-                   else Order_Index = 1),
-      Post =>
-         Has_Buffer (Result)
-         and then Get_Number (Result) = Number
-         and then Get_Length (Result) <= Max_Uint_Length;
+     Pre =>
+       Option_Properties_Table (Number).Format = UInt
+       and then (if Option_Properties_Table (Number).Repeatable
+                 then Order_Index >= 1
+                 else Order_Index = 1),
+     Post =>
+       Has_Buffer (Result)
+       and then Get_Number (Result) = Number
+       and then Get_Length (Result) <= Max_Uint_Length;
 
    procedure New_Opaque_Option
-     (Number : RFLX.CoAP.Option_Numbers;
-      Value  : RFLX.RFLX_Types.Bytes;
+     (Number      : RFLX.CoAP.Option_Numbers;
+      Value       : RFLX.RFLX_Types.Bytes;
       Order_Index : Option_Index := 1;
-      Result : out Option)
+      Result      : out Option)
    with
-     Pre  =>
-      Value'Length <= Option_Properties_Table (Number).Maximum_Length
-      and then Option_Properties_Table (Number).Format = Opaque
-      and then (if Option_Properties_Table (Number).Repeatable
-                  then Order_Index >= 1
-                  else Order_Index = 1),
+     Pre =>
+       Value'Length <= Option_Properties_Table (Number).Maximum_Length
+       and then Option_Properties_Table (Number).Format = Opaque
+       and then (if Option_Properties_Table (Number).Repeatable
+                 then Order_Index >= 1
+                 else Order_Index = 1),
      Post =>
-      Has_Buffer (Result)
-      and then Get_Number (Result) = Number
-      and then Get_Length (Result) = Value'Length;
+       Has_Buffer (Result)
+       and then Get_Number (Result) = Number
+       and then Get_Length (Result) = Value'Length;
 
    -- For options where we already have the encoded value, like in responses.
    procedure New_Encoded_Option
      (Number : RFLX.CoAP.Option_Numbers;
-      Value  : in out RFLX.RFLX_Types.Bytes_Ptr;
+      Value  : in out Option_Value_Ptr;
       Result : out Option)
    with
-     Pre  =>
-      Value'Length <= Option_Properties_Table (Number).Maximum_Length
-      and then Value /= null,
+     Pre =>
+       Value /= null
+       and then Value'Length
+                <= Option_Properties_Table (Number).Maximum_Length,
      Post =>
-      Has_Buffer (Result)
-      and then Value = null
-      and then Get_Number (Result) = Number;
+       Has_Buffer (Result)
+       and then Value = null
+       and then Get_Number (Result) = Number;
 
    procedure New_Empty_Option
-     (Number : RFLX.CoAP.Option_Numbers;
-      Result : out Option) with
-     Pre  =>
-         Option_Properties_Table (Number).Format = Empty,
-     Post =>
-         Has_Buffer (Result)
-         and then Get_Number (Result) = Number
-         and then Get_Length (Result) = 0;
-
-   procedure Take_Buffer (Opt   : in out Option;
-                          Value : out RFLX.RFLX_Types.Bytes_Ptr)
+     (Number : RFLX.CoAP.Option_Numbers; Result : out Option)
    with
-      Pre  => Has_Buffer (Opt),
-      Post => not Has_Buffer (Opt) and then Value /= null;
+     Pre => Option_Properties_Table (Number).Format = Empty,
+     Post =>
+       Has_Buffer (Result)
+       and then Get_Number (Result) = Number
+       and then Get_Length (Result) = 0;
+
+   procedure Take_Buffer (Opt : in out Option; Value : out Option_Value_Ptr)
+   with
+     Pre => Has_Buffer (Opt),
+     Post => not Has_Buffer (Opt) and then Value /= null;
 
    -- Make a deep copy of the Source option.
-   procedure Copy (Source : Option; Target : out Option) with
-     Pre  => Has_Buffer (Source),
+   procedure Copy (Source : Option; Target : out Option)
+   with
+     Pre => Has_Buffer (Source),
      Post =>
-      Has_Buffer (Target) and then Get_Number (Target) = Get_Number (Source)
-      and then Get_Length (Target) = Get_Length (Source);
+       Has_Buffer (Target)
+       and then Get_Number (Target) = Get_Number (Source)
+       and then Get_Length (Target) = Get_Length (Source);
 
    procedure Free (Opt : in out Option)
    with Post => not Has_Buffer (Opt);
 
-   function Image
-     (Format : Option_Format; Value : RFLX.RFLX_Types.Bytes)
-      return String
-   with
-     Pre  =>
-      (case Format is when UInt => Value'Length in 0 .. Max_Uint_Length,
-         when UTF8_String | Opaque =>
-           Value'Length in 0 .. Max_Option_Value_Length,
-         when Empty => Value'Length = 0,
-         when Unknown => Value'Length in 0 .. Max_Option_Value_Length),
-     Post =>
-     Image'Result'First = 1 and then
-     (case Format is
-         when UInt => Image'Result'Length <= Interfaces.Unsigned_32'Width,
-         when UTF8_String => Image'Result'Length = Value'Length,
-         when Empty => Image'Result'Length = 0,
+   function Has_Valid_Length
+     (Format : Option_Format; Length : Natural) return Boolean
+   is (case Format is
+         when UInt => Length in 0 .. Max_Uint_Length,
+         when UTF8_String | Opaque => Length in 0 .. Max_Option_Value_Length,
+         when Empty => Length = 0,
+         when Unknown => Length in 0 .. Max_Option_Value_Length);
+
+   function Is_Valid_Image_Length
+     (Format : Option_Format; Length : Natural) return Boolean
+   is (case Format is
+         when UInt => Length <= Interfaces.Unsigned_32'Width + 1,
+         when UTF8_String => Length <= Max_Option_Value_Length,
+         when Empty => Length = 0,
          when Opaque | Unknown =>
-           Image'Result'Length = Value'Length * RFLX.RFLX_Types.Byte'Width);
+           Length <= Max_Option_Value_Length * RFLX.RFLX_Types.Byte'Width);
+
+   function Image
+     (Format : Option_Format; Value : RFLX.RFLX_Types.Bytes) return String
+   with
+     Pre => Has_Valid_Length (Format, Value'Length),
+     Post =>
+       Image'Result'First = 1
+       and then Is_Valid_Image_Length (Format, Image'Result'Length);
 
    function Value_Image (Opt : Option) return String
    with
-     Pre  => Has_Buffer (Opt),
-     Post => Value_Image'Result'First = 1 and then
-     (case Option_Properties_Table (Get_Number (Opt)).Format  is
-         when UInt => Value_Image'Result'Length <= Interfaces.Unsigned_32'Width,
-         when UTF8_String => Value_Image'Result'Length = Get_Length (Opt),
-         when Empty => Value_Image'Result'Length = 0,
-         when Opaque | Unknown =>
-           Value_Image'Result'Length = Get_Length (Opt) * RFLX.RFLX_Types.Byte'Width);
+     Pre =>
+       Has_Buffer (Opt)
+       and then Has_Valid_Length
+                  (Option_Properties_Table (Get_Number ((Opt))).Format,
+                   Get_Length (Opt)),
+     Post =>
+       Value_Image'Result'First = 1
+       and then Is_Valid_Image_Length
+                  (Option_Properties_Table (Get_Number ((Opt))).Format,
+                   Value_Image'Result'Length);
 
    function To_UInt (Value : UInt_Bytes) return Interfaces.Unsigned_32;
 
@@ -271,7 +293,7 @@ private
 
    type Option is record
       Number      : RFLX.CoAP.Option_Numbers;
-      Value       : RFLX.RFLX_Types.Bytes_Ptr;
+      Value       : Option_Value_Ptr;
       Order_Index : Option_Index;
    end record;
 

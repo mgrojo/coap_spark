@@ -1,4 +1,5 @@
 with RFLX.RFLX_Types;
+with Interfaces;
 
 package CoAP_SPARK.Utils
   with SPARK_Mode
@@ -15,5 +16,12 @@ is
 
    procedure Copy_String (Source : String; Target : out RFLX.RFLX_Types.Bytes)
    with Pre => Target'Length = Source'Length;
+
+   -- Wrapper around 'Value attribute, which cannot be proved by SPARK.
+   function Value (Number : String) return Interfaces.Unsigned_16
+   with
+     Pre =>
+       Number'Length <= Interfaces.Unsigned_16'Width
+       and then (for all C of Number => C in '0' .. '9');
 
 end CoAP_SPARK.Utils;

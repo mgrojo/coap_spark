@@ -26,6 +26,8 @@ procedure CoAP_Client is
    package Types renames RFLX.RFLX_Types;
    package Channel renames CoAP_SPARK.Channel;
 
+   use type RFLX.CoAP_Client.Session_Environment.Status_Type;
+
    procedure Read (Ctx : FSM.Context;
                    Skt : in out CoAP_SPARK.Channel.Socket_Type) with
       Pre =>
@@ -229,6 +231,11 @@ begin
          Query         => CoAP_SPARK.URI.Query (URI),
          Payload       => Payload,
          Session_State => Ctx.E);
+
+      if Ctx.E.Current_Status /= Session_Environment.OK then
+         CoAP_SPARK.Log.Put_Line (Ctx.E.Current_Status'Image, CoAP_SPARK.Log.Error);
+         return;
+      end if;
 
       FSM.Initialize (Ctx);
       Channel.Connect

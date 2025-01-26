@@ -10,6 +10,16 @@
 - [ ] Support IPs in coap_client's URI
 - [ ] Correctly encode URIs
 - [ ] Set Channel in SPARK_Mode by using SPARK_Sockets from WolfSSL
+- [ ] Fix errors in these cases:
+      bin/coap_client  coaps://coap.me
+      bin/coap_client  http://coap.me
 
 * Server
 - [ ] Consider implementing server state-machine and example
+
+* Provers
+- [ ] (discarded) Compile and install colibri from
+      https://www.adacore.com/download/more (Linux 64bits - 2021) (discarded) or
+      https://colibri.frama-c.com/download.html (links currently broken)
+- [X] Obtained compiled colibri from https://soprano-project.fr/download_colibri.html
+      Seen on https://github.com/nasa/FPRoCK

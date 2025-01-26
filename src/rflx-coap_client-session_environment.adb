@@ -1,24 +1,31 @@
 with Ada.Strings.Fixed;
 with Ada.Strings.Maps;
+with Ada.Containers;
+
 with CoAP_SPARK.Options.Lists;
 
 package body RFLX.CoAP_Client.Session_Environment with
   SPARK_Mode
 is
 
+   use type Ada.Containers.Count_Type;
+
    procedure Split_String_In_Repeatable_Options
      (Source        : String;
       Separator     : Character;
       Number        : RFLX.CoAP.Option_Numbers;
-      Option_List   : in out CoAP_SPARK.Options.Lists.Vector) with
+      Option_List   : in out CoAP_SPARK.Options.Lists.Vector;
+      Status        : in out Status_Type) with
        Always_Terminates,
-       Pre => CoAP_SPARK.Options.Option_Properties_Table (Number).Repeatable,
+       Pre => CoAP_SPARK.Options.Option_Properties_Table (Number).Repeatable
+                and then
+               Source'Length <= CoAP_SPARK.Options.Max_Option_Value_Length,
        Post =>
-           Natural (CoAP_SPARK.Options.Lists.Length (Option_List)) -
-             Natural (CoAP_SPARK.Options.Lists.Length (Option_List'Old)) in
-             0 .. Ada.Strings.Fixed.Count
+           CoAP_SPARK.Options.Lists.Length (Option_List) -
+                    CoAP_SPARK.Options.Lists.Length (Option_List'Old) in
+             0 .. Ada.Containers.Count_Type (Ada.Strings.Fixed.Count
                     (Source => Source,
-                     Set => Ada.Strings.Maps.To_Set (Separator)) + 1
+                     Set => Ada.Strings.Maps.To_Set (Separator))) + 1
    is
       Segment_First : Natural;
       Segment_Last  : Natural := Source'First - 1;
@@ -38,6 +45,13 @@ is
 
          exit when Segment_Last = 0;
 
+         if Segment_Last - Segment_First + 1 >
+            CoAP_SPARK.Options.Option_Properties_Table (Number).Maximum_Length
+         then
+            Status := Capacity_Error;
+            return;
+         end if;
+
          CoAP_SPARK.Options.New_String_Option
            (Number      => Number,
             Value       => Source (Segment_First .. Segment_Last),
@@ -47,6 +61,8 @@ is
          CoAP_SPARK.Options.Lists.Append (Option_List, Option);
          Order_Index := Order_Index + 1;
 
+         pragma Loop_Invariant (Segment_Last <= Source'Last);
+         pragma Loop_Invariant (Order_Index <= Source'Length);
          pragma Loop_Variant (Increases => Segment_Last);
       end loop;
    end Split_String_In_Repeatable_Options;
@@ -102,24 +118,31 @@ is
            (Source      => Path,
             Separator   => '/',
             Number      => RFLX.CoAP.Uri_Path,
-            Option_List => Session_State.Request_Content.Options);
+            Option_List => Session_State.Request_Content.Options,
+            Status      => Session_State.Current_Status);
 
-         -- RFC7252: each Uri-Query Option specifies one argument parameterizing the
-         -- resource.
-         Split_String_In_Repeatable_Options
-           (Source      => Query,
-            Separator   => '&',
-            Number      => RFLX.CoAP.Uri_Query,
-            Option_List => Session_State.Request_Content.Options);
+         if Session_State.Current_Status = OK then
+            -- RFC7252: each Uri-Query Option specifies one argument parameterizing the
+            -- resource.
+            Split_String_In_Repeatable_Options
+              (Source      => Query,
+               Separator   => '&',
+               Number      => RFLX.CoAP.Uri_Query,
+               Option_List => Session_State.Request_Content.Options,
+               Status      => Session_State.Current_Status);
 
-         if Session_State.Request_Content.Payload /= null then
-            CoAP_SPARK.Options.New_UInt_Option
-              (Number => RFLX.CoAP.Content_Format,
-               Value  => Session_State.Request_Content.Format,
-               Result => Option);
+            if Session_State.Current_Status = OK
+               and then
+               Session_State.Request_Content.Payload /= null
+            then
+               CoAP_SPARK.Options.New_UInt_Option
+                 (Number => RFLX.CoAP.Content_Format,
+                  Value  => Session_State.Request_Content.Format,
+                  Result => Option);
 
-            CoAP_SPARK.Options.Lists.Append
-            (Session_State.Request_Content.Options, Option);
+               CoAP_SPARK.Options.Lists.Append
+                 (Session_State.Request_Content.Options, Option);
+            end if;
          end if;
       end;
 

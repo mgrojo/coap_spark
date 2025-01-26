@@ -10,6 +10,7 @@ is
 
    Scheme_Suffix : constant String := "://";
    Host_Suffix   : constant String := ":";
+   Query_Prefix  : constant String := "?";
 
    function Is_Valid (Self : URI) return Boolean;
 
@@ -24,15 +25,17 @@ is
       Query  : String := "") return URI
    with
       Pre => Is_Valid_Scheme (Scheme) and then
+         Scheme'First = 1 and then
          Host'Length in 1 .. Max_URI_Part_Length and then
          Path'Length in 1 .. Max_URI_Part_Length and then
          Query'Length in 0 .. Max_URI_Part_Length and then
-         Scheme'Length + Host'Length +
-         Port'Image'Length + Path'Length +
+         Scheme'Length + Scheme_Suffix'Length + Host'Length + Host_Suffix'Length +
+         Interfaces.Unsigned_16'Width + Path'Length + Query_Prefix'Length +
          Query'Length <= CoAP_SPARK.Max_URI_Length,
-      Post => Create'Result.Length =
-       Scheme'Length + Scheme_Suffix'Length + Host'Length +
-       Port'Image'Length + Path'Length + Query'Length and then
+      Post => Create'Result.Length <=
+       Scheme'Length + Scheme_Suffix'Length + Host'Length + Host_Suffix'Length +
+         Interfaces.Unsigned_16'Width + Path'Length + Query_Prefix'Length +
+         Query'Length and then
        Is_Valid (Create'Result);
 
    function Create (URI_String : String) return URI
@@ -58,6 +61,7 @@ private
 
    type URI (Length : URI_Length) is record
       URI_String  : String (1 .. Length);
+      Valid       : Boolean := False;
       Scheme_Last : URI_Length;
       Host_Last   : URI_Length;
       Port_Last   : URI_Length;
@@ -65,10 +69,6 @@ private
    end record;
 
    function Is_Valid (Self : URI) return Boolean
-     is (Self.Scheme_Last < Self.Host_Last
-         and then Is_Valid_Scheme (Self.URI_String (1 .. Self.Scheme_Last))
-         and then Self.Host_Last <= Self.Port_Last
-         and then Self.Port_Last <= Self.Path_Last
-         and then Self.Path_Last <= Self.URI_String'Last);
+   is (Self.Valid);
 
 end CoAP_SPARK.URI;

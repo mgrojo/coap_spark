@@ -63,7 +63,7 @@ is
    with
      Pre =>
        Buffer'First = 1
-       and then Buffer'Length
+       and then Buffer'Last
                 <= Ada.Streams.Stream_Element_Offset
                      (RFLX.RFLX_Builtin_Types.Index'Last)
    is
@@ -83,9 +83,8 @@ is
    with
      Pre =>
        Buffer'First = 1
-       and then Buffer'Length
-                <= Natural
-                     (RFLX.RFLX_Builtin_Types.Index'Last)
+       and then Buffer'Last
+                <= Interfaces.C.size_t (RFLX.RFLX_Builtin_Types.Index'Last)
    is
       Result : RFLX.RFLX_Builtin_Types.Bytes (1 .. Buffer'Length);
    begin

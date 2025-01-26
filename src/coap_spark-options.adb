@@ -100,7 +100,7 @@ is
 
    procedure New_Encoded_Option
      (Number : RFLX.CoAP.Option_Numbers;
-      Value  : in out RFLX.RFLX_Types.Bytes_Ptr;
+      Value  : in out Option_Value_Ptr;
       Result : out Option)
    is
    begin
@@ -121,7 +121,7 @@ is
    end New_Empty_Option;
 
    procedure Take_Buffer (Opt : in out Option;
-                          Value : out RFLX.RFLX_Types.Bytes_Ptr)
+                          Value : out Option_Value_Ptr)
    is
    begin
       Value := Opt.Value;
