@@ -2,6 +2,7 @@ pragma SPARK_Mode;
 
 with Ada.Command_Line;
 
+with Coap_Client_Config;
 with CoAP_SPARK.Channel;
 with CoAP_SPARK.Log;
 with CoAP_SPARK.Messages;
@@ -112,8 +113,19 @@ begin
 
    if Ada.Command_Line.Argument_Count = 0
      or else Ada.Command_Line.Argument (1) = "-h"
+     or else Ada.Command_Line.Argument (1) = "--help"
    then
       Usage;
+      return;
+   end if;
+
+   if Ada.Command_Line.Argument_Count = 1
+     and then (Ada.Command_Line.Argument (1) = "-V"
+      or else Ada.Command_Line.Argument (1) = "--version")
+   then
+      CoAP_SPARK.Log.Put (Coap_Client_Config.Crate_Name, CoAP_SPARK.Log.Info);
+      CoAP_SPARK.Log.Put (" v", CoAP_SPARK.Log.Info);
+      CoAP_SPARK.Log.Put_Line (Coap_Client_Config.Crate_Version, CoAP_SPARK.Log.Info);
       return;
    end if;
 
@@ -192,6 +204,16 @@ begin
 
    if Argument_Index > Ada.Command_Line.Argument_Count then
       CoAP_SPARK.Log.Put_Line ("URI is missing", CoAP_SPARK.Log.Error);
+      Usage;
+      return;
+   end if;
+
+   if Ada.Command_Line.Argument (Argument_Index) = "" or else
+      Ada.Command_Line.Argument (Argument_Index)(1) = '-'
+   then
+      CoAP_SPARK.Log.Put ("Unrecognized option: ", CoAP_SPARK.Log.Error);
+      CoAP_SPARK.Log.Put_Line (Ada.Command_Line.Argument (Argument_Index),
+                               CoAP_SPARK.Log.Error);
       Usage;
       return;
    end if;
@@ -278,10 +300,16 @@ begin
             CoAP_SPARK.Log.Put_Line
               ("Server answered with client error: "
                & CoAP_SPARK.Messages.Image (Ctx.E.Response_Codes));
+           CoAP_SPARK.Log.Put
+              (CoAP_SPARK.Messages.Image (Ctx.E.Response_Codes, Long => False) & " ",
+               CoAP_SPARK.Log.Info);
          when RFLX.CoAP.Server_Error =>
             CoAP_SPARK.Log.Put_Line
               ("Server answered with server error: "
                & CoAP_SPARK.Messages.Image (Ctx.E.Response_Codes));
+           CoAP_SPARK.Log.Put
+              (CoAP_SPARK.Messages.Image (Ctx.E.Response_Codes, Long => False) & " ",
+               CoAP_SPARK.Log.Info);
       end case;
 
       CoAP_SPARK.Messages.Print_Content (Ctx.E.Response_Content);

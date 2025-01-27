@@ -46,7 +46,10 @@ is
       Log_Level_Payload : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Info)
       with Pre => CoAP_SPARK.Log."<=" (General_Log_Level, Log_Level_Payload);
 
-   function Image (Item : Response_Kind) return String
+   -- Return the image of a response kind. When Long is True, the image includes
+   -- the human readable description of the response code, otherwise it only
+   -- includes the code in standard format.
+   function Image (Item : Response_Kind; Long : Boolean := True) return String
    with
      Post => Image'Result'First = 1;
 

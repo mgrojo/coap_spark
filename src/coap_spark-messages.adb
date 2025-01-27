@@ -38,7 +38,7 @@ is
       end if;
    end Print_Content;
 
-   function Image (Item : Response_Kind) return String is
+   function Image (Item : Response_Kind; Long : Boolean := True) return String is
       Detail_Number : constant Integer :=
         (case Item.Code_Class is
            when RFLX.CoAP.Success => 0,
@@ -49,19 +49,26 @@ is
                (Item.Server_Error_Code));
 
       Detail_Image : constant String :=
-        (case Item.Code_Class is
-           when RFLX.CoAP.Success => RFLX.CoAP.Success'Image,
-           when RFLX.CoAP.Client_Error =>
-             RFLX.CoAP.Client_Error_Response'Image (Item.Client_Error_Code),
-           when RFLX.CoAP.Server_Error =>
-             RFLX.CoAP.Server_Error_Response'Image (Item.Server_Error_Code));
+        (if Long
+         then
+           " ("
+           & (case Item.Code_Class is
+                when RFLX.CoAP.Success => RFLX.CoAP.Success'Image,
+                when RFLX.CoAP.Client_Error =>
+                  RFLX.CoAP.Client_Error_Response'Image
+                    (Item.Client_Error_Code),
+                when RFLX.CoAP.Server_Error =>
+                  RFLX.CoAP.Server_Error_Response'Image
+                    (Item.Server_Error_Code))
+           & ")"
+         else "");
    begin
       return
         CoAP_SPARK.Utils.Padded_Image
           (Source => Item.Code_Class'Enum_Rep, Count => 1)
         & "."
         & CoAP_SPARK.Utils.Padded_Image (Source => Detail_Number, Count => 2)
-        & " (" & Detail_Image & ")";
+        & Detail_Image;
    end Image;
 
    procedure Finalize (Item : in out Content)

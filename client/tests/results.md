@@ -1,89 +1,39 @@
 
 ## [coap_client_tests.md](coap_client_tests.md)  
-*** NOK : Then I get no error (coap_client_tests.md:12:)  
-No error expected, but got one ( 1)  
-*** NOK : And output contains `coap_client v0.1.` (coap_client_tests.md:13:)  
-Output:  
-|   
-| raised GNAT.SOCKETS.HOST_ERROR : [2] Try again: ersion  
-| [../bin/coap_client]  
-| 0x5e8b66 Gnat.Sockets.Raise_Host_Error at g-socket.adb:2105  
-| 0x5eda3c Gnat.Sockets.Get_Host_By_Name at g-socket.adb:1294  
-| 0x410351 Coap_Spark.Channel.Connect at coap_spark-channel.adb:156  
-| 0x40ccd6 Coap_Client at coap_client.adb:241  
-| 0x40ba04 Main at b__coap_client.adb:408  
-| [/lib/x86_64-linux-gnu/libc.so.6]  
-| 0x760109c29d8e  
-| 0x760109c29e3e  
-| [../bin/coap_client]  
-| 0x40ba53 _start at ???  
-| 0xfffffffffffffffe  
 
-does not contain expected:  
-| coap_client v0.1.  
+  ### Feature: CoAP Client to coap://coap.me  
 
-  
-  - [ ] scenario [version message](coap_client_tests.md) fails  
+    OK  : When I run `../bin/coap_client --version`
+    OK  : Then I get no error
+    OK  : And output contains `coap_client v0.1.`
+  - [X] scenario [version message](coap_client_tests.md) pass  
 
-*** NOK : Then I get no error (coap_client_tests.md:17:)  
-No error expected, but got one ( 1)  
-*** NOK : And output contains `Usage: coap_client` (coap_client_tests.md:18:)  
-Output:  
-|   
-| raised GNAT.SOCKETS.HOST_ERROR : [2] Try again: elp  
-| [../bin/coap_client]  
-| 0x5e8b66 Gnat.Sockets.Raise_Host_Error at g-socket.adb:2105  
-| 0x5eda3c Gnat.Sockets.Get_Host_By_Name at g-socket.adb:1294  
-| 0x410351 Coap_Spark.Channel.Connect at coap_spark-channel.adb:156  
-| 0x40ccd6 Coap_Client at coap_client.adb:241  
-| 0x40ba04 Main at b__coap_client.adb:408  
-| [/lib/x86_64-linux-gnu/libc.so.6]  
-| 0x7a8bb4629d8e  
-| 0x7a8bb4629e3e  
-| [../bin/coap_client]  
-| 0x40ba53 _start at ???  
-| 0xfffffffffffffffe  
+    OK  : When I run `../bin/coap_client --help`
+    OK  : Then I get no error
+    OK  : And output contains `Usage: coap_client`
+  - [X] scenario [help message](coap_client_tests.md) pass  
 
-does not contain expected:  
-| Usage: coap_client  
-
-  
-  - [ ] scenario [help message](coap_client_tests.md) fails  
-
-*** NOK : And output contains `Usage: coap_client` (coap_client_tests.md:23:)  
-Output:  
-|   
-| raised GNAT.SOCKETS.HOST_ERROR : [2] Try again: nknown-option  
-| [../bin/coap_client]  
-| 0x5e8b66 Gnat.Sockets.Raise_Host_Error at g-socket.adb:2105  
-| 0x5eda3c Gnat.Sockets.Get_Host_By_Name at g-socket.adb:1294  
-| 0x410351 Coap_Spark.Channel.Connect at coap_spark-channel.adb:156  
-| 0x40ccd6 Coap_Client at coap_client.adb:241  
-| 0x40ba04 Main at b__coap_client.adb:408  
-| [/lib/x86_64-linux-gnu/libc.so.6]  
-| 0x758adc029d8e  
-| 0x758adc029e3e  
-| [../bin/coap_client]  
-| 0x40ba53 _start at ???  
-| 0xfffffffffffffffe  
-
-does not contain expected:  
-| Usage: coap_client  
-
-  
+    OK  : When I run `../bin/coap_client --unknown-option`
+*** NOK : Then I get an error (coap_client_tests.md:22:)  
+Expected error code, got no error  
+    OK  : And output contains `Usage: coap_client`
   - [ ] scenario [usage message on unrecognized option](coap_client_tests.md) fails  
 
+    OK  : When I run `../bin/coap_client -m get coaps://coap.me/`
 *** NOK : Then I get an error (coap_client_tests.md:27:)  
 Expected error code, got no error  
   - [ ] scenario [coaps not supported by server](coap_client_tests.md) fails  
 
+    OK  : When I run `../bin/coap_client -m get http://coap.me/`
 *** NOK : Then I get an error (coap_client_tests.md:31:)  
 Expected error code, got no error  
   - [ ] scenario [invalid method](coap_client_tests.md) fails  
 
+    OK  : When I run `../bin/coap_client coap://coap.me/test`
+    OK  : Then I get no error
 *** NOK : And the output contains  (coap_client_tests.md:36:)  
 Output:  
-| welcome to the ETSI plugtest! last change: 2025-01-26 22:52:40 UTC  
+| welcome to the ETSI plugtest! last change: 2025-01-27 22:09:45 UTC  
 
 does not contain expected:  
 | Method: GET  
@@ -117,16 +67,53 @@ does not contain expected:
   
   - [ ] scenario [get method with test path and high verbosity](coap_client_tests.md) fails  
 
-*** NOK : And the output is (coap_client_tests.md:110:)  
-Output:  
-| Not authorized  
+    OK  : When I run `../bin/coap_client coap://coap.me`
+    OK  : Then I get no error
+    OK  : And output contains `</test>;rt="test";ct=0,</validate>;rt="validate"`
+  - [X] scenario [get method without path](coap_client_tests.md) pass  
 
-not equal to expected:  
-| 4.01 Not authorized  
+    OK  : When I run `../bin/coap_client coap://coap.me:5683`
+    OK  : Then I get no error
+    OK  : And output contains `</test>;rt="test";ct=0,</validate>;rt="validate"`
+  - [X] scenario [get method with port and no path](coap_client_tests.md) pass  
 
-  
-  - [ ] scenario [get "secret" path](coap_client_tests.md) fails  
+    OK  : When I run `../bin/coap_client -m get coap://coap.me/test`
+    OK  : Then I get no error
+    OK  : And output contains `welcome to the ETSI plugtest! last change:`
+  - [X] scenario [explicit get method with path](coap_client_tests.md) pass  
 
+    OK  : When I run `../bin/coap_client coap://coap.me:5683/test`
+    OK  : Then I get no error
+    OK  : And output contains `welcome to the ETSI plugtest! last change:`
+  - [X] scenario [get method with port and path](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coap://coap.me/validate`
+    OK  : Then I get no error
+  - [X] scenario [get "validate" path](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coap://coap.me/Type1`
+    OK  : Then I get no error
+  - [X] scenario [get "Type1" path](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coap://coap.me/blåbærsyltetøy`
+    OK  : Then I get no error
+  - [X] scenario [get "blåbærsyltetøy" path](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coap://coap.me/sink`
+    OK  : Then I get no error
+  - [X] scenario [get "sink" path](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coap://coap.me/separate`
+    OK  : Then I get no error
+  - [X] scenario [get "separate" path](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coap://coap.me/secret`
+    OK  : Then I get no error
+    OK  : And the output is
+  - [X] scenario [get "secret" path](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coap://coap.me/weird33`
+    OK  : Then I get no error
 *** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:118:)  
 Output:  
 | MALFORMED_MESSAGE  
@@ -137,6 +124,8 @@ contains unexpected:
   
   - [ ] scenario [get "weird33" path](coap_client_tests.md) fails  
 
+    OK  : When I run `../bin/coap_client coap://coap.me/weird44`
+    OK  : Then I get no error
 *** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:123:)  
 Output:  
 | MALFORMED_MESSAGE  
@@ -147,6 +136,8 @@ contains unexpected:
   
   - [ ] scenario [get "weird44" path](coap_client_tests.md) fails  
 
+    OK  : When I run `../bin/coap_client coap://coap.me/weird55`
+    OK  : Then I get no error
 *** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:128:)  
 Output:  
 | MALFORMED_MESSAGE  
@@ -157,6 +148,8 @@ contains unexpected:
   
   - [ ] scenario [get "weird55" path](coap_client_tests.md) fails  
 
+    OK  : When I run `../bin/coap_client coap://coap.me/weird333`
+    OK  : Then I get no error
 *** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:133:)  
 Output:  
 | MALFORMED_MESSAGE  
@@ -167,6 +160,8 @@ contains unexpected:
   
   - [ ] scenario [get "weird333" path](coap_client_tests.md) fails  
 
+    OK  : When I run `../bin/coap_client coap://coap.me/weird3333`
+    OK  : Then I get no error
 *** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:138:)  
 Output:  
 | MALFORMED_MESSAGE  
@@ -177,6 +172,8 @@ contains unexpected:
   
   - [ ] scenario [get "weird3333" path](coap_client_tests.md) fails  
 
+    OK  : When I run `../bin/coap_client coap://coap.me/weird33333`
+    OK  : Then I get no error
 *** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:143:)  
 Output:  
 | MALFORMED_MESSAGE  
@@ -187,16 +184,74 @@ contains unexpected:
   
   - [ ] scenario [get "weird33333" path](coap_client_tests.md) fails  
 
-*** NOK : And output is (coap_client_tests.md:219:)  
-Output:  
-| Not found  
+    OK  : When I run `../bin/coap_client coap://coap.me/123412341234123412341234`
+    OK  : Then I get no error
+    OK  : And the output contains
+  - [X] scenario [get "123412341234123412341234" path](coap_client_tests.md) pass  
 
-not equal to expected:  
-| 4.04 Not found  
+    OK  : When I run `../bin/coap_client coap://coap.me/create1`
+    OK  : Then I get no error
+  - [X] scenario [get "create1" path](coap_client_tests.md) pass  
 
-  
-  - [ ] scenario [explicit get with error 4.04](coap_client_tests.md) fails  
+    OK  : When I run `../bin/coap_client coap://coap.me/query`
+    OK  : Then I get no error
+    OK  : And the output contains
+  - [X] scenario [get "query" path](coap_client_tests.md) pass  
 
+    OK  : When I run `../bin/coap_client coap://coap.me/seg1`
+    OK  : Then I get no error
+  - [X] scenario [get "seg1" path](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coap://coap.me/path`
+    OK  : Then I get no error
+  - [X] scenario [get "path" path](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coap://coap.me/location1`
+    OK  : Then I get no error
+  - [X] scenario [get "location1" path](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coap://coap.me/3`
+    OK  : Then I get no error
+  - [X] scenario [get "3" path](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coap://coap.me/4`
+    OK  : Then I get no error
+  - [X] scenario [get "4" path](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coap://coap.me/5`
+    OK  : Then I get no error
+  - [X] scenario [get "5" path](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coap://coap.me/location1/location2/location3`
+    OK  : Then I get no error
+  - [X] scenario [get "location1/location2/location3" path](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coap://coap.me/broken`
+    OK  : Then I get no error
+  - [X] scenario [get with server error](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client  coap://coap.me/query?n=v`
+    OK  : Then I get no error
+    OK  : And output is
+  - [X] scenario [get with short query](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coap://coap.me/query?a=12345678901234567890abcdefghijklmnopqrstuvwxyz`
+    OK  : Then I get no error
+    OK  : And output is
+  - [X] scenario [get with long query](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client -m get coap://coap.me/hola`
+    OK  : Then I get no error
+    OK  : And output is
+  - [X] scenario [explicit get with error 4.04](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client -m put -e Hola coap://coap.me/test`
+    OK  : Then I get no error
+    OK  : And output is
+  - [X] scenario [put method](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client -m post -e "This is a test" coap://coap.me/test`
+    OK  : Then I get no error
 *** NOK : And output is (coap_client_tests.md:236:)  
 Output:  
 | "This is a test"  
@@ -209,10 +264,12 @@ not equal to expected:
   
   - [ ] scenario [post method](coap_client_tests.md) fails  
 
+    OK  : When I run `../bin/coap_client -m post -e "This is a test" coap://coap.me/forbidden`
+    OK  : Then I get no error
 *** NOK : And output is (coap_client_tests.md:245:)  
 Output:  
 | "This is a test"  
-| Method not supported here  
+| 4.05 Method not supported here  
 
 not equal to expected:  
 | 4.05 Method not supported here  
@@ -222,7 +279,7 @@ not equal to expected:
 
 
 ------------------
-- Failed     =  16
-- Successful =  23
+- Failed     =  12
+- Successful =  27
 - Empty      =  0
 - Not run    =  0
