@@ -14,26 +14,23 @@
   - [X] scenario [help message](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client --unknown-option`
-*** NOK : Then I get an error (coap_client_tests.md:22:)  
-Expected error code, got no error  
+    OK  : Then I get an error
     OK  : And output contains `Usage: coap_client`
-  - [ ] scenario [usage message on unrecognized option](coap_client_tests.md) fails  
+  - [X] scenario [usage message on unrecognized option](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client -m get coaps://coap.me/`
-*** NOK : Then I get an error (coap_client_tests.md:27:)  
-Expected error code, got no error  
-  - [ ] scenario [coaps not supported by server](coap_client_tests.md) fails  
+    OK  : Then I get an error
+  - [X] scenario [coaps not supported by server](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client -m get http://coap.me/`
-*** NOK : Then I get an error (coap_client_tests.md:31:)  
-Expected error code, got no error  
-  - [ ] scenario [invalid method](coap_client_tests.md) fails  
+    OK  : Then I get an error
+  - [X] scenario [invalid method](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client coap://coap.me/test`
     OK  : Then I get no error
 *** NOK : And the output contains  (coap_client_tests.md:36:)  
 Output:  
-| welcome to the ETSI plugtest! last change: 2025-01-27 22:09:45 UTC  
+| welcome to the ETSI plugtest! last change: 2025-01-29 22:00:24 UTC  
 
 does not contain expected:  
 | Method: GET  
@@ -279,7 +276,7 @@ not equal to expected:
 
 
 ------------------
-- Failed     =  12
-- Successful =  27
+- Failed     =  9
+- Successful =  30
 - Empty      =  0
 - Not run    =  0

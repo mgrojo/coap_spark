@@ -85,7 +85,7 @@ procedure CoAP_Client is
       end if;
    end Write;
 
-   procedure Usage is
+   procedure Usage (Is_Failure : Boolean := True) is
       procedure Put (Text : String;
                      Level : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Info)
          renames CoAP_SPARK.Log.Put;
@@ -101,6 +101,10 @@ procedure CoAP_Client is
          Put (" " & RFLX.CoAP.Method_Code'Image (I));
       end loop;
       CoAP_SPARK.Log.New_Line (Level => CoAP_SPARK.Log.Info);
+
+      if Is_Failure then
+         Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
+      end if;
    end Usage;
 
    Ctx : FSM.Context;
@@ -115,7 +119,7 @@ begin
      or else Ada.Command_Line.Argument (1) = "-h"
      or else Ada.Command_Line.Argument (1) = "--help"
    then
-      Usage;
+      Usage (Is_Failure => False);
       return;
    end if;
 
