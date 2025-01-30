@@ -26,43 +26,15 @@
     OK  : Then I get an error
   - [X] scenario [invalid method](coap_client_tests.md) pass  
 
-    OK  : When I run `../bin/coap_client coap://coap.me/test`
+    OK  : When I run `../bin/coap_client -v 4 coap://coap.me/test`
     OK  : Then I get no error
-*** NOK : And the output contains  (coap_client_tests.md:36:)  
-Output:  
-| welcome to the ETSI plugtest! last change: 2025-01-29 22:00:24 UTC  
+    OK  : And the output contains 
+  - [X] scenario [get method with test path and high verbosity I](coap_client_tests.md) pass  
 
-does not contain expected:  
-| Method: GET  
-| Scheme: coap  
-| Host: coap.me  
-| Port: 5683  
-| Path: /test  
-| Query:   
-| REQUEST:   
-| Option: URI_HOST  
-|   - Length:  7  
-|   - Value: coap.me  
-| Option: URI_PORT  
-|   - Length:  2  
-|   - Value:  5683  
-| Option: URI_PATH  
-|   - Length:  4  
-|   - Value: test  
-|   
-| RESPONSE:   
-| Server answered with success.  
-| Option: ETAG  
-|   - Length:  8  
-|   - Value:  217 170  27 123 139 211 160 191  
-| Option: CONTENT_FORMAT  
-|   - Length:  0  
-|   - Value:   
-| Content-Format: text/plain; charset=utf-8  
-| Payload: welcome to the ETSI plugtest! last change:   
-
-  
-  - [ ] scenario [get method with test path and high verbosity](coap_client_tests.md) fails  
+    OK  : When I run `../bin/coap_client -v 4 coap://coap.me/test`
+    OK  : Then I get no error
+    OK  : And the output contains 
+  - [X] scenario [get method with test path and high verbosity II](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client coap://coap.me`
     OK  : Then I get no error
@@ -111,7 +83,7 @@ does not contain expected:
 
     OK  : When I run `../bin/coap_client coap://coap.me/weird33`
     OK  : Then I get no error
-*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:118:)  
+*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:132:)  
 Output:  
 | MALFORMED_MESSAGE  
 
@@ -123,7 +95,7 @@ contains unexpected:
 
     OK  : When I run `../bin/coap_client coap://coap.me/weird44`
     OK  : Then I get no error
-*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:123:)  
+*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:137:)  
 Output:  
 | MALFORMED_MESSAGE  
 
@@ -135,7 +107,7 @@ contains unexpected:
 
     OK  : When I run `../bin/coap_client coap://coap.me/weird55`
     OK  : Then I get no error
-*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:128:)  
+*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:142:)  
 Output:  
 | MALFORMED_MESSAGE  
 
@@ -147,7 +119,7 @@ contains unexpected:
 
     OK  : When I run `../bin/coap_client coap://coap.me/weird333`
     OK  : Then I get no error
-*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:133:)  
+*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:147:)  
 Output:  
 | MALFORMED_MESSAGE  
 
@@ -159,7 +131,7 @@ contains unexpected:
 
     OK  : When I run `../bin/coap_client coap://coap.me/weird3333`
     OK  : Then I get no error
-*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:138:)  
+*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:152:)  
 Output:  
 | MALFORMED_MESSAGE  
 
@@ -171,7 +143,7 @@ contains unexpected:
 
     OK  : When I run `../bin/coap_client coap://coap.me/weird33333`
     OK  : Then I get no error
-*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:143:)  
+*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:157:)  
 Output:  
 | MALFORMED_MESSAGE  
 
@@ -249,21 +221,12 @@ contains unexpected:
 
     OK  : When I run `../bin/coap_client -m post -e "This is a test" coap://coap.me/test`
     OK  : Then I get no error
-*** NOK : And output is (coap_client_tests.md:236:)  
-Output:  
-| "This is a test"  
-| POST OK  
-
-not equal to expected:  
-| This is a test  
-| POST OK  
-
-  
-  - [ ] scenario [post method](coap_client_tests.md) fails  
+    OK  : And output is
+  - [X] scenario [post method](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client -m post -e "This is a test" coap://coap.me/forbidden`
     OK  : Then I get no error
-*** NOK : And output is (coap_client_tests.md:245:)  
+*** NOK : And output is (coap_client_tests.md:263:)  
 Output:  
 | "This is a test"  
 | 4.05 Method not supported here  
@@ -276,7 +239,7 @@ not equal to expected:
 
 
 ------------------
-- Failed     =  9
-- Successful =  30
+- Failed     =  7
+- Successful =  33
 - Empty      =  0
 - Not run    =  0
