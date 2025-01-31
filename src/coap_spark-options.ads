@@ -139,6 +139,12 @@ is
          Repeatable     => True,
          Maximum_Length => Max_Option_Value_Length)];
 
+   -- Return whether the option is critical or not given its option number, as
+   -- defined in the RFC-7252.
+   -- Received critical options can't be ignored. If they are unkwown, the
+   -- receiver must reject the message.
+   function Is_Critical (Number : RFLX.RFLX_Types.Base_Integer) return Boolean;
+
    type Option is private
    with
      Dynamic_Predicate =>

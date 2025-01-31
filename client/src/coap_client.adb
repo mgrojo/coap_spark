@@ -318,7 +318,9 @@ begin
 
       CoAP_SPARK.Messages.Print_Content (Ctx.E.Response_Content);
    else
+      CoAP_SPARK.Log.Put ("Aborted with error: ", CoAP_SPARK.Log.Error);
       CoAP_SPARK.Log.Put_Line (Ctx.E.Current_Status'Image, CoAP_SPARK.Log.Error);
+      Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
    end if;
 
    pragma Warnings (Off, "statement has no effect");

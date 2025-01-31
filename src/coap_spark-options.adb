@@ -8,6 +8,19 @@ package body CoAP_SPARK.Options with
 is
 
    use type RFLX.RFLX_Builtin_Types.Index;
+   use type RFLX.RFLX_Types.Base_Integer;
+
+   function Is_Critical (Number : RFLX.RFLX_Types.Base_Integer) return Boolean
+   is
+   begin
+      -- Quote from RFC7252 (5.4.6. Option Numbers):
+      --  > odd numbers indicate a
+      --  > critical option, while even numbers indicate an elective option.
+      --  > Note that this is not just a convention, it is a feature of the
+      --  > protocol: Whether an option is elective or critical is entirely
+      --  > determined by whether its option number is even or odd.
+      return Number mod 2 = 1;
+   end Is_Critical;
 
    procedure New_String_Option
      (Number : RFLX.CoAP.Option_Numbers;

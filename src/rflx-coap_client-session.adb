@@ -420,14 +420,40 @@ is
             null;
       end case;
 
-      if not RFLX.CoAP.Valid_Option_Numbers (Option_Delta) or else
-         Option_Length >
+      if not RFLX.CoAP.Valid_Option_Numbers (Option_Delta) then
+
+         if CoAP_SPARK.Options.Is_Critical (Number => Option_Delta) then
+            CoAP_SPARK.Log.Put
+               ("Unknown critical option:", CoAP_SPARK.Log.Error);
+            CoAP_SPARK.Log.Put_Line
+                (Option_Delta'Image, CoAP_SPARK.Log.Error);
+            State.Current_Status :=
+              CoAP_Client.Session_Environment.Unknown_Critical_Option;
+            return;
+         else
+            -- RFC 7252, section 5.4.1
+            --  > Upon reception, unrecognized options of class "elective" MUST be
+            --  > silently ignored.
+            -- So we only log a debug message here.
+            CoAP_SPARK.Log.Put
+               ("Ignoring unknown elective option:", CoAP_SPARK.Log.Debug);
+            CoAP_SPARK.Log.Put_Line
+                (Option_Delta'Image, CoAP_SPARK.Log.Debug);
+         end if;
+
+      elsif Option_Length >
          CoAP_SPARK.Options.Option_Properties_Table
             (RFLX.CoAP.To_Actual (Option_Delta)).Maximum_Length
       then
+         CoAP_SPARK.Log.Put
+            ("Option value is too long for option ", CoAP_SPARK.Log.Error);
+         CoAP_SPARK.Log.Put_Line
+           (RFLX.CoAP.Option_Numbers'Image (RFLX.CoAP.To_Actual (Option_Delta)),
+            CoAP_SPARK.Log.Error);
          State.Current_Status :=
            CoAP_Client.Session_Environment.Malformed_Message;
          return;
+
       elsif Option_Length > 0 then
          declare
             Option_Value  : RFLX.RFLX_Types.Bytes_Ptr :=
@@ -439,19 +465,6 @@ is
          begin
             RFLX.CoAP.Option_Type.Get_Option_Value
               (Ctx => Option_Cxt, Data => Option_Value.all);
-
-            if Option_Value.all'Length >
-             CoAP_SPARK.Options.Option_Properties_Table
-              (Option_Number).Maximum_Length
-            then
-               CoAP_SPARK.Log.Put
-                  ("Option value is too long for option");
-               CoAP_SPARK.Log.Put_Line (Option_Number'Image);
-
-               State.Current_Status :=
-                  RFLX.CoAP_Client.Session_Environment.Malformed_Message;
-               return;
-            end if;
 
             if Option_Number = CoAP.Content_Format then
                State.Response_Content.Format :=

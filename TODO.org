@@ -13,6 +13,7 @@
 - [ ] Fix errors in these cases:
       bin/coap_client  coaps://coap.me
       bin/coap_client  http://coap.me
+- [X] Implement RFC 7252 "5.4.1. Critical/Elective"
 
 * Server
 - [ ] Consider implementing server state-machine and example

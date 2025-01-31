@@ -82,76 +82,47 @@
   - [X] scenario [get "secret" path](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client coap://coap.me/weird33`
-    OK  : Then I get no error
-*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:132:)  
-Output:  
-| MALFORMED_MESSAGE  
-
-contains unexpected:  
-| MALFORMED_MESSAGE  
-
-  
-  - [ ] scenario [get "weird33" path](coap_client_tests.md) fails  
+    OK  : Then I get an error
+    OK  : And output does not contain `MALFORMED_MESSAGE`
+    OK  : And output contains `UNKNOWN_CRITICAL_OPTION`
+  - [X] scenario [get "weird33" path](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client coap://coap.me/weird44`
     OK  : Then I get no error
-*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:137:)  
-Output:  
-| MALFORMED_MESSAGE  
+    OK  : And output does not contain `MALFORMED_MESSAGE`
+    OK  : And output contains `resource with option 44`
+  - [X] scenario [get "weird44" (unknown elective option I)](coap_client_tests.md) pass  
 
-contains unexpected:  
-| MALFORMED_MESSAGE  
-
-  
-  - [ ] scenario [get "weird44" path](coap_client_tests.md) fails  
+    OK  : When I run `../bin/coap_client -v 4 coap://coap.me/weird44`
+    OK  : Then I get no error
+    OK  : And output does not contain `MALFORMED_MESSAGE`
+    OK  : And output contains `unknown elective option`
+    OK  : And output contains `resource with option 44`
+  - [X] scenario [get "weird44" (unknown elective option II)](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client coap://coap.me/weird55`
-    OK  : Then I get no error
-*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:142:)  
-Output:  
-| MALFORMED_MESSAGE  
-
-contains unexpected:  
-| MALFORMED_MESSAGE  
-
-  
-  - [ ] scenario [get "weird55" path](coap_client_tests.md) fails  
+    OK  : Then I get an error
+    OK  : And output does not contain `MALFORMED_MESSAGE`
+    OK  : And output contains `UNKNOWN_CRITICAL_OPTION`
+  - [X] scenario [get "weird55" path](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client coap://coap.me/weird333`
-    OK  : Then I get no error
-*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:147:)  
-Output:  
-| MALFORMED_MESSAGE  
-
-contains unexpected:  
-| MALFORMED_MESSAGE  
-
-  
-  - [ ] scenario [get "weird333" path](coap_client_tests.md) fails  
+    OK  : Then I get an error
+    OK  : And output does not contain `MALFORMED_MESSAGE`
+    OK  : And output contains `UNKNOWN_CRITICAL_OPTION`
+  - [X] scenario [get "weird333" path](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client coap://coap.me/weird3333`
-    OK  : Then I get no error
-*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:152:)  
-Output:  
-| MALFORMED_MESSAGE  
-
-contains unexpected:  
-| MALFORMED_MESSAGE  
-
-  
-  - [ ] scenario [get "weird3333" path](coap_client_tests.md) fails  
+    OK  : Then I get an error
+    OK  : And output does not contain `MALFORMED_MESSAGE`
+    OK  : And output contains `UNKNOWN_CRITICAL_OPTION`
+  - [X] scenario [get "weird3333" path](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client coap://coap.me/weird33333`
-    OK  : Then I get no error
-*** NOK : And output does not contain `MALFORMED_MESSAGE` (coap_client_tests.md:157:)  
-Output:  
-| MALFORMED_MESSAGE  
-
-contains unexpected:  
-| MALFORMED_MESSAGE  
-
-  
-  - [ ] scenario [get "weird33333" path](coap_client_tests.md) fails  
+    OK  : Then I get an error
+    OK  : And output does not contain `MALFORMED_MESSAGE`
+    OK  : And output contains `UNKNOWN_CRITICAL_OPTION`
+  - [X] scenario [get "weird33333" path](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client coap://coap.me/123412341234123412341234`
     OK  : Then I get no error
@@ -226,7 +197,7 @@ contains unexpected:
 
     OK  : When I run `../bin/coap_client -m post -e "This is a test" coap://coap.me/forbidden`
     OK  : Then I get no error
-*** NOK : And output is (coap_client_tests.md:263:)  
+*** NOK : And output is (coap_client_tests.md:279:)  
 Output:  
 | "This is a test"  
 | 4.05 Method not supported here  
@@ -239,7 +210,7 @@ not equal to expected:
 
 
 ------------------
-- Failed     =  7
-- Successful =  33
+- Failed     =  1
+- Successful =  40
 - Empty      =  0
 - Not run    =  0

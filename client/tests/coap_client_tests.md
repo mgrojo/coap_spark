@@ -30,8 +30,12 @@ Use this command to run the tests: `bbt coap_client_tests.md`
   - When I run `../bin/coap_client -m get http://coap.me/`
   - Then I get an error
 
-### Scenario: get method with test path and high verbosity
-  - When I run `../bin/coap_client coap://coap.me/test`
+### Scenario: get method with test path and high verbosity I
+This test has to be broken in two contains checks, because the ETAG
+option will be determined by the server, so we have to exclude it,
+and it is in the middle of the output.
+
+  - When I run `../bin/coap_client -v 4 coap://coap.me/test`
   - Then I get no error
   - And the output contains 
 ```
@@ -56,7 +60,17 @@ RESPONSE:
 Server answered with success.
 Option: ETAG
   - Length:  8
-  - Value:  217 170  27 123 139 211 160 191
+  - Value:  
+```
+
+### Scenario: get method with test path and high verbosity II
+This check continues the previous one and also ignores the timestampt at the
+end.
+
+  - When I run `../bin/coap_client -v 4 coap://coap.me/test`
+  - Then I get no error
+  - And the output contains 
+```
 Option: CONTENT_FORMAT
   - Length:  0
   - Value: 
@@ -114,33 +128,49 @@ Payload: welcome to the ETSI plugtest! last change:
 
 ### Scenario: get "weird33" path
   - When I run `../bin/coap_client coap://coap.me/weird33`
-  - Then I get no error
+  - Then I get an error
   - And output does not contain `MALFORMED_MESSAGE`
+  - And output contains `UNKNOWN_CRITICAL_OPTION`
 
-### Scenario: get "weird44" path
+### Scenario: get "weird44" (unknown elective option I)
   - When I run `../bin/coap_client coap://coap.me/weird44`
   - Then I get no error
   - And output does not contain `MALFORMED_MESSAGE`
+  - And output contains `resource with option 44`
+
+### Scenario: get "weird44" (unknown elective option II)
+We repeate the same path to check that the debug output contains a reference
+about having found an unknown elective option.
+
+  - When I run `../bin/coap_client -v 4 coap://coap.me/weird44`
+  - Then I get no error
+  - And output does not contain `MALFORMED_MESSAGE`
+  - And output contains `unknown elective option`
+  - And output contains `resource with option 44`
 
 ### Scenario: get "weird55" path
   - When I run `../bin/coap_client coap://coap.me/weird55`
-  - Then I get no error
+  - Then I get an error
   - And output does not contain `MALFORMED_MESSAGE`
+  - And output contains `UNKNOWN_CRITICAL_OPTION`
 
 ### Scenario: get "weird333" path
   - When I run `../bin/coap_client coap://coap.me/weird333`
-  - Then I get no error
+  - Then I get an error
   - And output does not contain `MALFORMED_MESSAGE`
+  - And output contains `UNKNOWN_CRITICAL_OPTION`
 
 ### Scenario: get "weird3333" path
   - When I run `../bin/coap_client coap://coap.me/weird3333`
-  - Then I get no error
+  - Then I get an error
   - And output does not contain `MALFORMED_MESSAGE`
+  - And output contains `UNKNOWN_CRITICAL_OPTION`
 
 ### Scenario: get "weird33333" path
   - When I run `../bin/coap_client coap://coap.me/weird33333`
-  - Then I get no error
+  - Then I get an error
   - And output does not contain `MALFORMED_MESSAGE`
+  - And output contains `UNKNOWN_CRITICAL_OPTION`
 
 ### Scenario: get "123412341234123412341234" path
   - When I run `../bin/coap_client coap://coap.me/123412341234123412341234`
@@ -231,11 +261,15 @@ PUT OK
 ```
 
 ### Scenario: post method
+Note: this test was expected to not print quotes around `"This is a test"` but
+the bbt version used here (0.0.6) passes the quotes to the command.
+See https://github.com/LionelDraghi/bbt/issues/11
+
   - When I run `../bin/coap_client -m post -e "This is a test" coap://coap.me/test`
   - Then I get no error
   - And output is
 ```
-This is a test
+"This is a test"
 POST OK
 ```
 
