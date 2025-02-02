@@ -24,4 +24,12 @@ is
        Number'Length <= Interfaces.Unsigned_16'Width
        and then (for all C of Number => C in '0' .. '9');
 
+   -- Returns the number of occurrences of Char in Source.
+   -- This wraps Ada.Strings.Fixed.Count, which doesn't provide a Postcondition,
+   -- but by definition, the result cannot be greater than the length of Source.
+   function Count (Source : String; Char : Character) return Natural
+   with
+      Post   => Count'Result in 0 .. Source'Length,
+      Global => null;
+
 end CoAP_SPARK.Utils;

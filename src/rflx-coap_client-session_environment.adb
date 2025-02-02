@@ -9,6 +9,7 @@ package body RFLX.CoAP_Client.Session_Environment with
 is
 
    use type Ada.Containers.Count_Type;
+   use type CoAP_SPARK.Options.Option_Format;
 
    procedure Split_String_In_Repeatable_Options
      (Source        : String;
@@ -18,35 +19,42 @@ is
       Status        : in out Status_Type) with
        Always_Terminates,
        Pre => CoAP_SPARK.Options.Option_Properties_Table (Number).Repeatable
-                and then
-               Source'Length <= CoAP_SPARK.Options.Max_Option_Value_Length,
-       Post =>
-           CoAP_SPARK.Options.Lists.Length (Option_List) -
-                    CoAP_SPARK.Options.Lists.Length (Option_List'Old) in
-             0 .. Ada.Containers.Count_Type (Ada.Strings.Fixed.Count
-                    (Source => Source,
-                     Set => Ada.Strings.Maps.To_Set (Separator))) + 1
+         and then CoAP_SPARK.Options.Option_Properties_Table (Number).Format =
+                   CoAP_SPARK.Options.UTF8_String
+         and then Source'Length <= CoAP_SPARK.Options.Max_Option_Value_Length
    is
+      Separator_Set : constant Ada.Strings.Maps.Character_Set :=
+        Ada.Strings.Maps.To_Set (Separator);
       Segment_First : Natural;
-      Segment_Last  : Natural := Source'First - 1;
+      Segment_Last  : Natural;
       Order_Index   : CoAP_SPARK.Options.Option_Index := 1;
       Option        : CoAP_SPARK.Options.Option;
    begin
 
-      while Segment_Last + 1 in Source'Range loop
+      if Source = "" then
+         return;
+      end if;
+
+      Segment_Last := Source'First;
+
+      while Segment_Last in Source'Range loop
 
          Ada.Strings.Fixed.Find_Token
            (Source => Source,
-            Set    => Ada.Strings.Maps.To_Set (Separator),
-            From   => Segment_Last + 1,
+            Set    => Separator_Set,
+            From   => Segment_Last,
             Test   => Ada.Strings.Outside,
             First  => Segment_First,
             Last   => Segment_Last);
 
-         exit when Segment_Last = 0;
+         exit when
+            Segment_First not in Source'Range or else
+            Segment_Last not in Source'Range;
 
          if Segment_Last - Segment_First + 1 >
             CoAP_SPARK.Options.Option_Properties_Table (Number).Maximum_Length
+            or else CoAP_SPARK.Options.Lists.Length (Option_List) =
+            CoAP_SPARK.Options.Lists.Capacity (Option_List)
          then
             Status := Capacity_Error;
             return;
@@ -59,11 +67,26 @@ is
             Result      => Option);
 
          CoAP_SPARK.Options.Lists.Append (Option_List, Option);
-         Order_Index := Order_Index + 1;
 
-         pragma Loop_Invariant (Segment_Last <= Source'Last);
-         pragma Loop_Invariant (Order_Index <= Source'Length);
+         exit when Segment_Last >= Source'Last;
+
+         if Order_Index = CoAP_SPARK.Options.Option_Index'Last then
+            Status := Capacity_Error;
+            return;
+         end if;
+
+         pragma Loop_Invariant (Segment_Last in Source'Range);
+         pragma Loop_Invariant (Segment_Last < Natural'Last);
+         pragma Loop_Invariant (Order_Index < CoAP_SPARK.Options.Option_Index'Last);
+         pragma Loop_Invariant
+            (CoAP_SPARK.Options.Lists.Length (Option_List) =
+             CoAP_SPARK.Options.Lists.Length (Option_List'Loop_Entry) +
+             CoAP_SPARK.Options.Lists.Capacity_Range (Order_Index));
          pragma Loop_Variant (Increases => Segment_Last);
+
+         Segment_Last := @ + 1;
+         Order_Index := @ + 1;
+
       end loop;
    end Split_String_In_Repeatable_Options;
 
@@ -75,7 +98,7 @@ is
       Query         : String;
       Format        : Interfaces.Unsigned_32 :=
         CoAP_SPARK.Content_Formats.text.plain_charset_utf_8;
-      Payload       : in out RFLX.RFLX_Types.Bytes_Ptr;
+      Payload       : in out CoAP_SPARK.Messages.Payload_Ptr;
       Session_State : out State)
    is
       use type RFLX.RFLX_Types.Bytes_Ptr;
@@ -135,13 +158,21 @@ is
                and then
                Session_State.Request_Content.Payload /= null
             then
-               CoAP_SPARK.Options.New_UInt_Option
-                 (Number => RFLX.CoAP.Content_Format,
-                  Value  => Session_State.Request_Content.Format,
-                  Result => Option);
+               if CoAP_SPARK.Options.Lists.Length
+                    (Session_State.Request_Content.Options)
+                 = CoAP_SPARK.Options.Lists.Capacity
+                     (Session_State.Request_Content.Options)
+               then
+                  Session_State.Current_Status := Capacity_Error;
+               else
+                  CoAP_SPARK.Options.New_UInt_Option
+                    (Number => RFLX.CoAP.Content_Format,
+                     Value  => Session_State.Request_Content.Format,
+                     Result => Option);
 
-               CoAP_SPARK.Options.Lists.Append
-                 (Session_State.Request_Content.Options, Option);
+                  CoAP_SPARK.Options.Lists.Append
+                    (Session_State.Request_Content.Options, Option);
+               end if;
             end if;
          end if;
       end;

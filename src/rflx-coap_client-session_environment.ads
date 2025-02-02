@@ -1,5 +1,6 @@
 with CoAP_SPARK.Content_Formats;
 with CoAP_SPARK.Messages;
+with CoAP_SPARK.Options;
 with Interfaces;
 with RFLX.CoAP;
 
@@ -38,9 +39,13 @@ is
       Query         : String;
       Format        : Interfaces.Unsigned_32 :=
         CoAP_SPARK.Content_Formats.text.plain_charset_utf_8;
-      Payload       : in out RFLX.RFLX_Types.Bytes_Ptr;
+      Payload       : in out CoAP_SPARK.Messages.Payload_Ptr;
       Session_State : out State)
-   with Always_Terminates;
+   with Always_Terminates,
+      Pre => Server'Length <= CoAP_SPARK.Options.Option_Properties_Table
+                                 (RFLX.CoAP.Uri_Host).Maximum_Length and then
+          Path'Length <= CoAP_SPARK.Max_URI_Length and then
+          Query'Length <= CoAP_SPARK.Max_URI_Length;
 
    procedure Finalize (Session_State : in out State);
 
