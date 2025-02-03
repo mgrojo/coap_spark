@@ -1,7 +1,7 @@
 
 ## [coap_client_tests.md](coap_client_tests.md)  
 
-  ### Feature: CoAP Client to coap://coap.me  
+  ### Feature: CoAP Client command line  
 
     OK  : When I run `../bin/coap_client --version`
     OK  : Then I get no error
@@ -18,13 +18,7 @@
     OK  : And output contains `Usage: coap_client`
   - [X] scenario [usage message on unrecognized option](coap_client_tests.md) pass  
 
-    OK  : When I run `../bin/coap_client -m get coaps://coap.me/`
-    OK  : Then I get an error
-  - [X] scenario [coaps not supported by server](coap_client_tests.md) pass  
-
-    OK  : When I run `../bin/coap_client -m get http://coap.me/`
-    OK  : Then I get an error
-  - [X] scenario [invalid method](coap_client_tests.md) pass  
+  ### Feature: ETSI CoAP plugtest  
 
     OK  : When I run `../bin/coap_client -v 4 coap://coap.me/test`
     OK  : Then I get no error
@@ -197,7 +191,7 @@
 
     OK  : When I run `../bin/coap_client -m post -e "This is a test" coap://coap.me/forbidden`
     OK  : Then I get no error
-*** NOK : And output is (coap_client_tests.md:279:)  
+*** NOK : And output is (coap_client_tests.md:278:)  
 Output:  
 | "This is a test"  
 | 4.05 Method not supported here  
@@ -208,9 +202,71 @@ not equal to expected:
   
   - [ ] scenario [post method error 4.05](coap_client_tests.md) fails  
 
+  ### Feature: some miscelaneous error conditions  
+
+    OK  : When I run `../bin/coap_client http://coap.me/`
+    OK  : Then I get an error
+    OK  : And output contains `invalid URI`
+  - [X] scenario [invalid CoAP URI (invalid scheme and path)](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client http://coap.me`
+    OK  : Then I get an error
+*** NOK : And output contains `invalid URI` (coap_client_tests.md:294:)  
+Output:  
+|   
+| raised GNAT.SOCKETS.SOCKET_ERROR : [111] Connection refused  
+| [../bin/coap_client]  
+| 0x5ec389 Gnat.Sockets.Raise_Socket_Error at g-socket.adb:2117  
+| 0x5ee3a7 Gnat.Sockets.Receive_Socket at g-socket.adb:2182  
+| 0x40fbf4 Coap_Spark.Channel.Receive at coap_spark-channel.adb:240  
+| 0x410aaf Coap_Spark.Channel.Receive at coap_spark-channel.adb:210  
+| 0x40da30 Coap_Client at coap_client.adb:78  
+| 0x40ba24 Main at b__coap_client.adb:410  
+| [/lib/x86_64-linux-gnu/libc.so.6]  
+| 0x75ccd2429d8e  
+| 0x75ccd2429e3e  
+| [../bin/coap_client]  
+| 0x40ba73 _start at ???  
+| 0xfffffffffffffffe  
+
+does not contain expected:  
+| invalid URI  
+
+  
+  - [ ] scenario [invalid CoAP URI (invalid scheme and no path)](coap_client_tests.md) fails  
+
+    OK  : When I run `../bin/coap_client coap.me`
+    OK  : Then I get an error
+*** NOK : And output contains `invalid URI` (coap_client_tests.md:299:)  
+Output:  
+|   
+| raised GNAT.SOCKETS.HOST_ERROR : [1] Host not found: p.me  
+| [../bin/coap_client]  
+| 0x5e8ea6 Gnat.Sockets.Raise_Host_Error at g-socket.adb:2105  
+| 0x5edd7c Gnat.Sockets.Get_Host_By_Name at g-socket.adb:1294  
+| 0x4102b1 Coap_Spark.Channel.Connect at coap_spark-channel.adb:156  
+| 0x40cef6 Coap_Client at coap_client.adb:269  
+| 0x40ba24 Main at b__coap_client.adb:410  
+| [/lib/x86_64-linux-gnu/libc.so.6]  
+| 0x7ba7fbc29d8e  
+| 0x7ba7fbc29e3e  
+| [../bin/coap_client]  
+| 0x40ba73 _start at ???  
+| 0xfffffffffffffffe  
+
+does not contain expected:  
+| invalid URI  
+
+  
+  - [ ] scenario [invalid CoAP URI (no scheme)](coap_client_tests.md) fails  
+
+    OK  : When I run `../bin/coap_client -m get coaps://coap.me/`
+    OK  : Then I get an error
+  - [X] scenario [coaps not supported by server](coap_client_tests.md) pass  
+
 
 ------------------
-- Failed     =  1
+- Failed     =  3
 - Successful =  40
 - Empty      =  0
 - Not run    =  0

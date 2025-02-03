@@ -1,11 +1,13 @@
-## Feature: CoAP Client to coap://coap.me
-
+# Black box tests for CoAP Client
 These are the test scenarios for `coap_client` to be run using the `bbt` tool.
+
 These scenarios require connectivity to coap://coap.me in Internet.
 
 You can install `bbt` with `alr install bbt`.
 
 Use this command to run the tests: `bbt coap_client_tests.md`
+
+## Feature: CoAP Client command line
 
 ### Scenario: version message
   - When I run `../bin/coap_client --version`
@@ -22,13 +24,10 @@ Use this command to run the tests: `bbt coap_client_tests.md`
   - Then I get an error
   - And output contains `Usage: coap_client`
 
-### Scenario: coaps not supported by server
-  - When I run `../bin/coap_client -m get coaps://coap.me/`
-  - Then I get an error
+## Feature: ETSI CoAP plugtest
+The ETSI CoAP plugtest can be run against the server running on coap://coap.me.
 
-### Scenario: invalid method
-  - When I run `../bin/coap_client -m get http://coap.me/`
-  - Then I get an error
+See https://coap.me for details.
 
 ### Scenario: get method with test path and high verbosity I
 This test has to be broken in two contains checks, because the ETAG
@@ -281,3 +280,24 @@ POST OK
 4.05 Method not supported here
 ```
 
+## Feature: some miscelaneous error conditions
+Tests for incorrect URIs or incompatibities with the server.
+
+### Scenario: invalid CoAP URI (invalid scheme and path)
+  - When I run `../bin/coap_client http://coap.me/`
+  - Then I get an error
+  - And output contains `invalid URI`
+
+### Scenario: invalid CoAP URI (invalid scheme and no path)
+  - When I run `../bin/coap_client http://coap.me`
+  - Then I get an error
+  - And output contains `invalid URI`
+
+### Scenario: invalid CoAP URI (no scheme)
+  - When I run `../bin/coap_client coap.me`
+  - Then I get an error
+  - And output contains `invalid URI`
+
+### Scenario: coaps not supported by server
+  - When I run `../bin/coap_client -m get coaps://coap.me/`
+  - Then I get an error
