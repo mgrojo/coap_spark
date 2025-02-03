@@ -1,6 +1,8 @@
 pragma SPARK_Mode;
 
-with Ada.Command_Line;
+-- The following package is used, instead of Ada.Command_Line, for the reasons
+-- explained in the package itself (related to the use of SPARK).
+with SPARK_Terminal;
 
 with Coap_Client_Config;
 with CoAP_SPARK.Channel;
@@ -103,7 +105,7 @@ procedure CoAP_Client is
       CoAP_SPARK.Log.New_Line (Level => CoAP_SPARK.Log.Info);
 
       if Is_Failure then
-         Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
+         SPARK_Terminal.Set_Exit_Status (SPARK_Terminal.Exit_Status_Failure);
       end if;
    end Usage;
 
@@ -115,17 +117,17 @@ procedure CoAP_Client is
    Argument_Index : Natural := 0;
 begin
 
-   if Ada.Command_Line.Argument_Count = 0
-     or else Ada.Command_Line.Argument (1) = "-h"
-     or else Ada.Command_Line.Argument (1) = "--help"
+   if SPARK_Terminal.Argument_Count = 0
+     or else SPARK_Terminal.Argument (1) = "-h"
+     or else SPARK_Terminal.Argument (1) = "--help"
    then
       Usage (Is_Failure => False);
       return;
    end if;
 
-   if Ada.Command_Line.Argument_Count = 1
-     and then (Ada.Command_Line.Argument (1) = "-V"
-      or else Ada.Command_Line.Argument (1) = "--version")
+   if SPARK_Terminal.Argument_Count = 1
+     and then (SPARK_Terminal.Argument (1) = "-V"
+      or else SPARK_Terminal.Argument (1) = "--version")
    then
       CoAP_SPARK.Log.Put (Coap_Client_Config.Crate_Name, CoAP_SPARK.Log.Info);
       CoAP_SPARK.Log.Put (" v", CoAP_SPARK.Log.Info);
@@ -133,25 +135,25 @@ begin
       return;
    end if;
 
-   while Argument_Index < Ada.Command_Line.Argument_Count loop
+   while Argument_Index < SPARK_Terminal.Argument_Count loop
       Argument_Index := @ + 1;
-      if Ada.Command_Line.Argument (Argument_Index) = "-m" then
+      if SPARK_Terminal.Argument (Argument_Index) = "-m" then
          Argument_Index := @ + 1;
          begin
             Method :=
               RFLX.CoAP.Method_Code'Value
-                (Ada.Command_Line.Argument (Argument_Index));
+                (SPARK_Terminal.Argument (Argument_Index));
          exception
             when Constraint_Error =>
                CoAP_SPARK.Log.Put_Line ("Invalid method", CoAP_SPARK.Log.Error);
                Usage;
                return;
          end;
-      elsif Ada.Command_Line.Argument (Argument_Index) = "-e" then
+      elsif SPARK_Terminal.Argument (Argument_Index) = "-e" then
          Argument_Index := @ + 1;
          declare
             Payload_String : constant String :=
-              Ada.Command_Line.Argument (Argument_Index);
+              SPARK_Terminal.Argument (Argument_Index);
          begin
             Payload :=
               new RFLX.RFLX_Types.Bytes'(1 .. Payload_String'Length => 0);
@@ -163,60 +165,60 @@ begin
                Usage;
                return;
          end;
-      elsif Ada.Command_Line.Argument (Argument_Index) = "-v" then
+      elsif SPARK_Terminal.Argument (Argument_Index) = "-v" then
          Argument_Index := @ + 1;
          begin
             CoAP_SPARK.Log.Set_Level
               (CoAP_SPARK.Log.Level_Type'Val
                  (CoAP_SPARK.Log.Level_Type'Pos (CoAP_SPARK.Log.Level_Type'Last) -
-                    Integer'Value (Ada.Command_Line.Argument (Argument_Index))));
+                    Integer'Value (SPARK_Terminal.Argument (Argument_Index))));
          exception
             when Constraint_Error =>
                CoAP_SPARK.Log.Put_Line ("Invalid verbosity level", CoAP_SPARK.Log.Error);
                Usage;
                return;
          end;
-      elsif Ada.Command_Line.Argument (Argument_Index) = "-B" then
+      elsif SPARK_Terminal.Argument (Argument_Index) = "-B" then
          -- This is allowed but not implemented. For compatibility to
          -- libcoap's coap-client, which uses this switch for specifying a
          -- timeout.
          Argument_Index := @ + 1;
-      elsif Ada.Command_Line.Argument (Argument_Index) = "-k" or else
-         Ada.Command_Line.Argument (Argument_Index) = "-u"
+      elsif SPARK_Terminal.Argument (Argument_Index) = "-k" or else
+         SPARK_Terminal.Argument (Argument_Index) = "-u"
       then
          Argument_Index := @ + 1;
 
-         if Argument_Index = Ada.Command_Line.Argument_Count  then
+         if Argument_Index = SPARK_Terminal.Argument_Count  then
             CoAP_SPARK.Log.Put ("Missing argument for ", CoAP_SPARK.Log.Error);
-            CoAP_SPARK.Log.Put_Line (Ada.Command_Line.Argument (Argument_Index - 1),
+            CoAP_SPARK.Log.Put_Line (SPARK_Terminal.Argument (Argument_Index - 1),
                                      CoAP_SPARK.Log.Error);
             Usage;
             return;
          end if;
          -- We will handle the PSK and Identity later, in the PSK_Callback
-      elsif Argument_Index = Ada.Command_Line.Argument_Count then
+      elsif Argument_Index = SPARK_Terminal.Argument_Count then
          -- We will handle the URI later
          null;
       else
          CoAP_SPARK.Log.Put ("Invalid option: ", CoAP_SPARK.Log.Error);
-         CoAP_SPARK.Log.Put_Line (Ada.Command_Line.Argument (Argument_Index),
+         CoAP_SPARK.Log.Put_Line (SPARK_Terminal.Argument (Argument_Index),
                                   CoAP_SPARK.Log.Error);
          Usage;
          return;
       end if;
    end loop;
 
-   if Argument_Index > Ada.Command_Line.Argument_Count then
+   if Argument_Index > SPARK_Terminal.Argument_Count then
       CoAP_SPARK.Log.Put_Line ("URI is missing", CoAP_SPARK.Log.Error);
       Usage;
       return;
    end if;
 
-   if Ada.Command_Line.Argument (Argument_Index) = "" or else
-      Ada.Command_Line.Argument (Argument_Index)(1) = '-'
+   if SPARK_Terminal.Argument (Argument_Index) = "" or else
+      SPARK_Terminal.Argument (Argument_Index)(1) = '-'
    then
       CoAP_SPARK.Log.Put ("Unrecognized option: ", CoAP_SPARK.Log.Error);
-      CoAP_SPARK.Log.Put_Line (Ada.Command_Line.Argument (Argument_Index),
+      CoAP_SPARK.Log.Put_Line (SPARK_Terminal.Argument (Argument_Index),
                                CoAP_SPARK.Log.Error);
       Usage;
       return;
@@ -224,7 +226,7 @@ begin
 
    declare
       URI_String : constant String :=
-        Ada.Command_Line.Argument (Argument_Index);
+        SPARK_Terminal.Argument (Argument_Index);
       URI        : constant CoAP_SPARK.URI.URI :=
         CoAP_SPARK.URI.Create (URI_String);
       Skt : CoAP_SPARK.Channel.Socket_Type
@@ -245,9 +247,8 @@ begin
       CoAP_SPARK.Log.Put_Line ("Path: " & CoAP_SPARK.URI.Path (URI));
       CoAP_SPARK.Log.Put_Line ("Query: " & CoAP_SPARK.URI.Query (URI));
 
-      Channel.Initialize
-        (Socket       => Skt,
-         PSK_Callback => CoAP_Secure.PSK_Client_Callback'Access);
+      CoAP_Secure.Initialize
+        (Socket => Skt);
 
       Session_Environment.Initialize
         (Method        => Method,
@@ -320,7 +321,7 @@ begin
    else
       CoAP_SPARK.Log.Put ("Aborted with error: ", CoAP_SPARK.Log.Error);
       CoAP_SPARK.Log.Put_Line (Ctx.E.Current_Status'Image, CoAP_SPARK.Log.Error);
-      Ada.Command_Line.Set_Exit_Status (Ada.Command_Line.Failure);
+      SPARK_Terminal.Set_Exit_Status (SPARK_Terminal.Exit_Status_Failure);
    end if;
 
    pragma Warnings (Off, "statement has no effect");

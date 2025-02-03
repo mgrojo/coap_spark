@@ -60,4 +60,12 @@ is
       end;
    end PSK_Client_Callback;
 
+   procedure Initialize (Socket : out CoAP_SPARK.Channel.Socket_Type)
+   is
+   begin
+      CoAP_SPARK.Channel.Initialize
+        (Socket       => Socket,
+         PSK_Callback => CoAP_Secure.PSK_Client_Callback'Access);
+   end Initialize;
+   
 end CoAP_Secure;
