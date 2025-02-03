@@ -34,6 +34,9 @@ project Coap_Spark is
    end Install;
 
    package Prove is
+
+      for Proof_Dir use "proof";
+
       for Proof_Switches ("Ada") use (
          "-j0",
          "--mode=silver",
@@ -43,7 +46,7 @@ project Coap_Spark is
          "--memlimit=2000",
          "--checks-as-errors=on",
          "--warnings=error",
-         "--counterexamples=off"
+         "--counterexamples=on"
       );
    end Prove;
 
