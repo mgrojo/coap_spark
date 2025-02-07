@@ -24,6 +24,12 @@ Use this command to run the tests: `bbt coap_client_tests.md`
   - Then I get an error
   - And output contains `Usage: coap_client`
 
+### Scenario: no URI
+  - When I run `../bin/coap_client -e Payload`
+  - Then I get an error
+  - And output contains `URI is missing`
+
+
 ## Feature: ETSI CoAP plugtest
 The ETSI CoAP plugtest can be run against the server running on coap://coap.me.
 
