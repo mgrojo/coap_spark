@@ -195,9 +195,6 @@ begin
             Valid_Command_Line := False;
          end if;
          -- We will handle the PSK and Identity later, in the PSK_Callback
-      elsif Argument_Index = SPARK_Terminal.Argument_Count then
-         -- We will handle the URI later
-         null;
       else
          CoAP_SPARK.Log.Put ("Invalid option: ", CoAP_SPARK.Log.Error);
          CoAP_SPARK.Log.Put_Line (SPARK_Terminal.Argument (Argument_Index),
@@ -205,17 +202,15 @@ begin
          Valid_Command_Line := False;
       end if;
 
-      exit when not Valid_Command_Line or
-         Argument_Index >= SPARK_Terminal.Argument_Count;
+      if Argument_Index = SPARK_Terminal.Argument_Count then
+         CoAP_SPARK.Log.Put_Line ("URI is missing", CoAP_SPARK.Log.Error);
+         Valid_Command_Line := False;
+      end if;
+      
+      exit when not Valid_Command_Line;
 
       Argument_Index := @ + 1;
-
    end loop;
-
-   if Argument_Index > SPARK_Terminal.Argument_Count then
-      CoAP_SPARK.Log.Put_Line ("URI is missing", CoAP_SPARK.Log.Error);
-      Valid_Command_Line := False;
-   end if;
 
    if not Valid_Command_Line then
       RFLX.RFLX_Types.Free (Payload);
