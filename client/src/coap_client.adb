@@ -146,15 +146,16 @@ begin
 
       if SPARK_Terminal.Argument (Argument_Index) = "-m" then
          Argument_Index := @ + 1;
-         begin
+         if CoAP_SPARK.Utils.Is_Valid_As_Method 
+              (SPARK_Terminal.Argument (Argument_Index))
+         then
             Method :=
-              RFLX.CoAP.Method_Code'Value
+              CoAP_SPARK.Utils.Value
                 (SPARK_Terminal.Argument (Argument_Index));
-         exception
-            when Constraint_Error =>
-               CoAP_SPARK.Log.Put_Line ("Invalid method", CoAP_SPARK.Log.Error);
+         else
+            CoAP_SPARK.Log.Put_Line ("Invalid method", CoAP_SPARK.Log.Error);
             Valid_Command_Line := False;
-         end;
+         end if;
       
       elsif SPARK_Terminal.Argument (Argument_Index) = "-e" then
          Argument_Index := @ + 1;
@@ -178,13 +179,26 @@ begin
 
       elsif SPARK_Terminal.Argument (Argument_Index) = "-v" then
          Argument_Index := @ + 1;
-         if CoAP_SPARK.Utils.Valid_Integer_Values.Is_Valid_As_Number
+         if CoAP_SPARK.Utils.Valid_Natural_Values.Is_Valid_As_Number
             (SPARK_Terminal.Argument (Argument_Index))
          then
-            CoAP_SPARK.Log.Set_Level
-               (CoAP_SPARK.Log.Level_Type'Val
-                  (CoAP_SPARK.Log.Level_Type'Pos (CoAP_SPARK.Log.Level_Type'Last) -
-                     (CoAP_SPARK.Utils.Value (SPARK_Terminal.Argument (Argument_Index)))));
+            declare
+               Verbosity_Number : constant Natural :=
+                 CoAP_SPARK.Utils.Value
+                   (SPARK_Terminal.Argument (Argument_Index));
+            begin
+               if Verbosity_Number > CoAP_SPARK.Log.Level_Type'Pos
+                  (CoAP_SPARK.Log.Level_Type'Last)
+               then
+                  CoAP_SPARK.Log.Put_Line ("Verbosity level too high", CoAP_SPARK.Log.Error);
+                  Valid_Command_Line := False;
+               else
+                  CoAP_SPARK.Log.Set_Level
+                    (CoAP_SPARK.Log.Level_Type'Val
+                       (CoAP_SPARK.Log.Level_Type'Pos (CoAP_SPARK.Log.Level_Type'Last) -
+                          Verbosity_Number));
+               end if;
+            end;
          else
             CoAP_SPARK.Log.Put_Line ("Invalid verbosity level", CoAP_SPARK.Log.Error);
             Valid_Command_Line := False;
@@ -250,7 +264,9 @@ begin
          CoAP_SPARK.Log.Put ("Unrecognized option: ", CoAP_SPARK.Log.Error);
          CoAP_SPARK.Log.Put_Line (URI_String, CoAP_SPARK.Log.Error);
          Valid_Command_Line := False;
-      elsif not CoAP_SPARK.URI.Is_Valid (URI) then
+      elsif not CoAP_SPARK.URI.Is_Valid (URI) or else
+         not CoAP_SPARK.URI.Has_Valid_Lengths (URI)
+      then
          CoAP_SPARK.Log.Put ("Invalid URI: ", CoAP_SPARK.Log.Error);
          CoAP_SPARK.Log.Put_Line (URI_String, CoAP_SPARK.Log.Error);
          Valid_Command_Line := False;

@@ -1,3 +1,5 @@
+with Ada.Strings.Equal_Case_Insensitive;
+with RFLX.CoAP;
 with RFLX.RFLX_Types;
 with Interfaces;
 
@@ -18,7 +20,7 @@ is
    with Pre => Target'Length = Source'Length;
 
    generic
-      -- For signed integer and modular types (no enumeration).
+      -- For positive integers and modular types (no negative nor enumeration).
       type Numeric_Type is (<>);
 
    package Valid_Values
@@ -40,13 +42,29 @@ is
 
    package Valid_Unsigned_16_Values is new
      Valid_Values (Interfaces.Unsigned_16);
-   package Valid_Integer_Values is new Valid_Values (Integer);
+   package Valid_Natural_Values is new Valid_Values (Natural);
 
    function Value (Number : String) return Interfaces.Unsigned_16
    renames Valid_Unsigned_16_Values.Value;
-   function Value (Number : String) return Integer
-   renames Valid_Integer_Values.Value;
+   function Value (Number : String) return Natural
+   renames Valid_Natural_Values.Value;
 
+   function Is_Equal (Source : String; Target : String) return Boolean
+     renames Ada.Strings.Equal_Case_Insensitive;
+
+   -- Returns True if Method is a valid CoAP method.
+   function Is_Valid_As_Method (Method : String) return Boolean
+   is (Is_Equal (Method, "GET") or else
+       Is_Equal (Method, "POST") or else
+       Is_Equal (Method, "PUT") or else
+       Is_Equal (Method, "DELETE") or else
+       Is_Equal (Method, "FETCH") or else
+       Is_Equal (Method, "PATCH") or else
+       Is_Equal (Method, "IPATCH"));
+
+   -- Wrapper around 'Value attribute, which cannot be proved by SPARK.
+   function Value (Method : String) return RFLX.CoAP.Method_Code
+      with Pre => Is_Valid_As_Method (Method);
 
    -- Returns the number of occurrences of Char in Source.
    -- This wraps Ada.Strings.Fixed.Count, which doesn't provide a Postcondition,

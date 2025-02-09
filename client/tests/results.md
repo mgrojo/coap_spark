@@ -221,17 +221,17 @@ Output:
 |   
 | raised GNAT.SOCKETS.SOCKET_ERROR : [111] Connection refused  
 | [../bin/coap_client]  
-| 0x5ebe49 Gnat.Sockets.Raise_Socket_Error at g-socket.adb:2117  
-| 0x5ede67 Gnat.Sockets.Receive_Socket at g-socket.adb:2182  
-| 0x40fab4 Coap_Spark.Channel.Receive at coap_spark-channel.adb:240  
-| 0x4108cf Coap_Spark.Channel.Receive at coap_spark-channel.adb:210  
-| 0x40d5a4 Coap_Client at coap_client.adb:78  
-| 0x40ba24 Main at b__coap_client.adb:412  
+| 0x5ecbc9 Gnat.Sockets.Raise_Socket_Error at g-socket.adb:2117  
+| 0x5eebe7 Gnat.Sockets.Receive_Socket at g-socket.adb:2182  
+| 0x40ffb4 Coap_Spark.Channel.Receive at coap_spark-channel.adb:240  
+| 0x410e6f Coap_Spark.Channel.Receive at coap_spark-channel.adb:210  
+| 0x40eafc Coap_Client at coap_client.adb:80  
+| 0x40b924 Main at b__coap_client.adb:412  
 | [/lib/x86_64-linux-gnu/libc.so.6]  
-| 0x7653db029d8e  
-| 0x7653db029e3e  
+| 0x7cb407229d8e  
+| 0x7cb407229e3e  
 | [../bin/coap_client]  
-| 0x40ba73 _start at ???  
+| 0x40b973 _start at ???  
 | 0xfffffffffffffffe  
 
 does not contain expected:  
@@ -247,16 +247,16 @@ Output:
 |   
 | raised GNAT.SOCKETS.HOST_ERROR : [1] Host not found: p.me  
 | [../bin/coap_client]  
-| 0x5e8966 Gnat.Sockets.Raise_Host_Error at g-socket.adb:2105  
-| 0x5ed83c Gnat.Sockets.Get_Host_By_Name at g-socket.adb:1294  
-| 0x4100d1 Coap_Spark.Channel.Connect at coap_spark-channel.adb:156  
-| 0x40cb94 Coap_Client at coap_client.adb:278  
-| 0x40ba24 Main at b__coap_client.adb:412  
+| 0x5e96e6 Gnat.Sockets.Raise_Host_Error at g-socket.adb:2105  
+| 0x5ee5bc Gnat.Sockets.Get_Host_By_Name at g-socket.adb:1294  
+| 0x410671 Coap_Spark.Channel.Connect at coap_spark-channel.adb:156  
+| 0x40dd06 Coap_Client at coap_client.adb:322  
+| 0x40b924 Main at b__coap_client.adb:412  
 | [/lib/x86_64-linux-gnu/libc.so.6]  
-| 0x74b828829d8e  
-| 0x74b828829e3e  
+| 0x7f464f829d8e  
+| 0x7f464f829e3e  
 | [../bin/coap_client]  
-| 0x40ba73 _start at ???  
+| 0x40b973 _start at ???  
 | 0xfffffffffffffffe  
 
 does not contain expected:  
@@ -265,6 +265,11 @@ does not contain expected:
   
   - [ ] scenario [invalid CoAP URI (no scheme)](coap_client_tests.md) fails  
 
+    OK  : When I run `../bin/coap_client -m gato http://coap.me/`
+    OK  : Then I get an error
+    OK  : And output contains `invalid method`
+  - [X] scenario [invalid CoAP method](coap_client_tests.md) pass  
+
     OK  : When I run `../bin/coap_client -m get coaps://coap.me/`
     OK  : Then I get an error
   - [X] scenario [coaps not supported by server](coap_client_tests.md) pass  
@@ -272,6 +277,6 @@ does not contain expected:
 
 ------------------
 - Failed     =  3
-- Successful =  41
+- Successful =  42
 - Empty      =  0
 - Not run    =  0

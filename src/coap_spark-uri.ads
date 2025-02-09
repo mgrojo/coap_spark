@@ -46,8 +46,7 @@ is
    function Scheme (Self : URI) return String;
 
    function Host (Self : URI) return String
-     with Pre => Is_Valid (Self),
-      Post => Host'Result'Length <= Max_URI_Part_Length;
+     with Pre => Is_Valid (Self);
 
    function Port (Self : URI) return Interfaces.Unsigned_16
      with Pre => Is_Valid (Self);
@@ -56,6 +55,12 @@ is
      with Pre => Is_Valid (Self);
 
    function Query (Self : URI) return String
+     with Pre => Is_Valid (Self);
+
+   function Has_Valid_Lengths (Self : URI) return Boolean
+     is (Host (Self)'Length <= Max_URI_Part_Length and then
+         Path (Self)'Length <= Max_URI_Part_Length and then
+         Query (Self)'Length <= Max_URI_Part_Length)
      with Pre => Is_Valid (Self);
 
 private

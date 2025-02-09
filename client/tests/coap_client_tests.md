@@ -304,6 +304,11 @@ Tests for incorrect URIs or incompatibities with the server.
   - Then I get an error
   - And output contains `invalid URI`
 
+### Scenario: invalid CoAP method
+  - When I run `../bin/coap_client -m gato http://coap.me/`
+  - Then I get an error
+  - And output contains `invalid method`
+
 ### Scenario: coaps not supported by server
   - When I run `../bin/coap_client -m get coaps://coap.me/`
   - Then I get an error
