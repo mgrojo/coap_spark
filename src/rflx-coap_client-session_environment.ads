@@ -45,8 +45,11 @@ is
       Pre => Server'Length <= CoAP_SPARK.Options.Option_Properties_Table
                                  (RFLX.CoAP.Uri_Host).Maximum_Length and then
           Path'Length <= CoAP_SPARK.Max_URI_Length and then
-          Query'Length <= CoAP_SPARK.Max_URI_Length;
+          Query'Length <= CoAP_SPARK.Max_URI_Length,
+      Post => Payload in null;
 
-   procedure Finalize (Session_State : in out State);
+   procedure Finalize (Session_State : in out State)
+   with Post => CoAP_SPARK.Messages.Is_Empty (Session_State.Request_Content)
+      and then CoAP_SPARK.Messages.Is_Empty (Session_State.Response_Content);
 
 end RFLX.CoAP_Client.Session_Environment;

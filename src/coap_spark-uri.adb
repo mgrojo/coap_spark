@@ -170,6 +170,8 @@ is
       if Self.Scheme_Last + Scheme_Suffix'Length + 1 not in
            Self.URI_String'Range
         or else Self.Host_Last not in Self.URI_String'Range
+        or else Self.Host_Last - Self.Scheme_Last - Scheme_Suffix'Length >
+           Max_URI_Part_Length
       then
          return "";
       end if;

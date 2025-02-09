@@ -31,9 +31,6 @@ is
       end loop;
    end Copy_String;
 
-   function Value (Number : String) return Interfaces.Unsigned_16
-   is (Interfaces.Unsigned_16'Value (Number)) with SPARK_Mode => Off;
-
    function Count (Source : String; Char : Character) return Natural
    is (Ada.Strings.Fixed.Count
          (Source => Source, Set => Ada.Strings.Maps.To_Set (Char)))

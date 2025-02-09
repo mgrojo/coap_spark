@@ -30,18 +30,20 @@ procedure CoAP_Client is
    package Channel renames CoAP_SPARK.Channel;
 
    use type RFLX.CoAP_Client.Session_Environment.Status_Type;
-
+   use type Types.Index;
+   use type Types.Bytes_Ptr;
    procedure Read (Ctx : FSM.Context;
                    Skt : in out CoAP_SPARK.Channel.Socket_Type) with
       Pre =>
          FSM.Initialized (Ctx)
-         and then FSM.Has_Data (Ctx, FSM.C_Transport),
+         and then FSM.Has_Data (Ctx, FSM.C_Transport)
+         and then CoAP_SPARK.Channel.Is_Valid (Skt),
       Post =>
          FSM.Initialized (Ctx)
    is
-      use type Types.Index;
       use type Types.Length;
-      Buffer : Types.Bytes (Types.Index'First .. Types.Index'First + 4095)
+      Buffer_Length : constant := 4095;
+      Buffer : Types.Bytes (Types.Index'First .. Types.Index'First + Buffer_Length)
          := [others => 0];
       Size : constant Types.Length := FSM.Read_Buffer_Size (Ctx, FSM.C_Transport);
    begin
@@ -66,11 +68,11 @@ procedure CoAP_Client is
                     Skt : in out CoAP_SPARK.Channel.Socket_Type) with
       Pre =>
          FSM.Initialized (Ctx)
-         and then FSM.Needs_Data (Ctx, FSM.C_Transport),
+         and then FSM.Needs_Data (Ctx, FSM.C_Transport)
+         and then CoAP_SPARK.Channel.Is_Valid (Skt),
       Post =>
          FSM.Initialized (Ctx)
-   is
-      use type Types.Index;
+      is
       use type Types.Length;
       Buffer : Types.Bytes (Types.Index'First .. Types.Index'First + 4095);
       Length : RFLX.RFLX_Builtin_Types.Length;
@@ -105,15 +107,17 @@ procedure CoAP_Client is
       end loop;
       CoAP_SPARK.Log.New_Line (Level => CoAP_SPARK.Log.Info);
 
-      if Is_Failure then
-         SPARK_Terminal.Set_Exit_Status (SPARK_Terminal.Exit_Status_Failure);
-      end if;
+      SPARK_Terminal.Set_Exit_Status
+        (Status =>
+           (if Is_Failure
+            then SPARK_Terminal.Exit_Status_Failure
+            else SPARK_Terminal.Exit_Status_Success));
    end Usage;
 
    Ctx : FSM.Context;
 
    Method : RFLX.CoAP.Method_Code := RFLX.CoAP.Get;
-   Payload : RFLX.RFLX_Types.Bytes_Ptr := null;
+   Payload : CoAP_SPARK.Messages.Payload_Ptr := null;
 
    Argument_Index : Natural := 1;
 
@@ -151,38 +155,47 @@ begin
                CoAP_SPARK.Log.Put_Line ("Invalid method", CoAP_SPARK.Log.Error);
             Valid_Command_Line := False;
          end;
+      
       elsif SPARK_Terminal.Argument (Argument_Index) = "-e" then
          Argument_Index := @ + 1;
          declare
-            Payload_String : constant String :=
-              SPARK_Terminal.Argument (Argument_Index);
+            Payload_Length : constant Natural :=
+              SPARK_Terminal.Argument (Argument_Index)'Length;
          begin
-            Payload :=
-              new RFLX.RFLX_Types.Bytes'(1 .. Payload_String'Length => 0);
-            CoAP_SPARK.Utils.Copy_String
-              (Source => Payload_String, Target => Payload.all);
-         exception
-            when Constraint_Error =>
-               CoAP_SPARK.Log.Put_Line ("Invalid payload", CoAP_SPARK.Log.Error);
+            if Payload_Length = 0 or else Payload_Length > CoAP_SPARK.Max_Payload_Length then
+               CoAP_SPARK.Log.Put_Line ("Payload too long", CoAP_SPARK.Log.Error);
                Valid_Command_Line := False;
+            elsif Payload /= null then
+               CoAP_SPARK.Log.Put_Line ("Payload already provided", CoAP_SPARK.Log.Error);
+               Valid_Command_Line := False;
+            else
+               Payload :=
+                 new Types.Bytes'(1 .. Types.Index (Payload_Length) => 0);
+               CoAP_SPARK.Utils.Copy_String
+                  (Source => SPARK_Terminal.Argument (Argument_Index), Target => Payload.all);
+            end if;
          end;
+
       elsif SPARK_Terminal.Argument (Argument_Index) = "-v" then
          Argument_Index := @ + 1;
-         begin
+         if CoAP_SPARK.Utils.Valid_Integer_Values.Is_Valid_As_Number
+            (SPARK_Terminal.Argument (Argument_Index))
+         then
             CoAP_SPARK.Log.Set_Level
-              (CoAP_SPARK.Log.Level_Type'Val
-                 (CoAP_SPARK.Log.Level_Type'Pos (CoAP_SPARK.Log.Level_Type'Last) -
-                    Integer'Value (SPARK_Terminal.Argument (Argument_Index))));
-         exception
-            when Constraint_Error =>
-               CoAP_SPARK.Log.Put_Line ("Invalid verbosity level", CoAP_SPARK.Log.Error);
+               (CoAP_SPARK.Log.Level_Type'Val
+                  (CoAP_SPARK.Log.Level_Type'Pos (CoAP_SPARK.Log.Level_Type'Last) -
+                     (CoAP_SPARK.Utils.Value (SPARK_Terminal.Argument (Argument_Index)))));
+         else
+            CoAP_SPARK.Log.Put_Line ("Invalid verbosity level", CoAP_SPARK.Log.Error);
             Valid_Command_Line := False;
-         end;
+         end if;
+
       elsif SPARK_Terminal.Argument (Argument_Index) = "-B" then
          -- This is allowed but not implemented. For compatibility to
          -- libcoap's coap-client, which uses this switch for specifying a
          -- timeout.
          Argument_Index := @ + 1;
+
       elsif SPARK_Terminal.Argument (Argument_Index) = "-k" or else
          SPARK_Terminal.Argument (Argument_Index) = "-u"
       then
@@ -202,15 +215,21 @@ begin
          Valid_Command_Line := False;
       end if;
 
-      if Argument_Index = SPARK_Terminal.Argument_Count then
+      if Valid_Command_Line and Argument_Index = SPARK_Terminal.Argument_Count then
          CoAP_SPARK.Log.Put_Line ("URI is missing", CoAP_SPARK.Log.Error);
          Valid_Command_Line := False;
       end if;
       
       exit when not Valid_Command_Line;
 
+      pragma Loop_Invariant (Argument_Index < SPARK_Terminal.Argument_Count);
       Argument_Index := @ + 1;
    end loop;
+
+   if SPARK_Terminal.Argument (Argument_Index)'Length > CoAP_SPARK.Max_URI_Length then
+      CoAP_SPARK.Log.Put_Line ("URI too long", CoAP_SPARK.Log.Error);
+      Valid_Command_Line := False;
+   end if;
 
    if not Valid_Command_Line then
       RFLX.RFLX_Types.Free (Payload);
@@ -230,13 +249,15 @@ begin
       if URI_String = "" or else URI_String (URI_String'First) = '-' then
          CoAP_SPARK.Log.Put ("Unrecognized option: ", CoAP_SPARK.Log.Error);
          CoAP_SPARK.Log.Put_Line (URI_String, CoAP_SPARK.Log.Error);
-         Usage;
-         return;
-      end if;
-
-      if not CoAP_SPARK.URI.Is_Valid (URI) then
+         Valid_Command_Line := False;
+      elsif not CoAP_SPARK.URI.Is_Valid (URI) then
          CoAP_SPARK.Log.Put ("Invalid URI: ", CoAP_SPARK.Log.Error);
          CoAP_SPARK.Log.Put_Line (URI_String, CoAP_SPARK.Log.Error);
+         Valid_Command_Line := False;
+      end if;
+
+      if not Valid_Command_Line then
+         RFLX.RFLX_Types.Free (Payload);
          Usage;
          return;
       end if;
@@ -256,6 +277,11 @@ begin
 
       CoAP_Secure.Initialize
         (Socket => Skt);
+      if not CoAP_SPARK.Channel.Is_Valid (Skt) then
+         CoAP_SPARK.Log.Put_Line ("Communication problems.", CoAP_SPARK.Log.Error);
+         RFLX.RFLX_Types.Free (Payload);
+         return;
+      end if;
 
       Session_Environment.Initialize
         (Method        => Method,
@@ -268,6 +294,11 @@ begin
 
       if Ctx.E.Current_Status /= Session_Environment.OK then
          CoAP_SPARK.Log.Put_Line (Ctx.E.Current_Status'Image, CoAP_SPARK.Log.Error);
+         RFLX.RFLX_Types.Free (Payload);
+         Session_Environment.Finalize (Ctx.E);
+         pragma Assert
+          (CoAP_SPARK.Messages.Is_Empty (Ctx.E.Request_Content)
+            and then CoAP_SPARK.Messages.Is_Empty (Ctx.E.Response_Content));
          return;
       end if;
 
@@ -277,27 +308,45 @@ begin
          Server => CoAP_SPARK.URI.Host (URI),
          Port   => CoAP_SPARK.Channel.Port_Type (CoAP_SPARK.URI.Port (URI)));
 
+      if not CoAP_SPARK.Channel.Is_Valid (Skt) then
+         CoAP_SPARK.Log.Put_Line ("Connection problems.", CoAP_SPARK.Log.Error);
+         RFLX.RFLX_Types.Free (Payload);
+         Session_Environment.Finalize (Ctx.E);
+         pragma Assert
+          (CoAP_SPARK.Messages.Is_Empty (Ctx.E.Request_Content)
+            and then CoAP_SPARK.Messages.Is_Empty (Ctx.E.Response_Content));
+         FSM.Finalize (Ctx);
+         pragma Assert (FSM.Uninitialized (Ctx));
+         return;
+      end if;
+               
       CoAP_SPARK.Log.Put_Line ("REQUEST: ");
       CoAP_SPARK.Messages.Print_Content (Ctx.E.Request_Content);
 
       while FSM.Active (Ctx) loop
          pragma Loop_Invariant (FSM.Initialized (Ctx));
+         pragma Loop_Invariant (CoAP_SPARK.Channel.Is_Valid (Skt));
          for C in FSM.Channel'Range loop
             pragma Loop_Invariant (FSM.Initialized (Ctx));
+            exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
             if FSM.Has_Data (Ctx, C) then
                Read (Ctx, Skt);
             end if;
+            exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
             if FSM.Needs_Data (Ctx, C) then
                Write (Ctx, Skt);
             end if;
          end loop;
+         exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
          FSM.Run (Ctx);
       end loop;
 
       if not CoAP_SPARK.Channel.Is_Valid (Skt) then
          CoAP_SPARK.Log.Put_Line ("Communication problems.", CoAP_SPARK.Log.Error);
       end if;
+      
       CoAP_SPARK.Channel.Finalize (Skt);
+      pragma Assert (not CoAP_SPARK.Channel.Is_Valid (Skt));
    end;
 
    CoAP_SPARK.Log.New_Line;
@@ -342,17 +391,18 @@ begin
       SPARK_Terminal.Set_Exit_Status (SPARK_Terminal.Exit_Status_Failure);
    end if;
 
-   RFLX.CoAP_Client.Session_Environment.Finalize (Ctx.E);
+   RFLX.RFLX_Types.Free (Payload);
 
    pragma Warnings (Off, "statement has no effect");
    pragma
      Warnings
-       (Off, """Ctx"" is set by ""Finalize"" but not used after the call");
+       (Off, " is set by ""Finalize"" but not used after the call");
+   RFLX.CoAP_Client.Session_Environment.Finalize (Ctx.E);
    FSM.Finalize (Ctx);
    pragma Warnings (On, "statement has no effect");
    pragma
      Warnings
-       (On, """Ctx"" is set by ""Finalize"" but not used after the call");
+       (On, " is set by ""Finalize"" but not used after the call");
 
    -- This has no effect, but it is needed to avoid a linking error with
    -- SPARKLib in the validation profile.

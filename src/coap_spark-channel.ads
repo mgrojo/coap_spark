@@ -50,8 +50,8 @@ is
 
    procedure Finalize
      (Socket : in out Socket_Type) with
-        Global =>
-           null;
+        Global => null,
+        Post => not Is_Valid (Socket);
 private
 
    type Socket_Type (Is_Secure : Boolean) is record

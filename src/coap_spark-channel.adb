@@ -248,13 +248,17 @@ is
 
    procedure Finalize
      (Socket : in out Socket_Type)
-   with SPARK_Mode => Off
    is
    begin
       GNAT.Sockets.Close_Socket (Socket => Socket.Attached_Socket);
+      Socket.Attached_Socket := GNAT.Sockets.No_Socket;
       if Socket.Is_Secure then
-         WolfSSL.Free (Ssl => Socket.Ssl);
-         WolfSSL.Free (Context => Socket.Ctx);
+         if WolfSSL.Is_Valid (Socket.Ssl) then
+            WolfSSL.Free (Ssl => Socket.Ssl);
+         end if;
+         if WolfSSL.Is_Valid (Socket.Ctx) then
+            WolfSSL.Free (Context => Socket.Ctx);
+         end if;
       end if;
    end Finalize;
 

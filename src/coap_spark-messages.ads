@@ -53,10 +53,12 @@ is
    with
      Post => Image'Result'First = 1;
 
+   function Is_Empty (Item : Content) return Boolean
+   is (CoAP_SPARK.Options.Lists.Is_Empty (Item.Options)
+       and then Item.Payload = null);
+
    procedure Finalize (Item : in out Content)
    with
-     Post =>
-       CoAP_SPARK.Options.Lists.Is_Empty (Item.Options)
-       and then Item.Payload = null;
+     Post => Is_Empty (Item);
 
 end CoAP_SPARK.Messages;
