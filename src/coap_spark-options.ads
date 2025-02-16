@@ -9,6 +9,7 @@ is
 
    use type RFLX.CoAP.Option_Numbers;
    use type RFLX.RFLX_Builtin_Types.Bytes_Ptr;
+   use type RFLX.RFLX_Types.Length;
 
    -- According to Section 5.10. Option Definitions "Table 4: Options"
    -- the maximum size for uint options is 4 bytes.
@@ -21,7 +22,7 @@ is
    with Dynamic_Predicate => UInt_Bytes'Length <= Max_Uint_Length;
 
    subtype Option_Value_Length is
-     Natural range 0 .. CoAP_SPARK.Options.Max_Option_Value_Length;
+     RFLX.RFLX_Types.Length range 0 .. CoAP_SPARK.Options.Max_Option_Value_Length;
 
    subtype Option_Value_Ptr is RFLX.RFLX_Types.Bytes_Ptr
    with
@@ -152,6 +153,10 @@ is
          (Option_Properties_Table (Option.Number).Format,
           (if Option.Value = null then 0 else Option.Value.all'Length));
 
+   type Option_Model (<>) is private with Ghost;
+
+   function Model (Opt : Option) return Option_Model with Ghost;
+
    function "<" (Left, Right : Option) return Boolean;
    overriding
    function "=" (Left, Right : Option) return Boolean;
@@ -247,8 +252,7 @@ is
      Pre => Has_Buffer (Source),
      Post =>
        Has_Buffer (Target)
-       and then Get_Number (Target) = Get_Number (Source)
-       and then Get_Length (Target) = Get_Length (Source);
+       and then Model (Source) = Model (Target);
 
    procedure Free (Opt : in out Option)
    with Post => not Has_Buffer (Opt);
@@ -284,7 +288,7 @@ is
        Has_Buffer (Opt)
        and then Has_Valid_Length
                   (Option_Properties_Table (Get_Number ((Opt))).Format,
-                   Get_Length (Opt)),
+                   Natural (Get_Length (Opt))),
      Post =>
        Value_Image'Result'First = 1
        and then Is_Valid_Image_Length
@@ -302,6 +306,19 @@ private
       Value       : Option_Value_Ptr;
       Order_Index : Option_Index;
    end record;
+
+   type Option_Model (Value_Last : RFLX.RFLX_Types.Index'Base) is record
+      Number      : RFLX.CoAP.Option_Numbers;
+      Value       : RFLX.RFLX_Types.Bytes (1 ..  Value_Last);
+      Order_Index : Option_Index;
+   end record;
+
+   function Model (Opt : Option) return Option_Model
+   is ((Value_Last   => RFLX.RFLX_Types.Index'Base (Get_Length (Opt)),
+        Number       => Get_Number (Opt),
+        Value        => (if Get_Length (Opt) = 0 then [] else Opt.Value.all),
+        Order_Index  => Opt.Order_Index));
+
 
    function "<" (Left, Right : Option) return Boolean is
     (if Left.Number = Right.Number

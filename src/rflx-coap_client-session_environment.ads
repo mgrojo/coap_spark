@@ -3,10 +3,13 @@ with CoAP_SPARK.Messages;
 with CoAP_SPARK.Options;
 with Interfaces;
 with RFLX.CoAP;
+with RFLX.RFLX_Types;
 
 package RFLX.CoAP_Client.Session_Environment with
    SPARK_Mode
 is
+
+   use type RFLX.RFLX_Types.Length;
 
    type Status_Type is
      (OK,

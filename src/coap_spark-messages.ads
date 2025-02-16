@@ -32,8 +32,7 @@ is
        or else Payload_Ptr'Length <= CoAP_SPARK.Max_Payload_Length;
 
    type Content is record
-      Options : CoAP_SPARK.Options.Lists.Vector
-                          (CoAP_SPARK.Max_Number_Of_Options);
+      Options : CoAP_SPARK.Options.Lists.Vector;
       Format : Interfaces.Unsigned_32 := 0;
       Payload : Payload_Ptr;
    end record;

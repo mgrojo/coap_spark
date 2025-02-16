@@ -52,7 +52,7 @@ is
             Segment_Last not in Source'Range;
 
          if Segment_Last - Segment_First + 1 >
-            CoAP_SPARK.Options.Option_Properties_Table (Number).Maximum_Length
+            Natural (CoAP_SPARK.Options.Option_Properties_Table (Number).Maximum_Length)
             or else CoAP_SPARK.Options.Lists.Length (Option_List) =
             CoAP_SPARK.Options.Lists.Capacity (Option_List)
          then
