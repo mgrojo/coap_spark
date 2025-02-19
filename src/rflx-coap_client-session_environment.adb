@@ -54,7 +54,7 @@ is
          if Segment_Last - Segment_First + 1 >
             Natural (CoAP_SPARK.Options.Option_Properties_Table (Number).Maximum_Length)
             or else CoAP_SPARK.Options.Lists.Length (Option_List) =
-            CoAP_SPARK.Options.Lists.Capacity (Option_List)
+            CoAP_SPARK.Max_Number_Of_Options
          then
             Status := Capacity_Error;
             return;
@@ -66,7 +66,9 @@ is
             Order_Index => Order_Index,
             Result      => Option);
 
-         CoAP_SPARK.Options.Lists.Append (Option_List, Option);
+         CoAP_SPARK.Options.Lists.Append (Option_List,
+                                          CoAP_SPARK.Options.To_Indefinite (Option));
+         CoAP_SPARK.Options.Free (Option);
 
          exit when Segment_Last >= Source'Last;
 
@@ -75,6 +77,7 @@ is
             return;
          end if;
 
+         pragma Loop_Invariant (not CoAP_SPARK.Options.Has_Buffer (Option));
          pragma Loop_Invariant (Segment_Last in Source'Range);
          pragma Loop_Invariant (Segment_Last < Natural'Last);
          pragma Loop_Invariant (Order_Index < CoAP_SPARK.Options.Option_Index'Last);
@@ -109,9 +112,7 @@ is
       Session_State.Current_Message_ID := 0;
       Session_State.Request_Content.Format := Format;
       Session_State.Request_Content.Options :=
-        CoAP_SPARK.Options.Lists.Empty_Vector
-          (Capacity => CoAP_SPARK.Max_Number_Of_Options);
-
+        CoAP_SPARK.Options.Lists.Empty_Vector;
       -- Move payload.
       Session_State.Request_Content.Payload := Payload;
       Payload := null;
@@ -125,7 +126,10 @@ is
             Result => Option);
 
          CoAP_SPARK.Options.Lists.Append
-           (Session_State.Request_Content.Options, Option);
+           (Session_State.Request_Content.Options,
+            CoAP_SPARK.Options.To_Indefinite (Option));
+         CoAP_SPARK.Options.Free (Option);
+         pragma Assert (not CoAP_SPARK.Options.Has_Buffer (Option));
 
          CoAP_SPARK.Options.New_UInt_Option
            (Number => RFLX.CoAP.Uri_Port,
@@ -133,7 +137,10 @@ is
             Result => Option);
 
          CoAP_SPARK.Options.Lists.Append
-           (Session_State.Request_Content.Options, Option);
+           (Session_State.Request_Content.Options,
+            CoAP_SPARK.Options.To_Indefinite (Option));
+         CoAP_SPARK.Options.Free (Option);
+         pragma Assert (not CoAP_SPARK.Options.Has_Buffer (Option));
 
          -- RFC7252: each Uri-Path Option specifies one segment of the absolute
          --  path to the resource.
@@ -160,8 +167,7 @@ is
             then
                if CoAP_SPARK.Options.Lists.Length
                     (Session_State.Request_Content.Options)
-                 = CoAP_SPARK.Options.Lists.Capacity
-                     (Session_State.Request_Content.Options)
+                 = CoAP_SPARK.Max_Number_Of_Options
                then
                   Session_State.Current_Status := Capacity_Error;
                else
@@ -171,7 +177,11 @@ is
                      Result => Option);
 
                   CoAP_SPARK.Options.Lists.Append
-                    (Session_State.Request_Content.Options, Option);
+                    (Session_State.Request_Content.Options,
+                       CoAP_SPARK.Options.To_Indefinite (Option));
+                  CoAP_SPARK.Options.Free (Option);
+                  pragma Assert (not CoAP_SPARK.Options.Has_Buffer (Option));
+
                end if;
             end if;
          end if;
@@ -179,8 +189,7 @@ is
 
       Session_State.Response_Content.Format := 0;
       Session_State.Response_Content.Options :=
-        CoAP_SPARK.Options.Lists.Empty_Vector
-          (Capacity => CoAP_SPARK.Max_Number_Of_Options);
+        CoAP_SPARK.Options.Lists.Empty_Vector;
       Session_State.Response_Content.Payload := null;
       Session_State.Response_Codes := (Code_Class => RFLX.CoAP.Success);
 

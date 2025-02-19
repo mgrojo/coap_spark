@@ -250,24 +250,20 @@ is
       -- The options must be sorted by option number before they are encoded
       CoAP_SPARK.Options.Lists.Sorting.Sort (State.Request_Content.Options);
 
-      for Option of State.Request_Content.Options loop
+      for Element of State.Request_Content.Options loop
          pragma Loop_Invariant (RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt));
          pragma Loop_Invariant (RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt));
          declare
-            Option_Copy : CoAP_SPARK.Options.Option;
+            Option : CoAP_SPARK.Options.Option :=
+              CoAP_SPARK.Options.To_Option (Element);
          begin
             if CoAP_SPARK.Options.Has_Buffer (Option) then
-               -- Make a copy of the option to comply with the SPARK requirements
-               -- on pointers.
-               --
-               CoAP_SPARK.Options.Copy
-                 (Source => Option, Target => Option_Copy);
 
                Add_Option
-                 (Opt                 => Option_Copy,
+                 (Opt                 => Option,
                   Current_Delta       => Current_Delta,
                   Option_Sequence_Cxt => Option_Sequence_Cxt);
-               pragma Unreferenced (Option_Copy);
+               pragma Unreferenced (Option);
             else
                CoAP_SPARK.Log.Put_Line ("Discarded option without buffer");
             end if;
@@ -342,7 +338,7 @@ is
    with
      Pre =>
        CoAP_SPARK.Options.Lists.Length (State.Response_Content.Options) <
-         CoAP_SPARK.Options.Lists.Capacity (State.Response_Content.Options)
+         CoAP_SPARK.Max_Number_Of_Options
        and then RFLX.CoAP.Option_Type.Has_Buffer (Option_Cxt)
        and then RFLX.CoAP.Option_Type.Well_Formed_Message (Option_Cxt)
        and then Option_Delta <
@@ -479,7 +475,9 @@ is
 
             CoAP_SPARK.Options.Lists.Append
               (Container => State.Response_Content.Options,
-               New_Item => Option);
+               New_Item => CoAP_SPARK.Options.To_Indefinite (Option));
+            CoAP_SPARK.Options.Free (Option);
+            pragma Assert (not CoAP_SPARK.Options.Has_Buffer (Option));
          end;
       else
          declare
@@ -497,7 +495,9 @@ is
 
             CoAP_SPARK.Options.Lists.Append
               (Container => State.Response_Content.Options,
-               New_Item => Option);
+               New_Item => CoAP_SPARK.Options.To_Indefinite (Option));
+            CoAP_SPARK.Options.Free (Option);
+            pragma Assert (not CoAP_SPARK.Options.Has_Buffer (Option));
          end;
 
          if CoAP.To_Actual (Option_Delta) = CoAP.Content_Format then
@@ -565,7 +565,7 @@ is
                pragma Assert (not RFLX.CoAP.Option_Type.Has_Buffer (Option_Cxt));
 
                if CoAP_SPARK.Options.Lists.Length (State.Response_Content.Options) =
-                  CoAP_SPARK.Options.Lists.Capacity (State.Response_Content.Options)
+                  CoAP_SPARK.Max_Number_Of_Options
                   and then not End_Of_Options
                then
                   CoAP_SPARK.Log.Put_Line
@@ -622,7 +622,11 @@ is
                           (Item  =>
                              CoAP_SPARK.Options.Image
                                (Format => CoAP_SPARK.Options.Opaque,
-                                Value  => Buffer (First .. Last)),
+                                Value  => Buffer (First ..
+                                    RFLX.RFLX_Types.Index'Min (Last,
+                                                           CoAP_SPARK.Options.
+                                                             Max_Option_Value_Length
+                                                             - First + 1))),
                            Level => CoAP_SPARK.Log.Error);
                      else
                         CoAP_SPARK.Log.Put_Line

@@ -9,7 +9,7 @@ is
 
    use type RFLX.CoAP.Option_Numbers;
    use type RFLX.RFLX_Builtin_Types.Bytes_Ptr;
-   use type RFLX.RFLX_Types.Length;
+   use type RFLX.RFLX_Types.Index;
 
    -- According to Section 5.10. Option Definitions "Table 4: Options"
    -- the maximum size for uint options is 4 bytes.
@@ -22,7 +22,7 @@ is
    with Dynamic_Predicate => UInt_Bytes'Length <= Max_Uint_Length;
 
    subtype Option_Value_Length is
-     RFLX.RFLX_Types.Length range 0 .. CoAP_SPARK.Options.Max_Option_Value_Length;
+     RFLX.RFLX_Types.Index'Base range 0 .. CoAP_SPARK.Options.Max_Option_Value_Length;
 
    subtype Option_Value_Ptr is RFLX.RFLX_Types.Bytes_Ptr
    with
@@ -153,17 +153,30 @@ is
          (Option_Properties_Table (Option.Number).Format,
           (if Option.Value = null then 0 else Option.Value.all'Length));
 
-   type Option_Model (<>) is private with Ghost;
+   type Indefinite_Option (Value_Length : Option_Value_Length) is private
+   with
+     Dynamic_Predicate =>
+       Has_Valid_Length
+         (Option_Properties_Table (Indefinite_Option.Number).Format,
+          Natural (Value_Length));
 
-   function Model (Opt : Option) return Option_Model with Ghost;
+   function To_Option (From : Indefinite_Option) return Option;
+   function To_Indefinite (Opt : Option) return Indefinite_Option;
 
    function "<" (Left, Right : Option) return Boolean;
+   function "<" (Left, Right : Indefinite_Option) return Boolean;
+
    overriding
    function "=" (Left, Right : Option) return Boolean;
 
    function Get_Number (Opt : Option) return RFLX.CoAP.Option_Numbers;
 
    function Get_Length (Opt : Option) return Option_Value_Length;
+
+
+   function Get_Number (Opt : Indefinite_Option) return RFLX.CoAP.Option_Numbers;
+
+   function Get_Length (Opt : Indefinite_Option) return Option_Value_Length;
 
    function Has_Buffer (Opt : Option) return Boolean;
 
@@ -252,7 +265,7 @@ is
      Pre => Has_Buffer (Source),
      Post =>
        Has_Buffer (Target)
-       and then Model (Source) = Model (Target);
+       and then To_Indefinite (Source) = To_Indefinite (Target);
 
    procedure Free (Opt : in out Option)
    with Post => not Has_Buffer (Opt);
@@ -295,6 +308,19 @@ is
                   (Option_Properties_Table (Get_Number ((Opt))).Format,
                    Value_Image'Result'Length);
 
+
+   function Value_Image (Opt : Indefinite_Option) return String
+   with
+     Pre =>
+         Has_Valid_Length
+                  (Option_Properties_Table (Get_Number ((Opt))).Format,
+                   Natural (Get_Length (Opt))),
+     Post =>
+       Value_Image'Result'First = 1
+       and then Is_Valid_Image_Length
+                  (Option_Properties_Table (Get_Number ((Opt))).Format,
+                   Value_Image'Result'Length);
+
    function To_UInt (Value : UInt_Bytes) return Interfaces.Unsigned_32;
 
 private
@@ -307,20 +333,24 @@ private
       Order_Index : Option_Index;
    end record;
 
-   type Option_Model (Value_Last : RFLX.RFLX_Types.Index'Base) is record
+   type Indefinite_Option (Value_Length : Option_Value_Length) is record
       Number      : RFLX.CoAP.Option_Numbers;
-      Value       : RFLX.RFLX_Types.Bytes (1 ..  Value_Last);
+      Value       : RFLX.RFLX_Types.Bytes (1 ..  Value_Length);
       Order_Index : Option_Index;
    end record;
 
-   function Model (Opt : Option) return Option_Model
-   is ((Value_Last   => RFLX.RFLX_Types.Index'Base (Get_Length (Opt)),
+   function To_Indefinite (Opt : Option) return Indefinite_Option
+   is ((Value_Length => RFLX.RFLX_Types.Index'Base (Get_Length (Opt)),
         Number       => Get_Number (Opt),
         Value        => (if Get_Length (Opt) = 0 then [] else Opt.Value.all),
         Order_Index  => Opt.Order_Index));
 
-
    function "<" (Left, Right : Option) return Boolean is
+    (if Left.Number = Right.Number
+      then Left.Order_Index < Right.Order_Index
+      else Left.Number < Right.Number);
+
+   function "<" (Left, Right : Indefinite_Option) return Boolean is
     (if Left.Number = Right.Number
       then Left.Order_Index < Right.Order_Index
       else Left.Number < Right.Number);
@@ -341,5 +371,11 @@ private
 
    function Get_Length (Opt : Option) return Option_Value_Length is
      (if Opt.Value = null then 0 else Opt.Value.all'Length);
+
+   function Get_Number (Opt : Indefinite_Option) return RFLX.CoAP.Option_Numbers
+   is (Opt.Number);
+
+   function Get_Length (Opt : Indefinite_Option) return Option_Value_Length is
+     (Opt.Value_Length);
 
 end CoAP_SPARK.Options;

@@ -7,7 +7,6 @@ package body CoAP_SPARK.Options with
   SPARK_Mode
 is
 
-   use type RFLX.RFLX_Builtin_Types.Index;
    use type RFLX.RFLX_Types.Base_Integer;
 
    function Is_Critical (Number : RFLX.RFLX_Types.Base_Integer) return Boolean
@@ -218,6 +217,14 @@ is
          Value  => Opt.Value.all);
    end Value_Image;
 
+   function Value_Image (Opt : Indefinite_Option) return String
+   is
+   begin
+      return Image
+        (Format => Option_Properties_Table (Opt.Number).Format,
+         Value  => Opt.Value);
+   end Value_Image;
+
    -- See RFC7252, Section "3.2. Option Value Formats"
    function To_UInt (Value : UInt_Bytes) return Interfaces.Unsigned_32 is
       use type Interfaces.Unsigned_32;
@@ -230,5 +237,13 @@ is
       end loop;
       return Result;
    end To_UInt;
+
+   function To_Option (From : Indefinite_Option) return Option
+   is
+   begin
+      return (Number       => From.Number,
+              Value        => new RFLX.RFLX_Types.Bytes'(From.Value),
+              Order_Index  => From.Order_Index);
+   end To_Option;
 
 end CoAP_SPARK.Options;

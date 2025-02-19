@@ -20,9 +20,7 @@ is
          then CoAP_SPARK.Options.UTF8_String
          else CoAP_SPARK.Options.Opaque);
    begin
-      for Option of Item.Options loop
-         CoAP_SPARK.Options.Text_IO.Print (Option, General_Log_Level);
-      end loop;
+      CoAP_SPARK.Options.Text_IO.Print (Item.Options, General_Log_Level);
 
       if Item.Payload not in null then
          CoAP_SPARK.Log.Put ("Content-Format: ", Level => General_Log_Level);
@@ -80,7 +78,8 @@ is
       loop
          declare
             Option_Copy : CoAP_SPARK.Options.Option :=
-              CoAP_SPARK.Options.Lists.Element (Item.Options, I);
+              CoAP_SPARK.Options.To_Option
+                (CoAP_SPARK.Options.Lists.Element (Item.Options, I));
          begin
             -- Make a swallow copy of the option to be able to use a variable
             -- to free the stored Option.

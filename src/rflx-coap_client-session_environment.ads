@@ -9,7 +9,7 @@ package RFLX.CoAP_Client.Session_Environment with
    SPARK_Mode
 is
 
-   use type RFLX.RFLX_Types.Length;
+   use type RFLX.RFLX_Types.Index;
 
    type Status_Type is
      (OK,
