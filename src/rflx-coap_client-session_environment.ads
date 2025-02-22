@@ -16,7 +16,8 @@ is
       Capacity_Error,
       Invalid_Request,
       Malformed_Message,
-      Unknown_Critical_Option);
+      Unknown_Critical_Option,
+      Communication_Problems);
 
 
    type State is record
@@ -51,8 +52,11 @@ is
           Query'Length <= CoAP_SPARK.Max_URI_Length,
       Post => Payload in null;
 
+   function Is_Finalized (Session_State : State) return Boolean
+     is (CoAP_SPARK.Messages.Is_Empty (Session_State.Request_Content)
+         and then CoAP_SPARK.Messages.Is_Empty (Session_State.Response_Content));
+
    procedure Finalize (Session_State : in out State)
-   with Post => CoAP_SPARK.Messages.Is_Empty (Session_State.Request_Content)
-      and then CoAP_SPARK.Messages.Is_Empty (Session_State.Response_Content);
+   with Post => Is_Finalized (Session_State);
 
 end RFLX.CoAP_Client.Session_Environment;

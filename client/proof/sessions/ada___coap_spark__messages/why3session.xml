@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE why3session PUBLIC "-//Why3//proof session v5//EN"
+"http://why3.lri.fr/why3session.dtd">
+<why3session shape_version="6">
+<file format="gnat-json">
+<path name=".."/><path name=".."/><path name=".."/><path name=".."/><path name="obj"/>
+<path name="validation"/><path name="gnatprove"/><path name="ada___coap_spark__messages.gnat-json"/>
+<theory name="Ada___coap_spark__messages__package_def">
+ <goal name="def&#39;vc">
+ <transf name="split_goal_wp_conj" >
+  <goal name="def&#39;vc.0">
+  </goal>
+  <goal name="def&#39;vc.1">
+  </goal>
+ </transf>
+ </goal>
+</theory>
+</file>
+</why3session>
