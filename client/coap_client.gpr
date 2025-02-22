@@ -24,12 +24,12 @@ project CoAP_Client is
 
       case CoAP_Client_Config.Alire_Host_OS is
       when "windows" =>
-         Linker_Options := Linker_Options & ("-lcrypt32", "-Wl,-gc-sections");
+         Linker_Options := Linker_Options & ("-lcrypt32", "-Wl,--gc-sections");
       when "macos" =>
-         --  -gc-sections isn’t supported on macOS
+         --  --gc-sections isn’t supported on macOS
          null;
       when others =>
-         Linker_Options := Linker_Options & ("-Wl,-gc-sections");
+         Linker_Options := Linker_Options & ("-Wl,--gc-sections");
       end case;
 
       for Default_Switches ("Ada") use Linker_Options;

@@ -1,6 +1,7 @@
 with Ada.Containers;
 with CoAP_SPARK.Log;
-with CoAP_SPARK.Options.Lists.Sorting;
+with CoAP_SPARK.Options.Lists;
+with CoAP_SPARK.Options.List_Sorting;
 with CoAP_SPARK.Random;
 with RFLX.CoAP.Option_Sequence;
 with RFLX.CoAP.Option_Type;
@@ -248,7 +249,7 @@ is
         (Ctx => Option_Sequence_Cxt, Buffer => Option_Sequence_Buffer);
 
       -- The options must be sorted by option number before they are encoded
-      CoAP_SPARK.Options.Lists.Sorting.Sort (State.Request_Content.Options);
+      CoAP_SPARK.Options.List_Sorting.Instance.Sort (State.Request_Content.Options);
 
       for Element of State.Request_Content.Options loop
          pragma Loop_Invariant (RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt));
