@@ -40,7 +40,7 @@ project Coap_Spark is
       for Proof_Switches ("Ada") use (
          "-j0",
          "--mode=silver",
-         "--prover=z3,cvc5,altergo",
+         "--prover=z3,cvc5,altergo,colibri",
          "--steps=0",
          "--timeout=180",
          "--memlimit=2000",
@@ -48,6 +48,7 @@ project Coap_Spark is
          "--warnings=error",
          "--counterexamples=on"
       );
+
    end Prove;
 
 end Coap_Spark;

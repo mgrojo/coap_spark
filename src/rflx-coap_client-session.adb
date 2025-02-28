@@ -1,5 +1,6 @@
 with Ada.Containers;
 with CoAP_SPARK.Log;
+with CoAP_SPARK.Messages;
 with CoAP_SPARK.Options.Lists;
 with CoAP_SPARK.Options.List_Sorting;
 with CoAP_SPARK.Random;
@@ -254,6 +255,11 @@ is
       for Element of State.Request_Content.Options loop
          pragma Loop_Invariant (RFLX.CoAP.Option_Sequence.Valid (Option_Sequence_Cxt));
          pragma Loop_Invariant (RFLX.CoAP.Option_Sequence.Has_Buffer (Option_Sequence_Cxt));
+         pragma Loop_Invariant (CoAP_SPARK.Options.List_Sorting.Instance.Is_Sorted
+                                   (State.Request_Content.Options));
+         --  pragma Loop_Invariant
+         --    (To_Option_Extended16_Type
+         --        (CoAP_SPARK.Options.Get_Number (Element)) >= Current_Delta);
          declare
             Option : CoAP_SPARK.Options.Option :=
               CoAP_SPARK.Options.To_Option (Element);
@@ -342,7 +348,7 @@ is
          CoAP_SPARK.Max_Number_Of_Options
        and then RFLX.CoAP.Option_Type.Has_Buffer (Option_Cxt)
        and then RFLX.CoAP.Option_Type.Well_Formed_Message (Option_Cxt)
-       and then Option_Delta <
+       and then Option_Delta <=
          RFLX.CoAP.Option_Numbers'Enum_Rep (RFLX.CoAP.Option_Numbers'Last)
    is
       Option_Length : Option_Value_Length;
@@ -538,13 +544,19 @@ is
 
             RFLX.CoAP.Option_Sequence.Initialize
               (Ctx => Option_Sequence_Cxt, Buffer => Buffer);
+            CoAP_SPARK.Messages.Finalize (State.Response_Content);
 
             Read_Options :
+            while RFLX.CoAP.Option_Sequence.Has_Element (Option_Sequence_Cxt)
             loop
                pragma Loop_Invariant (RFLX.CoAP.Option_Sequence.Has_Buffer
                                     (Option_Sequence_Cxt));
                pragma Loop_Invariant (RFLX.CoAP.Option_Sequence.Valid
                                          (Option_Sequence_Cxt));
+               pragma Loop_Invariant
+                  (CoAP_SPARK.Options.Lists.Length (State.Response_Content.Options) <
+                     CoAP_SPARK.Max_Number_Of_Options);
+
                RFLX.CoAP.Option_Sequence.Switch
                  (Ctx => Option_Sequence_Cxt, Element_Ctx => Option_Cxt);
 
@@ -576,10 +588,7 @@ is
                   exit Read_Options;
                end if;
 
-               exit Read_Options when
-                 End_Of_Options
-                 or else not RFLX.CoAP.Option_Sequence.Has_Element
-                               (Option_Sequence_Cxt);
+               exit Read_Options when End_Of_Options;
             end loop Read_Options;
 
             if State.Current_Status = RFLX.CoAP_Client.Session_Environment.OK

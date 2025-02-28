@@ -1,4 +1,6 @@
 with "config/coap_client_config.gpr";
+with "coap_spark.gpr";
+
 project CoAP_Client is
 
    for Main use ("coap_client.adb");
@@ -40,21 +42,6 @@ project CoAP_Client is
       for Artifacts (".") use ("share");
    end Install;
 
-   package Prove is
-
-      for Proof_Dir use "proof";
-
-      for Proof_Switches ("Ada") use (
-         "-j0",
-         "--mode=silver",
-         "--prover=z3,cvc5,altergo",
-         "--steps=0",
-         "--timeout=180",
-         "--memlimit=2000",
-         "--checks-as-errors=on",
-         "--warnings=error",
-         "--counterexamples=on"
-      );
-   end Prove;
+   package Prove renames CoAP_SPARK.Prove;
 
 end CoAP_Client;

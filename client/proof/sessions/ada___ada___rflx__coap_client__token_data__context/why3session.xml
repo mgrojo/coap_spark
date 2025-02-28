@@ -6,29 +6,29 @@
 <prover id="1" name="CVC5" version="0.0.7-gnatprove" timelimit="180" steplimit="0" memlimit="2000"/>
 <prover id="2" name="Z3" version="4.5.1-gnatprove" timelimit="180" steplimit="0" memlimit="2000"/>
 <prover id="3" name="Trivial" version="1.0" alternative="trivial" timelimit="1" steplimit="1" memlimit="1000"/>
-<file format="gnat-json">
+<file format="gnat-json" proved="true">
 <path name=".."/><path name=".."/><path name=".."/><path name=".."/><path name="obj"/>
-<path name="validation"/><path name="gnatprove"/><path name="ada___ada___rflx__coap_client__token_data__context.gnat-json"/>
-<theory name="Ada___ada___rflx__coap_client__token_data__context__default_checks">
- <goal name="def&#39;vc">
- <transf name="split_goal_wp_conj" >
+<path name="development"/><path name="gnatprove"/><path name="ada___ada___rflx__coap_client__token_data__context.gnat-json"/>
+<theory name="Ada___ada___rflx__coap_client__token_data__context__default_checks" proved="true">
+ <goal name="def&#39;vc" proved="true">
+ <transf name="split_goal_wp_conj" proved="true" >
   <goal name="def&#39;vc.0" proved="true">
   <proof prover="0"><result status="highfailure"/></proof>
-  <proof prover="1"><result status="valid" steps="24212"/></proof>
-  <proof prover="2"><result status="highfailure"/></proof>
+  <proof prover="1"><result status="highfailure"/></proof>
+  <proof prover="2"><result status="valid" steps="121757"/></proof>
   </goal>
   <goal name="def&#39;vc.1" proved="true">
   <proof prover="3"><result status="valid" steps="1"/></proof>
   </goal>
   <goal name="def&#39;vc.2" proved="true">
-  <proof prover="0"><result status="failure" steps="0"/></proof>
-  <proof prover="1"><result status="highfailure"/></proof>
+  <proof prover="0"><result status="valid" steps="1167"/></proof>
+  <proof prover="1"><result status="valid" steps="3140"/></proof>
   <proof prover="2"><result status="valid" steps="1764"/></proof>
   </goal>
-  <goal name="def&#39;vc.3">
-  <proof prover="0"><result status="failure"/></proof>
-  <proof prover="1"><result status="failure"/></proof>
-  <proof prover="2"><result status="failure"/></proof>
+  <goal name="def&#39;vc.3" proved="true">
+  <proof prover="0"><result status="valid" steps="322"/></proof>
+  <proof prover="1"><result status="valid" steps="5265"/></proof>
+  <proof prover="2"><result status="valid" steps="15779"/></proof>
   <transf name="introduce_premises" >
    <goal name="def&#39;vc.3.0">
    </goal>
@@ -38,14 +38,14 @@
   <proof prover="3"><result status="valid" steps="1"/></proof>
   </goal>
   <goal name="def&#39;vc.5" proved="true">
-  <proof prover="0"><result status="highfailure"/></proof>
+  <proof prover="0"><result status="valid" steps="1167"/></proof>
   <proof prover="1"><result status="valid" steps="3140"/></proof>
   <proof prover="2"><result status="valid" steps="1773"/></proof>
   </goal>
-  <goal name="def&#39;vc.6">
-  <proof prover="0"><result status="failure"/></proof>
-  <proof prover="1"><result status="failure"/></proof>
-  <proof prover="2"><result status="failure"/></proof>
+  <goal name="def&#39;vc.6" proved="true">
+  <proof prover="0"><result status="highfailure"/></proof>
+  <proof prover="1"><result status="highfailure"/></proof>
+  <proof prover="2"><result status="valid" steps="15801"/></proof>
   <transf name="introduce_premises" >
    <goal name="def&#39;vc.6.0">
    </goal>

@@ -221,17 +221,19 @@ Output:
 |   
 | raised GNAT.SOCKETS.SOCKET_ERROR : [111] Connection refused  
 | [../bin/coap_client]  
-| 0x5ecbc9 Gnat.Sockets.Raise_Socket_Error at g-socket.adb:2117  
-| 0x5eebe7 Gnat.Sockets.Receive_Socket at g-socket.adb:2182  
-| 0x40ffb4 Coap_Spark.Channel.Receive at coap_spark-channel.adb:240  
-| 0x410e6f Coap_Spark.Channel.Receive at coap_spark-channel.adb:210  
-| 0x40eafc Coap_Client at coap_client.adb:80  
-| 0x40b924 Main at b__coap_client.adb:412  
+| 0x5efd49 Gnat.Sockets.Raise_Socket_Error at g-socket.adb:2117  
+| 0x5f1d67 Gnat.Sockets.Receive_Socket at g-socket.adb:2182  
+| 0x40e154 Coap_Spark.Channel.Receive at coap_spark-channel.adb:240  
+| 0x40f00f Coap_Spark.Channel.Receive at coap_spark-channel.adb:210  
+| 0x40f938 Coap_Spark.Client_Session.Write at coap_spark-client_session.adb:63  
+| 0x4110d8 Coap_Spark.Client_Session.Run_Session_Loop at coap_spark-client_session.adb:50  
+| 0x40d075 Coap_Client at coap_client.adb:302  
+| 0x40bc14 Main at b__coap_client.adb:414  
 | [/lib/x86_64-linux-gnu/libc.so.6]  
-| 0x7cb407229d8e  
-| 0x7cb407229e3e  
+| 0x79bead029d8e  
+| 0x79bead029e3e  
 | [../bin/coap_client]  
-| 0x40b973 _start at ???  
+| 0x40bc63 _start at ???  
 | 0xfffffffffffffffe  
 
 does not contain expected:  
@@ -247,16 +249,16 @@ Output:
 |   
 | raised GNAT.SOCKETS.HOST_ERROR : [1] Host not found: p.me  
 | [../bin/coap_client]  
-| 0x5e96e6 Gnat.Sockets.Raise_Host_Error at g-socket.adb:2105  
-| 0x5ee5bc Gnat.Sockets.Get_Host_By_Name at g-socket.adb:1294  
-| 0x410671 Coap_Spark.Channel.Connect at coap_spark-channel.adb:156  
-| 0x40dd06 Coap_Client at coap_client.adb:322  
-| 0x40b924 Main at b__coap_client.adb:412  
+| 0x5ec866 Gnat.Sockets.Raise_Host_Error at g-socket.adb:2105  
+| 0x5f173c Gnat.Sockets.Get_Host_By_Name at g-socket.adb:1294  
+| 0x40e811 Coap_Spark.Channel.Connect at coap_spark-channel.adb:156  
+| 0x40cf5c Coap_Client at coap_client.adb:283  
+| 0x40bc14 Main at b__coap_client.adb:414  
 | [/lib/x86_64-linux-gnu/libc.so.6]  
-| 0x7f464f829d8e  
-| 0x7f464f829e3e  
+| 0x77272fa29d8e  
+| 0x77272fa29e3e  
 | [../bin/coap_client]  
-| 0x40b973 _start at ???  
+| 0x40bc63 _start at ???  
 | 0xfffffffffffffffe  
 
 does not contain expected:  

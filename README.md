@@ -71,6 +71,17 @@ Or if you want to start afresh,for example, using a different version of
 ```
 alr gnatprove
 ```
+The full proof in silver mode is still work in progress.
+
+The project is using `gnatprove` from the Alire community index. You can install it running this:
+```
+alr install gnatprove
+```
+
+The Colibri solver has to be installed separately, for example, from the
+[GNAT Community Edition 2021](https://www.adacore.com/download). After installation,
+and before running `gnatprove`, you have to put `{GNAT-2021-HOME}/libexec/spark/bin`
+in the `PATH`, so `gnatprove` can find the `colibri` executable.
 
 ## Status
 CoAP-SPARK is still work in progress. When finished, it will be the subject of my
