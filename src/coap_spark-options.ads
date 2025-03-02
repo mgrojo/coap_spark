@@ -160,7 +160,12 @@ is
          (Option_Properties_Table (Indefinite_Option.Number).Format,
           Natural (Value_Length));
 
-   function To_Option (From : Indefinite_Option) return Option;
+   function To_Option (From : Indefinite_Option) return Option
+   with
+     Post =>
+       To_Indefinite (To_Option'Result) = From
+       and then Has_Buffer (To_Option'Result);
+
    function To_Indefinite (Opt : Option) return Indefinite_Option;
 
    function "<" (Left, Right : Option) return Boolean;
@@ -177,6 +182,8 @@ is
    function Get_Number (Opt : Indefinite_Option) return RFLX.CoAP.Option_Numbers;
 
    function Get_Length (Opt : Indefinite_Option) return Option_Value_Length;
+
+   function Get_Value (Opt : Indefinite_Option) return RFLX.RFLX_Types.Bytes;
 
    function Has_Buffer (Opt : Option) return Boolean;
 
@@ -376,6 +383,9 @@ private
    is (Opt.Number);
 
    function Get_Length (Opt : Indefinite_Option) return Option_Value_Length is
-     (Opt.Value_Length);
+     (Opt.Value'Length);
+
+   function Get_Value (Opt : Indefinite_Option) return RFLX.RFLX_Types.Bytes is
+     (Opt.Value);
 
 end CoAP_SPARK.Options;

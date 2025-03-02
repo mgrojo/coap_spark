@@ -1,5 +1,6 @@
 {
     "makefile.configureOnOpen": true,
     "ada.projectFile": "coap_spark.gpr",
-    "sarif-viewer.connectToGithubCodeScanning": "off"
+    "sarif-viewer.connectToGithubCodeScanning": "off",
+    "cmake.ignoreCMakeListsMissing": true
 }

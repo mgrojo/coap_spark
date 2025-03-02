@@ -17,7 +17,8 @@ is
       Invalid_Request,
       Malformed_Message,
       Unknown_Critical_Option,
-      Communication_Problems);
+      Communication_Problems,
+      Unexpected_Case);
 
 
    type State is record
