@@ -212,8 +212,6 @@ is
             null;
       end case;
 
-      -- CoAP_SPARK.Options.Take_Buffer (Opt, Value_Bytes);
-
       RFLX.CoAP.Option_Type.Set_Option_Value
          (Ctx => Option_Cxt, Data => CoAP_SPARK.Options.Get_Value (Opt));
 

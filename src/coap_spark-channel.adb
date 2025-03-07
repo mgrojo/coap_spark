@@ -1,12 +1,14 @@
 with Ada.Streams;
 with Ada.Unchecked_Conversion;
+
+with GNAT.Sockets;
+
 with Interfaces.C;
 
 package body CoAP_SPARK.Channel
   with SPARK_Mode
 is
 
-   use type RFLX.RFLX_Builtin_Types.Index;
    use type Ada.Streams.Stream_Element_Offset;
    use type Interfaces.C.size_t;
 
@@ -65,7 +67,9 @@ is
        Buffer'First = 1
        and then Buffer'Last
                 <= Ada.Streams.Stream_Element_Offset
-                     (RFLX.RFLX_Builtin_Types.Index'Last)
+                     (RFLX.RFLX_Builtin_Types.Index'Last),
+      Post =>
+        To_RFLX_Bytes'Result'Length = Buffer'Length
    is
       Result : RFLX.RFLX_Builtin_Types.Bytes (1 .. Buffer'Length);
    begin
@@ -84,7 +88,9 @@ is
      Pre =>
        Buffer'First = 1
        and then Buffer'Last
-                <= Interfaces.C.size_t (RFLX.RFLX_Builtin_Types.Index'Last)
+                <= Interfaces.C.size_t (RFLX.RFLX_Builtin_Types.Index'Last),
+     Post =>
+       To_RFLX_Bytes'Result'Length = Buffer'Length
    is
       Result : RFLX.RFLX_Builtin_Types.Bytes (1 .. Buffer'Length);
    begin
@@ -101,22 +107,31 @@ is
       Port         : Port_Type := Default_Port;
       PSK_Callback : WolfSSL.PSK_Client_Callback := null;
       Server       : Boolean := False)
-   with SPARK_Mode => Off
    is
+      Result : SPARK_Sockets.Subprogram_Result;
    begin
 
-      GNAT.Sockets.Create_Socket
-        (Socket => Socket.Attached_Socket,
-         Family => GNAT.Sockets.Family_Inet,
-         Mode   => GNAT.Sockets.Socket_Datagram);
+      Socket.Attached_Socket := (Exists => False);
+
+      SPARK_Sockets.Create_Datagram_Socket
+        (Socket => Socket.Attached_Socket);
+
+      if not Socket.Attached_Socket.Exists then
+         return;
+      end if;
 
       if Server then
-         GNAT.Sockets.Bind_Socket
-           (Socket  => Socket.Attached_Socket,
+         Result := SPARK_Sockets.Bind_Socket
+           (Socket  => Socket.Attached_Socket.Socket,
             Address =>
-              (Family => GNAT.Sockets.Family_Inet,
-               Addr   => GNAT.Sockets.Any_Inet_Addr,
-               Port   => GNAT.Sockets.Port_Type (Port)));
+              (Family => SPARK_Sockets.Family_Inet,
+               Addr   => SPARK_Sockets.Any_Inet_Addr,
+               Port   => SPARK_Sockets.Port_Type (Port)));
+
+         if Result /= SPARK_Sockets.Success then
+            return;
+         end if;
+
       end if;
 
       if Socket.Is_Secure then
@@ -144,43 +159,91 @@ is
       end if;
    end Initialize;
 
+   use type SPARK_Sockets.Family_Type;
+
+   function Inet_Address (Host_Name : String) return SPARK_Sockets.Optional_Inet_Addr;
+
+   function Inet_Address (Host_Name : String) return SPARK_Sockets.Optional_Inet_Addr
+   with SPARK_Mode => Off
+   is
+   begin
+      return (Exists => True,
+              Addr   => GNAT.Sockets.Addresses (GNAT.Sockets.Get_Host_By_Name (Host_Name)));
+   exception
+      when others =>
+         return (Exists => False);
+   end Inet_Address;
+
    procedure Connect
      (Socket : in out Socket_Type;
       Server : String;
       Port   : Port_Type := Default_Port)
-   with SPARK_Mode => Off
    is
-      Address : constant GNAT.Sockets.Sock_Addr_Type :=
-        (Family => GNAT.Sockets.Family_Inet,
-         Addr   => GNAT.Sockets.Addresses
-                      (GNAT.Sockets.Get_Host_By_Name (Server)),
-         Port   => GNAT.Sockets.Port_Type (Port));
+      Inet_Addr : SPARK_Sockets.Optional_Inet_Addr;
+      Address : GNAT.Sockets.Sock_Addr_Type;
+      Result : SPARK_Sockets.Subprogram_Result;
    begin
-      GNAT.Sockets.Connect_Socket
-        (Socket => Socket.Attached_Socket,
+
+      Inet_Addr := Inet_Address (Server);
+      if not Inet_Addr.Exists or else
+         (Inet_Addr.Exists and then Inet_Addr.Addr.Family /= SPARK_Sockets.Family_Inet)
+      then
+         return;
+      end if;
+
+      Address := (Family => SPARK_Sockets.Family_Inet,
+                  Addr   => Inet_Addr.Addr,
+                  Port   => SPARK_Sockets.Port_Type (Port));
+
+      Result := SPARK_Sockets.Connect_Socket
+        (Socket => Socket.Attached_Socket.Socket,
          Server => Address);
+
+      if Result /= SPARK_Sockets.Success then
+         -- Socket := (if Socket.Is_Secure then Invalid_Secure_Socket else Invalid_Socket);
+         return;
+      end if;
 
       if Socket.Is_Secure then
          Socket.Result := WolfSSL.DTLS_Set_Peer
                          (Ssl     => Socket.Ssl,
                           Address => Address);
 
+         if Socket.Result /= SPARK_Sockets.Success then
+            return;
+         end if;
+
          --  Attach wolfSSL to the socket.
          Socket.Result := WolfSSL.Attach
                       (Ssl    => Socket.Ssl,
-                       Socket => GNAT.Sockets.To_C (Socket.Attached_Socket));
+                       Socket => SPARK_Sockets.To_C (Socket.Attached_Socket.Socket));
       end if;
    end Connect;
+
+   procedure Send_Socket
+     (Socket : Socket_Type;
+      Item   : Ada.Streams.Stream_Element_Array)
+      with Pre => Is_Valid (Socket);
+
+   procedure Send_Socket
+     (Socket : Socket_Type;
+      Item   : Ada.Streams.Stream_Element_Array)
+   with SPARK_Mode => Off
+   is
+      Unused_Last : Ada.Streams.Stream_Element_Offset;
+   begin
+      GNAT.Sockets.Send_Socket
+        (Socket => Socket.Attached_Socket.Socket, Item => Item, Last => Unused_Last);
+   end Send_Socket;
 
    procedure Send
      (Socket : in out Socket_Type;
       Buffer : RFLX.RFLX_Builtin_Types.Bytes)
-   with SPARK_Mode => Off
    is
    begin
       if Socket.Is_Secure then
          declare
-            Data : constant WolfSSL.Byte_Array (1 .. Buffer'Length) :=
+            Data : constant WolfSSL.Byte_Array :=
               To_C (Buffer);
             Output : WolfSSL.Write_Result;
          begin
@@ -195,23 +258,41 @@ is
       else
          declare
             Data        :
-              constant Ada.Streams.Stream_Element_Array (1 .. Buffer'Length) :=
+              constant Ada.Streams.Stream_Element_Array :=
                 To_Ada_Stream (Buffer);
-            Unused_Last : Ada.Streams.Stream_Element_Offset;
          begin
-            GNAT.Sockets.Send_Socket
-              (Socket => Socket.Attached_Socket,
-               Item   => Data,
-               Last   => Unused_Last);
+            Send_Socket
+              (Socket => Socket,
+               Item   => Data);
          end;
       end if;
    end Send;
+
+   procedure Receive_Socket
+     (Socket : Socket_Type;
+      Item   : out Ada.Streams.Stream_Element_Array;
+      Last   : out Ada.Streams.Stream_Element_Offset)
+   with
+      Relaxed_Initialization => Item,
+      Pre => Is_Valid (Socket),
+      Post => Last in Item'First - 1 .. Item'Last and then
+              Item (Item'First .. Last)'Initialized;
+
+   procedure Receive_Socket
+     (Socket : Socket_Type;
+      Item   : out Ada.Streams.Stream_Element_Array;
+      Last   : out Ada.Streams.Stream_Element_Offset)
+   with SPARK_Mode => Off
+   is
+   begin
+      GNAT.Sockets.Receive_Socket
+        (Socket => Socket.Attached_Socket.Socket, Item => Item, Last => Last);
+   end Receive_Socket;
 
    procedure Receive
      (Socket : in out Socket_Type;
       Buffer : out RFLX.RFLX_Builtin_Types.Bytes;
       Length : out RFLX.RFLX_Builtin_Types.Length)
-   with SPARK_Mode => Off
    is
    begin
       if Socket.Is_Secure then
@@ -233,14 +314,17 @@ is
          end;
       else
          declare
-            Data : Ada.Streams.Stream_Element_Array (1 .. Buffer'Length);
+            Data : Ada.Streams.Stream_Element_Array (1 .. Buffer'Length)
+               with Relaxed_Initialization;
             Last : Ada.Streams.Stream_Element_Offset;
          begin
 
-            GNAT.Sockets.Receive_Socket
-              (Socket => Socket.Attached_Socket, Item => Data, Last => Last);
+            Receive_Socket
+              (Socket => Socket, Item => Data, Last => Last);
 
-            Buffer := To_RFLX_Bytes (Data);
+            pragma Assert (Data'Length = Buffer'Length);
+            Buffer (Buffer'First .. RFLX.RFLX_Builtin_Types.Index'Base (Last)) :=
+               To_RFLX_Bytes (Data (Data'First .. Last));
             Length := RFLX.RFLX_Builtin_Types.Length (Last);
          end;
       end if;
@@ -250,8 +334,7 @@ is
      (Socket : in out Socket_Type)
    is
    begin
-      GNAT.Sockets.Close_Socket (Socket => Socket.Attached_Socket);
-      Socket.Attached_Socket := GNAT.Sockets.No_Socket;
+      SPARK_Sockets.Close_Socket (Socket => Socket.Attached_Socket);
       if Socket.Is_Secure then
          if WolfSSL.Is_Valid (Socket.Ssl) then
             WolfSSL.Free (Ssl => Socket.Ssl);

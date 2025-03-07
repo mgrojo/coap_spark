@@ -18,7 +18,8 @@ is
       Id_Max_Length  : Interfaces.C.unsigned;
       Key            : Interfaces.C.Strings.chars_ptr;
       Key_Max_Length : Interfaces.C.unsigned) return Interfaces.C.unsigned
-   with Convention => C;
+   with Convention => C,
+      Side_Effects;
 
    procedure Initialize (Socket : out CoAP_SPARK.Channel.Socket_Type) with
       Global =>

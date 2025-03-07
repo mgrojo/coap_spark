@@ -1,4 +1,5 @@
-private with GNAT.Sockets;
+private with SPARK_Sockets;
+
 with WolfSSL;
 
 with RFLX.RFLX_Builtin_Types;
@@ -17,6 +18,7 @@ is
                          PSK_Callback : WolfSSL.PSK_Client_Callback := null;
                          Server : Boolean := False) with
       Pre => (if Socket.Is_Secure then PSK_Callback not in null else True),
+      Relaxed_Initialization => Socket,
       Global =>
          null;
 
@@ -31,9 +33,11 @@ is
       Global =>
       null;
 
+   use type RFLX.RFLX_Builtin_Types.Index;
+
    procedure Send (Socket : in out Socket_Type;
                    Buffer :        RFLX.RFLX_Builtin_Types.Bytes) with
-      Pre => Is_Valid (Socket),
+      Pre => Is_Valid (Socket) and then Buffer'First = 1,
       Global =>
          null;
 
@@ -42,20 +46,25 @@ is
    procedure Receive (Socket : in out Socket_Type;
                       Buffer :    out RFLX.RFLX_Builtin_Types.Bytes;
                       Length :    out RFLX.RFLX_Builtin_Types.Length) with
-      Pre => Is_Valid (Socket),
+      Relaxed_Initialization => (Buffer),
+      Pre => Is_Valid (Socket) and then Buffer'First = 1,
       Post =>
-         Length <= Buffer'Length,
+         Length <= Buffer'Length and then
+         Buffer (Buffer'First .. RFLX.RFLX_Builtin_Types.Index'Base (Length))'Initialized,
       Global =>
          null;
+
+   function Has_Attached_Socket (Socket : Socket_Type) return Boolean;
 
    procedure Finalize
      (Socket : in out Socket_Type) with
         Global => null,
+        Pre => Has_Attached_Socket (Socket),
         Post => not Is_Valid (Socket);
 private
 
    type Socket_Type (Is_Secure : Boolean) is record
-      Attached_Socket : GNAT.Sockets.Socket_Type;
+      Attached_Socket : SPARK_Sockets.Optional_Socket;
       case Is_Secure is
          when True =>
             Ssl    : WolfSSL.WolfSSL_Type;
@@ -68,8 +77,11 @@ private
 
    use type WolfSSL.Subprogram_Result;
 
+   function Has_Attached_Socket (Socket : Socket_Type) return Boolean is
+      (Socket.Attached_Socket.Exists);
+
    function Is_Valid (Socket : Socket_Type) return Boolean is
-      (GNAT.Sockets."/=" (Socket.Attached_Socket, GNAT.Sockets.No_Socket)
+      (Socket.Attached_Socket.Exists
        and then
        (if Socket.Is_Secure then Socket.Result = WolfSSL.Success and then
           WolfSSL.Is_Valid (Socket.Ssl) and then

@@ -57,7 +57,8 @@ is
          FSM.Initialized (Ctx)
       is
       use type Types.Length;
-      Buffer : Types.Bytes (Types.Index'First .. Types.Index'First + 4095);
+      Buffer : Types.Bytes (Types.Index'First .. Types.Index'First + 4095)
+         with Relaxed_Initialization;
       Length : RFLX.RFLX_Builtin_Types.Length;
    begin
       Channel.Receive (Skt, Buffer, Length);

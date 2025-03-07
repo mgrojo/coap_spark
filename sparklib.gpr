@@ -24,9 +24,9 @@ project SPARKlib extends "sparklib_external" is
       for Default_Switches ("Ada") use Ada_Compiler_Switches;
    end Compiler;
 
-   for Excluded_Source_Files use SPARKlib_External'Excluded_Source_Files;
+   for Excluded_Source_Files use SPARKlib_External'Excluded_Source_Files
+      & (
       -- Uncomment the files you want to exclude from your project
-      -- & (
       -- "spark-big_integers.ads",
       -- "spark-big_intervals.ads",
       -- "spark-big_reals.ads",
@@ -85,8 +85,8 @@ project SPARKlib extends "sparklib_external" is
       -- "spark-containers-stable_sorting.ads",
       -- "spark-containers-types.ads",
       -- "spark-conversions.ads",
-      -- "spark-conversions-float_conversions.ads",
-      -- "spark-conversions-long_float_conversions.ads",
+      "spark-conversions-float_conversions.ads",
+      "spark-conversions-long_float_conversions.ads",
       -- "spark-conversions-long_integer_conversions.ads",
       -- "spark-cut_operations.adb",
       -- "spark-cut_operations.ads",
@@ -101,12 +101,12 @@ project SPARKlib extends "sparklib_external" is
       -- "spark-lemmas-constrained_array.ads",
       -- "spark-lemmas-fixed_point_arithmetic.adb",
       -- "spark-lemmas-fixed_point_arithmetic.ads",
-      -- "spark-lemmas-float_arithmetic.ads",
-      -- "spark-lemmas-float_base.ads",
-      -- "spark-lemmas-floating_point_arithmetic.adb",
-      -- "spark-lemmas-floating_point_arithmetic.ads",
+      "spark-lemmas-float_arithmetic.ads",
+      "spark-lemmas-float_base.ads",
+      "spark-lemmas-floating_point_arithmetic.adb",
+      "spark-lemmas-floating_point_arithmetic.ads",
       -- "spark-lemmas-integer_arithmetic.ads",
-      -- "spark-lemmas-long_float_arithmetic.ads",
+      "spark-lemmas-long_float_arithmetic.ads"
       -- "spark-lemmas-long_integer_arithmetic.ads",
       -- "spark-lemmas-mod32_arithmetic.ads",
       -- "spark-lemmas-mod64_arithmetic.ads",
@@ -125,6 +125,6 @@ project SPARKlib extends "sparklib_external" is
       -- "spark-tests.ads",
       -- "spark-tests-array_lemmas.adb",
       -- "spark-tests-array_lemmas.ads"
-      -- );
+      );
 
 end SPARKlib;

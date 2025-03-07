@@ -301,8 +301,10 @@ begin
 
       CoAP_SPARK.Client_Session.Run_Session_Loop (Ctx, Skt);
 
-      CoAP_SPARK.Channel.Finalize (Skt);
-      pragma Assert (not CoAP_SPARK.Channel.Is_Valid (Skt));
+      if CoAP_SPARK.Channel.Has_Attached_Socket (Skt) then
+         CoAP_SPARK.Channel.Finalize (Skt);
+         pragma Assert (not CoAP_SPARK.Channel.Is_Valid (Skt));
+      end if;
    end;
 
    CoAP_SPARK.Log.New_Line;
