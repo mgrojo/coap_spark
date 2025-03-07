@@ -88,6 +88,12 @@ Payload: welcome to the ETSI plugtest! last change:
   - Then I get no error
   - And output contains `</test>;rt="test";ct=0,</validate>;rt="validate"`
 
+
+### Scenario: get method with empty path
+  - When I run `../bin/coap_client coap://coap.me/`
+  - Then I get no error
+  - And output contains `</test>;rt="test";ct=0,</validate>;rt="validate"`
+
 ### Scenario: get method with port and no path
   - When I run `../bin/coap_client coap://coap.me:5683`
   - Then I get no error

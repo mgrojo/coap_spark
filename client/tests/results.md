@@ -40,6 +40,21 @@
     OK  : And output contains `</test>;rt="test";ct=0,</validate>;rt="validate"`
   - [X] scenario [get method without path](coap_client_tests.md) pass  
 
+    OK  : When I run `../bin/coap_client coap://coap.me/`
+*** NOK : Then I get no error (coap_client_tests.md:94:)  
+No error expected, but got one ( 1)  
+*** NOK : And output contains `</test>;rt="test";ct=0,</validate>;rt="validate"` (coap_client_tests.md:95:)  
+Output:  
+| Invalid URI: coap://coap.me/  
+| Usage: coap_client [-m METHOD] [-e <Payload>] [-k <PSK>] [-u <Identity>] [-v <verbosity>] <URI>  
+|   METHOD: GET POST PUT DELETE FETCH PATCH IPATCH  
+
+does not contain expected:  
+| </test>;rt="test";ct=0,</validate>;rt="validate"  
+
+  
+  - [ ] scenario [get method with empty path](coap_client_tests.md) fails  
+
     OK  : When I run `../bin/coap_client coap://coap.me:5683`
     OK  : Then I get no error
     OK  : And output contains `</test>;rt="test";ct=0,</validate>;rt="validate"`
@@ -196,7 +211,7 @@
 
     OK  : When I run `../bin/coap_client -m post -e "This is a test" coap://coap.me/forbidden`
     OK  : Then I get no error
-*** NOK : And output is (coap_client_tests.md:284:)  
+*** NOK : And output is (coap_client_tests.md:290:)  
 Output:  
 | "This is a test"  
 | 4.05 Method not supported here  
@@ -216,24 +231,25 @@ not equal to expected:
 
     OK  : When I run `../bin/coap_client http://coap.me`
     OK  : Then I get an error
-*** NOK : And output contains `invalid URI` (coap_client_tests.md:300:)  
+*** NOK : And output contains `invalid URI` (coap_client_tests.md:306:)  
 Output:  
 |   
 | raised GNAT.SOCKETS.SOCKET_ERROR : [111] Connection refused  
 | [../bin/coap_client]  
-| 0x5efd49 Gnat.Sockets.Raise_Socket_Error at g-socket.adb:2117  
-| 0x5f1d67 Gnat.Sockets.Receive_Socket at g-socket.adb:2182  
-| 0x40e154 Coap_Spark.Channel.Receive at coap_spark-channel.adb:240  
-| 0x40f00f Coap_Spark.Channel.Receive at coap_spark-channel.adb:210  
-| 0x40f938 Coap_Spark.Client_Session.Write at coap_spark-client_session.adb:63  
-| 0x4110d8 Coap_Spark.Client_Session.Run_Session_Loop at coap_spark-client_session.adb:50  
-| 0x40d075 Coap_Client at coap_client.adb:302  
-| 0x40bc14 Main at b__coap_client.adb:414  
+| 0x5f1149 Gnat.Sockets.Raise_Socket_Error at g-socket.adb:2117  
+| 0x5f3167 Gnat.Sockets.Receive_Socket at g-socket.adb:2182  
+| 0x40e2c3 Coap_Spark.Channel.Receive_Socket at coap_spark-channel.adb:288  
+| 0x40e488 Coap_Spark.Channel.Receive at coap_spark-channel.adb:322  
+| 0x40f58d Coap_Spark.Channel.Receive at coap_spark-channel.adb:292  
+| 0x40fec8 Coap_Spark.Client_Session.Write at coap_spark-client_session.adb:63  
+| 0x411754 Coap_Spark.Client_Session.Run_Session_Loop at coap_spark-client_session.adb:50  
+| 0x40d23d Coap_Client at coap_client.adb:302  
+| 0x40bdd4 Main at b__coap_client.adb:417  
 | [/lib/x86_64-linux-gnu/libc.so.6]  
-| 0x79bead029d8e  
-| 0x79bead029e3e  
+| 0x79674a429d8e  
+| 0x79674a429e3e  
 | [../bin/coap_client]  
-| 0x40bc63 _start at ???  
+| 0x40be23 _start at ???  
 | 0xfffffffffffffffe  
 
 does not contain expected:  
@@ -244,21 +260,24 @@ does not contain expected:
 
     OK  : When I run `../bin/coap_client coap.me`
     OK  : Then I get an error
-*** NOK : And output contains `invalid URI` (coap_client_tests.md:305:)  
+*** NOK : And output contains `invalid URI` (coap_client_tests.md:311:)  
 Output:  
 |   
-| raised GNAT.SOCKETS.HOST_ERROR : [1] Host not found: p.me  
+| raised GNAT.SOCKETS.SOCKET_ERROR : [89] Destination address required  
 | [../bin/coap_client]  
-| 0x5ec866 Gnat.Sockets.Raise_Host_Error at g-socket.adb:2105  
-| 0x5f173c Gnat.Sockets.Get_Host_By_Name at g-socket.adb:1294  
-| 0x40e811 Coap_Spark.Channel.Connect at coap_spark-channel.adb:156  
-| 0x40cf5c Coap_Client at coap_client.adb:283  
-| 0x40bc14 Main at b__coap_client.adb:414  
+| 0x5f1149 Gnat.Sockets.Raise_Socket_Error at g-socket.adb:2117  
+| 0x5f14be Gnat.Sockets.Control_Socket.Part at g-socket.adb:796  
+| 0x5f3658 Gnat.Sockets.Send_Socket at g-socket.adb:2986  
+| 0x40f0df Coap_Spark.Channel.Send at coap_spark-channel.adb:235  
+| 0x40fd5b Coap_Spark.Client_Session.Read at coap_spark-client_session.adb:45  
+| 0x411308 Coap_Spark.Client_Session.Run_Session_Loop at coap_spark-client_session.adb:18  
+| 0x40d23d Coap_Client at coap_client.adb:302  
+| 0x40bdd4 Main at b__coap_client.adb:417  
 | [/lib/x86_64-linux-gnu/libc.so.6]  
-| 0x77272fa29d8e  
-| 0x77272fa29e3e  
+| 0x7ce7bf629d8e  
+| 0x7ce7bf629e3e  
 | [../bin/coap_client]  
-| 0x40bc63 _start at ???  
+| 0x40be23 _start at ???  
 | 0xfffffffffffffffe  
 
 does not contain expected:  
@@ -278,7 +297,7 @@ does not contain expected:
 
 
 ------------------
-- Failed     =  3
+- Failed     =  4
 - Successful =  42
 - Empty      =  0
 - Not run    =  0
