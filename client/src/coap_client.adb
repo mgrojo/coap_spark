@@ -289,10 +289,10 @@ begin
          CoAP_SPARK.Log.Put_Line
            ("Connection problems.", CoAP_SPARK.Log.Error);
          RFLX.RFLX_Types.Free (Payload);
-         Session_Environment.Finalize (Ctx.E);
-         pragma Assert (Session_Environment.Is_Finalized (Ctx.E));
          FSM.Finalize (Ctx);
          pragma Assert (FSM.Uninitialized (Ctx));
+         Session_Environment.Finalize (Ctx.E);
+         pragma Assert (Session_Environment.Is_Finalized (Ctx.E));
          return;
       end if;
 
@@ -301,10 +301,8 @@ begin
 
       CoAP_SPARK.Client_Session.Run_Session_Loop (Ctx, Skt);
 
-      if CoAP_SPARK.Channel.Has_Attached_Socket (Skt) then
-         CoAP_SPARK.Channel.Finalize (Skt);
-         pragma Assert (not CoAP_SPARK.Channel.Is_Valid (Skt));
-      end if;
+      CoAP_SPARK.Channel.Finalize (Skt);
+      pragma Assert (not CoAP_SPARK.Channel.Is_Valid (Skt));
    end;
 
    CoAP_SPARK.Log.New_Line;
@@ -348,11 +346,11 @@ begin
    end if;
 
    RFLX.RFLX_Types.Free (Payload);
+   FSM.Finalize (Ctx);
+   pragma Assert (FSM.Uninitialized (Ctx));
 
    Session_Environment.Finalize (Ctx.E);
    pragma Assert (Session_Environment.Is_Finalized (Ctx.E));
-   FSM.Finalize (Ctx);
-   pragma Assert (FSM.Uninitialized (Ctx));
 
    -- This has no effect, but it is needed to avoid a linking error with
    -- SPARKLib in the validation profile.

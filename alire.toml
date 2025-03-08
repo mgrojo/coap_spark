@@ -38,3 +38,6 @@ gnatprove = "^14.1.1"
     ]
 "*".Ada_Version = "Ada2022"
 
+# You might want to use the following to specify the path to the Colibri solver
+# [environment]
+# PATH.append = "/home/mgr/local/gnat-2021/libexec/spark/bin"

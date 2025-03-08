@@ -61,6 +61,8 @@ See [`client/tests/coap_client_tests.md`](client/tests/coap_client_tests.md)
 for the specification of these tests.
 
 ## How to prove
+The project (library and client) is currently proved up to the silver mode.
+
 The [`proof/`](proof/) directory constains the results of passing GNATProve. You can replay it running:
 ```
 alr gnatprove --replay
@@ -71,7 +73,6 @@ Or if you want to start afresh,for example, using a different version of
 ```
 alr gnatprove
 ```
-The full proof in silver mode is still work in progress.
 
 The project is using `gnatprove` from the Alire community index. You can install it running this:
 ```

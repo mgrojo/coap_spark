@@ -59,7 +59,6 @@ is
    procedure Finalize
      (Socket : in out Socket_Type) with
         Global => null,
-        Pre => Has_Attached_Socket (Socket),
         Post => not Is_Valid (Socket);
 private
 

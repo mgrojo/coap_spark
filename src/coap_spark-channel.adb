@@ -334,7 +334,10 @@ is
      (Socket : in out Socket_Type)
    is
    begin
-      SPARK_Sockets.Close_Socket (Socket => Socket.Attached_Socket);
+      if Has_Attached_Socket (Socket) then
+         SPARK_Sockets.Close_Socket (Socket => Socket.Attached_Socket);
+      end if;
+
       if Socket.Is_Secure then
          if WolfSSL.Is_Valid (Socket.Ssl) then
             WolfSSL.Free (Ssl => Socket.Ssl);
