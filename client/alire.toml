@@ -13,6 +13,7 @@ executables = ["coap_client"]
 
 [[depends-on]]
 coap_spark = "*"
+gnatcov = "^22.0.1"
 
 [[pins]]
 coap_spark = { path='..' }
