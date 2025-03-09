@@ -6,7 +6,7 @@ package Workarounds is
    with
      Always_Terminates => True,
      Export => True,
-     Convention => C,
+     Convention => Ada,
      External_Name => "check_or_fail";
 
 end Workarounds;
