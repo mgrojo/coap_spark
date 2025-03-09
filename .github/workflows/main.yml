@@ -43,7 +43,7 @@ jobs:
       - run: alr install gnatcov
 
         # Instrument the project code for coverage analysis.
-      - run: cd client && alr gnatcov instrument --level=stmt --dump-trigger=atexit --projects coap_spark.gpr
+      - run: cd client && alr gnatcov instrument --level=stmt --dump-trigger=atexit --projects coap_client.gpr
 
         # Build testsuite with instrumented code.
       - run: cd client && alr build -- --src-subdirs=gnatcov-instr --implicit-with=gnatcov_rts_full
@@ -52,7 +52,7 @@ jobs:
       - run: cd client && make -Ctests
 
         # Run the GNATcov code coverage analysis on the trace files.
-      - run: cd client && alr gnatcov coverage --annotate=xcov --output-dir gnatcov_out --level=stmt --projects coap_spark.gpr tests/*.srctrace
+      - run: cd client && GPR_PROJECT_PATH=$HOME/.alire/share/gnatcoverage/gnatcov_rts/ alr gnatcov coverage --annotate=xcov --output-dir gnatcov_out --level=stmt --projects coap_spark.gpr tests/*.srctrace
 
         # Upload the code coverage analysis results to codecov.io
       - uses: alire-project/gnatcov-to-codecovio-action@main
