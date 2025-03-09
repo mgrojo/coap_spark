@@ -31,13 +31,13 @@ jobs:
       - run: alr build --validation
 
         # Run GNATprove to perform automatic formal verification of the SPARK code.
-      - run: alr gnatprove -j0 --level=4
+      - run: alr gnatprove -j0 --level=4 --prover=z3,cvc5,altergo
 
       # Build the client using the validation build profile to enforce static analysis and coding style.
       - run: cd client && alr build --validation
 
         # Run GNATprove in the client to perform automatic formal verification of the SPARK code.
-      - run: cd client && alr gnatprove -j0 --level=4
+      - run: cd client && alr gnatprove -j0 --level=4 --prover=z3,cvc5,altergo
 
         # Instrument the project code for coverage analysis.
       - run: cd client && alr gnatcov instrument --level=stmt --dump-trigger=atexit --projects coap_spark.gpr
