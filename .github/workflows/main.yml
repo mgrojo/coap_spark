@@ -39,6 +39,9 @@ jobs:
         # Run GNATprove in the client to perform automatic formal verification of the SPARK code.
       #- run: cd client && alr gnatprove -j0 --level=4
 
+        # Install gnatcov
+      - run: alr install gnatcov
+
         # Instrument the project code for coverage analysis.
       - run: cd client && alr gnatcov instrument --level=stmt --dump-trigger=atexit --projects coap_spark.gpr
 
