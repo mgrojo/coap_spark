@@ -25,7 +25,7 @@ jobs:
         # Install and setup Alire package manager
       - uses: alire-project/setup-alire@v2
         with:
-          version: 2.0.1 # Remove this option to use the default (latest stable release)
+          version: 2.1.0 # Remove this option to use the default (latest stable release)
 
         # Build the project using the validation build profile to enforce static analysis and coding style.
       - run: alr build --validation
