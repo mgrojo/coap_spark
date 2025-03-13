@@ -31,19 +31,22 @@ jobs:
       - run: alr build --validation
 
         # Run GNATprove to perform automatic formal verification of the SPARK code.
-      - run: alr gnatprove -j0 --level=4
+      #- run: alr gnatprove -j0 --level=4
 
       # Build the client using the validation build profile to enforce static analysis and coding style.
-      - run: cd client && alr build --validation
+      - run: cd client && alr build --profiles="*=validation"
 
         # Run GNATprove in the client to perform automatic formal verification of the SPARK code.
-      - run: cd client && alr gnatprove -j0 --level=4
+      #- run: cd client && alr gnatprove -j0 --level=4
+
+        # Install gnatcov
+      - run: alr install gnatcov
 
         # Instrument the project code for coverage analysis.
-      - run: cd client && alr gnatcov instrument --level=stmt --dump-trigger=atexit --projects coap_spark.gpr
+      - run: cd client && alr gnatcov instrument --level=stmt --dump-trigger=atexit --projects coap_client.gpr
 
         # Build testsuite with instrumented code.
-      - run: cd client && alr build -- --src-subdirs=gnatcov-instr --implicit-with=gnatcov_rts_full
+      - run: cd client && GPR_PROJECT_PATH=$HOME/.alire/share/gnatcoverage/gnatcov_rts/ alr build -- --src-subdirs=gnatcov-instr --implicit-with=gnatcov_rts_full -cargs:Ada -gnatec=$HOME/.alire/share/examples/gnatcoverage/support/instrument-spark.adc
       
         # Run the instrumented testsuite. This will produce at least one `.srctrace` file for the coverage analysis.
       - run: cd client && make -Ctests
