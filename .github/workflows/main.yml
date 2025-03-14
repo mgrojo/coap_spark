@@ -63,6 +63,7 @@ jobs:
         # Upload the code coverage analysis results to codecov.io
       - uses: alire-project/gnatcov-to-codecovio-action@main
         with:
+          token: {{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false # Don't fail the workflow if codecov.io failed
           verbose: true
 
