@@ -49,7 +49,7 @@ jobs:
       - run: cd client && GPR_PROJECT_PATH=$HOME/.alire/share/gnatcoverage/gnatcov_rts/ alr build -- --src-subdirs=gnatcov-instr --implicit-with=gnatcov_rts_full -U -cargs:Ada -gnatec=$HOME/.alire/share/examples/gnatcoverage/support/instrument-spark.adc
       
         # Run the instrumented testsuite. This will produce at least one `.srctrace` file for the coverage analysis.
-      - run: cd client && make -Ctests
+      - run: cd client && PATH=$HOME/.alire/bin:$PATH make -Ctests
 
         # Run the GNATcov code coverage analysis on the trace files.
       - run: cd client && alr gnatcov coverage --annotate=xcov --output-dir gnatcov_out --level=stmt --projects coap_spark.gpr tests/*.srctrace
