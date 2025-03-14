@@ -28,31 +28,31 @@ jobs:
           version: 2.1.0 # Remove this option to use the default (latest stable release)
 
         # Build the project using the validation build profile to enforce static analysis and coding style.
-      - run: alr build --validation
+      - run: alr --non-interactive build --validation
 
         # Run GNATprove to perform automatic formal verification of the SPARK code.
       #- run: alr gnatprove -j0 --level=4
 
       # Build the client using the validation build profile to enforce static analysis and coding style.
-      - run: cd client && alr build --profiles="*=validation"
+      - run: cd client && alr --non-interactive build --profiles="*=validation"
 
         # Run GNATprove in the client to perform automatic formal verification of the SPARK code.
       #- run: cd client && alr gnatprove -j0 --level=4
 
         # Install binary crates needed for testing
-      - run: alr install gnatcov bbt
+      - run: alr --non-interactive install gnatcov bbt
 
         # Instrument the project code for coverage analysis.
-      - run: cd client && alr gnatcov instrument --level=stmt --dump-trigger=atexit --projects coap_client.gpr
+      - run: cd client && alr --non-interactive gnatcov instrument --level=stmt --dump-trigger=atexit --projects coap_client.gpr
 
         # Build testsuite with instrumented code (first pass, it fails for some reason).
-      - run: cd client && GPR_PROJECT_PATH=$HOME/.alire/share/gnatcoverage/gnatcov_rts/ alr build -- --src-subdirs=gnatcov-instr --implicit-with=gnatcov_rts_full -U -cargs:Ada -gnatec=$HOME/.alire/share/examples/gnatcoverage/support/instrument-spark.adc
+      - run: cd client && GPR_PROJECT_PATH=$HOME/.alire/share/gnatcoverage/gnatcov_rts/ alr --non-interactive build -- --src-subdirs=gnatcov-instr --implicit-with=gnatcov_rts_full -U -cargs:Ada -gnatec=$HOME/.alire/share/examples/gnatcoverage/support/instrument-spark.adc
       
         # Run the instrumented testsuite. This will produce at least one `.srctrace` file for the coverage analysis.
       - run: cd client && PATH=$HOME/.alire/bin:$PATH make -Ctests
 
         # Run the GNATcov code coverage analysis on the trace files.
-      - run: cd client && alr gnatcov coverage --annotate=xcov --output-dir gnatcov_out --level=stmt --projects coap_spark.gpr tests/*.srctrace
+      - run: cd client && alr --non-interactive gnatcov coverage --annotate=xcov --output-dir gnatcov_out --level=stmt --projects coap_spark.gpr tests/*.srctrace
 
         # Upload the code coverage analysis results to codecov.io
       - uses: alire-project/gnatcov-to-codecovio-action@main
