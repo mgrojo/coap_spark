@@ -28,7 +28,8 @@ jobs:
           version: 2.1.0 # Remove this option to use the default (latest stable release)
 
       # Set OS environment variable correctly on Windows for WolfSSL
-      - run: if [[ "${OS:-unset}" == "Windows_NT" ]]; then export OS=Windows ; fi
+      - run: export OS=Windows
+        if: matrix.os == 'windows-latest'
 
         # Build the project using the validation build profile to enforce static analysis and coding style.
       - run: alr --non-interactive build --validation
