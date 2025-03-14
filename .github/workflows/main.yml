@@ -45,7 +45,9 @@ jobs:
         # Instrument the project code for coverage analysis.
       - run: cd client && alr gnatcov instrument --level=stmt --dump-trigger=atexit --projects coap_client.gpr
 
-        # Build testsuite with instrumented code.
+        # Build testsuite with instrumented code (first pass, it fails for some reason).
+      - run: cd client && GPR_PROJECT_PATH=$HOME/.alire/share/gnatcoverage/gnatcov_rts/ alr build -- --src-subdirs=gnatcov-instr --implicit-with=gnatcov_rts_full -cargs:Ada -gnatec=$HOME/.alire/share/examples/gnatcoverage/support/instrument-spark.adc || true
+        # Second pass
       - run: cd client && GPR_PROJECT_PATH=$HOME/.alire/share/gnatcoverage/gnatcov_rts/ alr build -- --src-subdirs=gnatcov-instr --implicit-with=gnatcov_rts_full -cargs:Ada -gnatec=$HOME/.alire/share/examples/gnatcoverage/support/instrument-spark.adc
       
         # Run the instrumented testsuite. This will produce at least one `.srctrace` file for the coverage analysis.
