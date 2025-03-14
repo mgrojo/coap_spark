@@ -61,37 +61,9 @@ jobs:
       - run: cd client && alr --non-interactive gnatcov coverage --annotate=xcov --output-dir gnatcov_out --level=stmt --projects coap_spark.gpr tests/*.srctrace
 
         # Upload the code coverage analysis results to codecov.io
-      - uses: alire-project/gnatcov-to-codecovio-action@main
+      - uses:  mgrojo/gnatcov-to-codecovio-action@main
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false # Don't fail the workflow if codecov.io failed
           verbose: true
 
-        # Produce an Alire release manifest
-      - name: Make Release Manifest
-        run: |
-          # Set user GitHub login required for `alr publish`
-          alr config --set --global user.github_login ${{github.repository_owner}}
-          
-          # Run Alire publish assistant
-          alr publish ${{github.server_url}}/${{github.repository}} ${{github.sha}}
-
-        # Save the path to the release manifest for the next step.
-        # This is a little trick to get around the fact that the actions/upload-release-asset doesn't allow globing pattern.
-      - name: Get Release Manifest PATH
-        run: |
-          export MANIFEST_PATHNAME=$(ls alire/releases/*.toml | head -n 1)
-          echo MANIFEST_PATHNAME=$MANIFEST_PATHNAME >> $GITHUB_ENV
-          echo MANIFEST_NAME=$(basename $MANIFEST_PATHNAME) >> $GITHUB_ENV
-
-        # If this workflow was triggered by a release event, upload the release manifest as a GitHub release asset.
-      - name: Upload release manifest
-        if: (github.event_name == 'release')
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ${{ env.MANIFEST_PATHNAME }}
-          asset_name: ${{ env.MANIFEST_NAME }}
-          asset_content_type: application/toml
