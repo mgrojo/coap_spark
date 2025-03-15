@@ -32,10 +32,10 @@ jobs:
           version: 2.1.0 # Remove this option to use the default (latest stable release)
 
         # Build the project using the validation build profile to enforce static analysis and coding style.
-      - run: alr --non-interactive build --validation -- -cargs:Ada -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
+      - run: alr --non-interactive build --validation -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
 
       # Build the client using the validation build profile to enforce static analysis and coding style.
-      - run: cd client && alr --non-interactive build --profiles="*=validation" -- -cargs:Ada -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
+      - run: cd client && alr --non-interactive build --profiles="*=validation" -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
 
         # Run GNATprove in the client to perform automatic formal verification of the SPARK code.
       #- run: cd client && alr gnatprove -j0 --level=4
