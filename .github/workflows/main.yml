@@ -13,6 +13,10 @@ jobs:
     
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest] # List of GitHub Actions platform to run the workflow on
+    env:
+      # For WolfSSL:
+      #  set the value of the environment variable OS to Windows when running on the Windows operating system and to Linux_Or_Mac otherwise
+      OS: ${{ matrix.os == 'windows-latest' && 'Windows' || 'Linux_Or_Mac' }}
 
     runs-on: ${{ matrix.os }} # Run the continuous integration workflow on each OS listed in the matrix.
     
@@ -20,16 +24,12 @@ jobs:
         # Check-out the repository
       - uses: actions/checkout@v2
         with:
-          submodules: 'true' # Also checkout recuresively the submodules
+          submodules: 'true' # Also checkout recursively the submodules
 
         # Install and setup Alire package manager
       - uses: alire-project/setup-alire@v2
         with:
           version: 2.1.0 # Remove this option to use the default (latest stable release)
-
-      # Set OS environment variable correctly on Windows for WolfSSL
-      - run: set OS=Windows
-        if: matrix.os == 'windows-latest'
 
         # Build the project using the validation build profile to enforce static analysis and coding style.
       - run: alr --non-interactive build --validation
@@ -47,19 +47,19 @@ jobs:
       - run: alr --non-interactive install gnatcov bbt
 
         # Instrument the project code for coverage analysis.
-      - run: cd client && alr --non-interactive gnatcov instrument --level=stmt --dump-trigger=atexit --no-subprojects --projects coap_client.gpr,../coap_spark.gpr
+      - run: cd client && alr --non-interactive gnatcov instrument --level=stmt --dump-trigger=atexit --no-subprojects --projects coap_client.gpr --projects coap_spark.gpr
 
         # Build testsuite with instrumented code (first pass, it fails for some reason).
       - run: cd client && GPR_PROJECT_PATH=$HOME/.alire/share/gnatcoverage/gnatcov_rts/ alr --non-interactive build -- --src-subdirs=gnatcov-instr --implicit-with=gnatcov_rts_full -cargs:Ada -gnatec=$HOME/.alire/share/examples/gnatcoverage/support/instrument-spark.adc
 
-      - run: cd client && alr --non-interactive gnatcov instrument --level=stmt --dump-trigger=atexit --projects coap_client.gpr
+      - run: cd client && alr --non-interactive gnatcov instrument --level=stmt --dump-trigger=atexit --no-subprojects --projects coap_client.gpr --projects coap_spark.gpr
       - run: cd client && GPR_PROJECT_PATH=$HOME/.alire/share/gnatcoverage/gnatcov_rts/ alr --non-interactive build -- --src-subdirs=gnatcov-instr --implicit-with=gnatcov_rts_full -cargs:Ada -gnatec=$HOME/.alire/share/examples/gnatcoverage/support/instrument-spark.adc
 
         # Run the instrumented testsuite. This will produce at least one `.srctrace` file for the coverage analysis.
       - run: cd client && PATH=$HOME/.alire/bin:$PATH make -Ctests
 
         # Run the GNATcov code coverage analysis on the trace files.
-      - run: cd client && alr --non-interactive gnatcov coverage --annotate=xcov --output-dir gnatcov_out --level=stmt --projects coap_spark.gpr tests/*.srctrace
+      - run: cd client && alr --non-interactive gnatcov coverage --annotate=xcov --output-dir gnatcov_out --level=stmt --projects coap_client.gpr tests/*.srctrace
 
         # Upload the code coverage analysis results to codecov.io
       - uses:  mgrojo/gnatcov-to-codecovio-action@main
