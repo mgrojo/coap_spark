@@ -13,6 +13,10 @@ jobs:
     
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest] # List of GitHub Actions platform to run the workflow on
+    env:
+      # For WolfSSL:
+      #  set the value of the environment variable OS to Windows when running on the Windows operating system and to Linux_Or_Mac otherwise
+      OS: ${{ matrix.os == 'windows-latest' && 'Windows' || 'Linux_Or_Mac' }}
 
     runs-on: ${{ matrix.os }} # Run the continuous integration workflow on each OS listed in the matrix.
     
@@ -20,7 +24,7 @@ jobs:
         # Check-out the repository
       - uses: actions/checkout@v2
         with:
-          submodules: 'true' # Also checkout recuresively the submodules
+          submodules: 'true' # Also checkout recursively the submodules
 
         # Install and setup Alire package manager
       - uses: alire-project/setup-alire@v2
@@ -28,63 +32,39 @@ jobs:
           version: 2.1.0 # Remove this option to use the default (latest stable release)
 
         # Build the project using the validation build profile to enforce static analysis and coding style.
-      - run: alr build --validation
+      - run: alr --non-interactive build --validation
 
         # Run GNATprove to perform automatic formal verification of the SPARK code.
       #- run: alr gnatprove -j0 --level=4
 
       # Build the client using the validation build profile to enforce static analysis and coding style.
-      - run: cd client && alr build --profiles="*=validation"
+      - run: cd client && alr --non-interactive build --profiles="*=validation"
 
         # Run GNATprove in the client to perform automatic formal verification of the SPARK code.
       #- run: cd client && alr gnatprove -j0 --level=4
 
-        # Install gnatcov
-      - run: alr install gnatcov
+        # Install binary crates needed for testing
+      - run: alr --non-interactive install gnatcov bbt
 
         # Instrument the project code for coverage analysis.
-      - run: cd client && alr gnatcov instrument --level=stmt --dump-trigger=atexit --projects coap_client.gpr
+      - run: cd client && alr --non-interactive gnatcov instrument --level=stmt --dump-trigger=atexit --no-subprojects --projects coap_client.gpr --projects coap_spark.gpr
 
-        # Build testsuite with instrumented code.
-      - run: cd client && GPR_PROJECT_PATH=$HOME/.alire/share/gnatcoverage/gnatcov_rts/ alr build -- --src-subdirs=gnatcov-instr --implicit-with=gnatcov_rts_full -cargs:Ada -gnatec=$HOME/.alire/share/examples/gnatcoverage/support/instrument-spark.adc
-      
+        # Build testsuite with instrumented code (first pass, it fails for some reason).
+      - run: cd client && GPR_PROJECT_PATH=$HOME/.alire/share/gnatcoverage/gnatcov_rts/ alr --non-interactive build -- --src-subdirs=gnatcov-instr --implicit-with=gnatcov_rts_full -cargs:Ada -gnatec=$HOME/.alire/share/examples/gnatcoverage/support/instrument-spark.adc
+
+      - run: cd client && alr --non-interactive gnatcov instrument --level=stmt --dump-trigger=atexit --no-subprojects --projects coap_client.gpr --projects coap_spark.gpr
+      - run: cd client && GPR_PROJECT_PATH=$HOME/.alire/share/gnatcoverage/gnatcov_rts/ alr --non-interactive build -- --src-subdirs=gnatcov-instr --implicit-with=gnatcov_rts_full -cargs:Ada -gnatec=$HOME/.alire/share/examples/gnatcoverage/support/instrument-spark.adc
+
         # Run the instrumented testsuite. This will produce at least one `.srctrace` file for the coverage analysis.
-      - run: cd client && make -Ctests
+      - run: cd client && PATH=$HOME/.alire/bin:$PATH make -Ctests
 
         # Run the GNATcov code coverage analysis on the trace files.
-      - run: cd client && alr gnatcov coverage --annotate=xcov --output-dir gnatcov_out --level=stmt --projects coap_spark.gpr tests/*.srctrace
+      - run: cd client && alr --non-interactive gnatcov coverage --annotate=xcov --output-dir gnatcov_out --level=stmt --projects coap_client.gpr tests/*.srctrace
 
         # Upload the code coverage analysis results to codecov.io
-      - uses: alire-project/gnatcov-to-codecovio-action@main
+      - uses:  mgrojo/gnatcov-to-codecovio-action@main
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false # Don't fail the workflow if codecov.io failed
           verbose: true
 
-        # Produce an Alire release manifest
-      - name: Make Release Manifest
-        run: |
-          # Set user GitHub login required for `alr publish`
-          alr config --set --global user.github_login ${{github.repository_owner}}
-          
-          # Run Alire publish assistant
-          alr publish ${{github.server_url}}/${{github.repository}} ${{github.sha}}
-
-        # Save the path to the release manifest for the next step.
-        # This is a little trick to get around the fact that the actions/upload-release-asset doesn't allow globing pattern.
-      - name: Get Release Manifest PATH
-        run: |
-          export MANIFEST_PATHNAME=$(ls alire/releases/*.toml | head -n 1)
-          echo MANIFEST_PATHNAME=$MANIFEST_PATHNAME >> $GITHUB_ENV
-          echo MANIFEST_NAME=$(basename $MANIFEST_PATHNAME) >> $GITHUB_ENV
-
-        # If this workflow was triggered by a release event, upload the release manifest as a GitHub release asset.
-      - name: Upload release manifest
-        if: (github.event_name == 'release')
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ${{ env.MANIFEST_PATHNAME }}
-          asset_name: ${{ env.MANIFEST_NAME }}
-          asset_content_type: application/toml
