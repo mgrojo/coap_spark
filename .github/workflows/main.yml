@@ -35,22 +35,28 @@ jobs:
 
         # Build the project using the validation build profile to enforce static analysis and coding style.
       - run: alr --non-interactive build --$PROFILE -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
-
+        shell: bash
+        
       # Build the client using the validation build profile to enforce static analysis and coding style.
       - run: cd client && alr --non-interactive build --profiles="*=$PROFILE" -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
+        shell: bash
 
         # Run GNATprove in the client to perform automatic formal verification of the SPARK code.
       #- run: cd client && alr gnatprove -j0 --level=4
 
         # Install binary crates needed for testing
       - run: alr --non-interactive install gnatcov bbt
+        shell: bash
 
         # Run the instrumented testsuite. This will produce *.gcno and *.gcda files for the coverage analysis.
       - run: cd client && PATH=$HOME/.alire/bin:$PATH make -Ctests
+        shell: bash
 
         # Run gcov on the library and the client. This will produce *.gcov files.
-      - run: alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-      - run: cd client && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+      - run: |
+          alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+          cd client && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+        shell: bash
 
         # Upload results to codecov.io
       - uses: codecov/codecov-action@v5
