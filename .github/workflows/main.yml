@@ -32,10 +32,7 @@ jobs:
           version: 2.1.0 # Remove this option to use the default (latest stable release)
 
         # Build the project using the validation build profile to enforce static analysis and coding style.
-      - run: alr --non-interactive build --validation -- -cargs:Ada -fprofile-arcs -ftest-coverage -largs:Ada -lgcov --coverage -fprofile-arcs
-
-        # Run GNATprove to perform automatic formal verification of the SPARK code.
-      #- run: alr gnatprove -j0 --level=4
+      - run: alr --non-interactive build --validation -- -cargs:Ada -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
 
       # Build the client using the validation build profile to enforce static analysis and coding style.
       - run: cd client && alr --non-interactive build --profiles="*=validation" -- -cargs:Ada -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
@@ -48,7 +45,12 @@ jobs:
 
         # Run the instrumented testsuite. This will produce *.gcno and *.gcda files for the coverage analysis.
       - run: cd client && PATH=$HOME/.alire/bin:$PATH make -Ctests
-      
+
+        # Run gcov on the library and the client. This will produce *.gcov files.
+      - run: alr exec -- gcov -o obj/validation src/*.ad[sb]
+      - run: cd client && alr exec -- gcov -o obj/validation src/*.ad[sb]
+
+        # Upload results to codecov.io
       - uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true # optional (default = false)
