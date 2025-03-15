@@ -17,6 +17,8 @@ jobs:
       # For WolfSSL:
       #  set the value of the environment variable OS to Windows when running on the Windows operating system and to Linux_Or_Mac otherwise
       OS: ${{ matrix.os == 'windows-latest' && 'Windows' || 'Linux_Or_Mac' }}
+      # On Windows, the validation profile fails due to "(style) incorrect line terminator [-gnatyd]"
+      PROFILE: ${{ matrix.os == 'windows-latest' && 'development' || 'validation' }}
 
     runs-on: ${{ matrix.os }} # Run the continuous integration workflow on each OS listed in the matrix.
     
@@ -32,10 +34,10 @@ jobs:
           version: 2.1.0 # Remove this option to use the default (latest stable release)
 
         # Build the project using the validation build profile to enforce static analysis and coding style.
-      - run: alr --non-interactive build --validation -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
+      - run: alr --non-interactive build --$PROFILE -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
 
       # Build the client using the validation build profile to enforce static analysis and coding style.
-      - run: cd client && alr --non-interactive build --profiles="*=validation" -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
+      - run: cd client && alr --non-interactive build --profiles="*=$PROFILE" -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
 
         # Run GNATprove in the client to perform automatic formal verification of the SPARK code.
       #- run: cd client && alr gnatprove -j0 --level=4
@@ -47,8 +49,8 @@ jobs:
       - run: cd client && PATH=$HOME/.alire/bin:$PATH make -Ctests
 
         # Run gcov on the library and the client. This will produce *.gcov files.
-      - run: alr exec -- gcov -o obj/validation src/*.ad[sb]
-      - run: cd client && alr exec -- gcov -o obj/validation src/*.ad[sb]
+      - run: alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+      - run: cd client && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
 
         # Upload results to codecov.io
       - uses: codecov/codecov-action@v5
