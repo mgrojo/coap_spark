@@ -1,10 +1,18 @@
-results.md : ../bin/coap_client coap_client_tests.md
+ifeq ($(OS),Windows)
+    RM = del /Q
+    PROGRAM = ..\bin\coap_client.exe
+else
+    RM = rm -f
+    PROGRAM = ../bin/coap_client
+endif
+
+results.md : $(PROGRAM) coap_client_tests.md
 	bbt --verbose coap_client_tests.md | tee $@
 
-valgrind : ../bin/coap_client coap_client_tests.md
+valgrind : $(PROGRAM) coap_client_tests.md
 	valgrind --tool=memcheck --log-file=valgrind-%p.txt --trace-children=yes bbt --verbose coap_client_tests.md
 .PHONY: valgrind
 
 clean:
-	rm -f results.md
+	$(RM) results.md
 .PHONY: clean
