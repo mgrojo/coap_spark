@@ -94,6 +94,20 @@ is
          return URI_Object;
       end if;
 
+      declare
+         Scheme : constant String :=
+           URI_Object.URI_String
+                     (URI_Object.URI_String'First .. URI_Object.Scheme_Last);
+      begin
+         if Scheme /= Secure_Scheme
+           and then Scheme /= Default_Scheme
+           and then Scheme /= ""
+         then
+            URI_Object.Valid := False;
+            return URI_Object;
+         end if;
+      end;
+
       URI_Object.Host_Last := 0;
 
       if Aux_Index /= 0 then
