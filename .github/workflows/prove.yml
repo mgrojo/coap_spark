@@ -25,14 +25,14 @@ jobs:
 
     - name: Install GNAT package
       run: |
-        chmod +x install_package.sh && ./install_package.sh gnat-2021-20210519-x86_64-linux-bin $HOME/gnat-2021 com.adacore.spark2014_discovery
+        chmod +x install_package.sh && ./install_package.sh ./gnat-2021-20210519-x86_64-linux-bin $HOME/gnat-2021 com.adacore.spark2014_discovery
 
     # Install and setup Alire package manager
     - uses: alire-project/setup-alire@v2
       with:
         version: 2.1.0 # Remove this option to use the default (latest stable release)
 
-    - name: Set up environment
+    - name: Set up environment for Colibri
       run: echo "$HOME/gnat-2021/libexec/spark/bin" >> $GITHUB_PATH
 
     # Run GNATprove in the client to perform automatic formal verification of the SPARK code.
