@@ -101,7 +101,6 @@ is
       begin
          if Scheme /= Secure_Scheme
            and then Scheme /= Default_Scheme
-           and then Scheme /= ""
          then
             URI_Object.Valid := False;
             return URI_Object;
@@ -135,7 +134,10 @@ is
          end if;
          URI_Object.Port_Last := Aux_Index - 1;
 
-         if URI_Object.Host_Last + Host_Suffix'Length + 1
+         -- If the host part is followed by a port part, check that the port
+         -- part is valid.
+         if URI_Object.Host_Last /= URI_Object.Port_Last and then
+            URI_Object.Host_Last + Host_Suffix'Length + 1
             not in URI_Object.URI_String'Range
          then
             URI_Object.Valid := False;
@@ -146,7 +148,7 @@ is
            Ada.Strings.Fixed.Index
              (Source  => URI_Object.URI_String,
               Pattern => "?",
-              From    => URI_Object.Host_Last + Host_Suffix'Length + 1);
+              From    => URI_Object.Port_Last);
 
          if Aux_Index = 0 then
             -- No query part

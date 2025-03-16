@@ -104,6 +104,11 @@ Payload: welcome to the ETSI plugtest! last change:
   - Then I get no error
   - And output contains `welcome to the ETSI plugtest! last change:`
 
+### Scenario: explicit get method with IP and path
+  - When I run `../bin/coap_client -m get coap://134.102.218.18/test`
+  - Then I get no error
+  - And output contains `welcome to the ETSI plugtest! last change:`
+
 ### Scenario: get method with port and path
   - When I run `../bin/coap_client coap://coap.me:5683/test`
   - Then I get no error
@@ -267,20 +272,14 @@ You asked me about: a=12345678901234567890abcdefghijklmnopqrstuvwxyz
   - Then I get no error
   - And output is
 ```
-Hola
 PUT OK
 ```
 
 ### Scenario: post method
-Note: this test was expected to not print quotes around `"This is a test"` but
-the bbt version used here (0.0.6) passes the quotes to the command.
-See https://github.com/LionelDraghi/bbt/issues/11
-
   - When I run `../bin/coap_client -m post -e "This is a test" coap://coap.me/test`
   - Then I get no error
   - And output is
 ```
-"This is a test"
 POST OK
 ```
 

@@ -297,7 +297,9 @@ begin
       end if;
 
       CoAP_SPARK.Log.Put_Line ("REQUEST: ");
-      CoAP_SPARK.Messages.Print_Content (Ctx.E.Request_Content);
+      CoAP_SPARK.Messages.Print_Content
+        (Item => Ctx.E.Request_Content,
+         Log_Level_Payload => CoAP_SPARK.Log.Debug);
 
       CoAP_SPARK.Client_Session.Run_Session_Loop (Ctx, Skt);
 

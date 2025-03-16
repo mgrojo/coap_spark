@@ -5,6 +5,10 @@ GNATPROVE := gnatprove
 
 GENERATED := $(patsubst specs/%,generated/%,$(SPECS:.rflx=.ads))
 
+RFLX_DEBUG :=
+# Set this to activate RecordFlux debug mode
+#RFLX_DEBUG := --debug built-in
+
 all: generate
 .PHONY: all
 
@@ -24,7 +28,7 @@ generate: $(GENERATED)
 generated/%.ads: specs/%.rflx
 	@echo "Generating $@ from $<" 
 	@mkdir -p $(dir $@)
-	@$(RFLX) generate -d $(dir $@) $<
+	@$(RFLX) generate $(RFLX_DEBUG) -d $(dir $@) $<
 	@$(RFLX) graph -d $(dir $@) $<
 
 test:

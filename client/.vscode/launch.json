@@ -14,7 +14,7 @@
             "program": "${workspaceFolder}/bin/coap_client",
             "stopAtEntry": false,
             "externalConsole": false,
-            "args": ["-m", "put", "-e", "Hola", "coap://coap.me/test"],
+            "args": ["-m", "post", "-e", "This is a test", "coap://coap.me/forbiddenget"],
             "MIMode": "gdb",
             "preLaunchTask": "ada: Build main - src/coap_client.adb",
             "setupCommands": [
