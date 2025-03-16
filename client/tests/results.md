@@ -231,32 +231,8 @@ not equal to expected:
 
     OK  : When I run `../bin/coap_client http://coap.me`
     OK  : Then I get an error
-*** NOK : And output contains `invalid URI` (coap_client_tests.md:306:)  
-Output:  
-|   
-| raised GNAT.SOCKETS.SOCKET_ERROR : [111] Connection refused  
-| [../bin/coap_client]  
-| 0x5f1149 Gnat.Sockets.Raise_Socket_Error at g-socket.adb:2117  
-| 0x5f3167 Gnat.Sockets.Receive_Socket at g-socket.adb:2182  
-| 0x40e2c3 Coap_Spark.Channel.Receive_Socket at coap_spark-channel.adb:288  
-| 0x40e488 Coap_Spark.Channel.Receive at coap_spark-channel.adb:322  
-| 0x40f58d Coap_Spark.Channel.Receive at coap_spark-channel.adb:292  
-| 0x40fec8 Coap_Spark.Client_Session.Write at coap_spark-client_session.adb:63  
-| 0x411754 Coap_Spark.Client_Session.Run_Session_Loop at coap_spark-client_session.adb:50  
-| 0x40d23d Coap_Client at coap_client.adb:302  
-| 0x40bdd4 Main at b__coap_client.adb:417  
-| [/lib/x86_64-linux-gnu/libc.so.6]  
-| 0x79674a429d8e  
-| 0x79674a429e3e  
-| [../bin/coap_client]  
-| 0x40be23 _start at ???  
-| 0xfffffffffffffffe  
-
-does not contain expected:  
-| invalid URI  
-
-  
-  - [ ] scenario [invalid CoAP URI (invalid scheme and no path)](coap_client_tests.md) fails  
+    OK  : And output contains `invalid URI`
+  - [X] scenario [invalid CoAP URI (invalid scheme and no path)](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client coap.me`
     OK  : Then I get an error
@@ -265,19 +241,19 @@ Output:
 |   
 | raised GNAT.SOCKETS.SOCKET_ERROR : [89] Destination address required  
 | [../bin/coap_client]  
-| 0x5f1149 Gnat.Sockets.Raise_Socket_Error at g-socket.adb:2117  
-| 0x5f14be Gnat.Sockets.Control_Socket.Part at g-socket.adb:796  
-| 0x5f3658 Gnat.Sockets.Send_Socket at g-socket.adb:2986  
-| 0x40f0df Coap_Spark.Channel.Send at coap_spark-channel.adb:235  
-| 0x40fd5b Coap_Spark.Client_Session.Read at coap_spark-client_session.adb:45  
-| 0x411308 Coap_Spark.Client_Session.Run_Session_Loop at coap_spark-client_session.adb:18  
-| 0x40d23d Coap_Client at coap_client.adb:302  
-| 0x40bdd4 Main at b__coap_client.adb:417  
+| 0x5f1309 Gnat.Sockets.Raise_Socket_Error at g-socket.adb:2117  
+| 0x5f167e Gnat.Sockets.Control_Socket.Part at g-socket.adb:796  
+| 0x5f3818 Gnat.Sockets.Send_Socket at g-socket.adb:2986  
+| 0x40f1ff Coap_Spark.Channel.Send at coap_spark-channel.adb:235  
+| 0x40fe8b Coap_Spark.Client_Session.Read at coap_spark-client_session.adb:45  
+| 0x411438 Coap_Spark.Client_Session.Run_Session_Loop at coap_spark-client_session.adb:18  
+| 0x40d2d0 Coap_Client at coap_client.adb:302  
+| 0x40be84 Main at b__coap_client.adb:417  
 | [/lib/x86_64-linux-gnu/libc.so.6]  
-| 0x7ce7bf629d8e  
-| 0x7ce7bf629e3e  
+| 0x729963a29d8e  
+| 0x729963a29e3e  
 | [../bin/coap_client]  
-| 0x40be23 _start at ???  
+| 0x40bed3 _start at ???  
 | 0xfffffffffffffffe  
 
 does not contain expected:  
@@ -297,7 +273,7 @@ does not contain expected:
 
 
 ------------------
-- Failed     =  4
-- Successful =  42
+- Failed     =  3
+- Successful =  43
 - Empty      =  0
 - Not run    =  0
