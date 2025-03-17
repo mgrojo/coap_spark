@@ -1,0 +1,41 @@
+name: GNATprove
+
+on:                    # Run the workflow for each of the following events:
+  push:                # - A branch is pushed or updated.
+  pull_request:        # - A pull-request is opened or updated.
+  workflow_dispatch:   # - A manual run of the workflow is requested from the GitHub web interface.
+  release:
+    types: [created]   # - A release is created.
+
+jobs:
+  gnatprove:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        submodules: 'true' # Also checkout recursively the submodules
+
+    - name: Download GNAT Community package for Colibri
+      run: |
+        wget -O gnat-2021-20210519-x86_64-linux-bin 'https://community.download.adacore.com/v1/f3a99d283f7b3d07293b2e1d07de00e31e332325?filename=gnat-2021-20210519-x86_64-linux-bin&rand=1674'
+        wget -O install_package.sh 'https://raw.githubusercontent.com/AdaCore/gnat_community_install_script/refs/heads/master/install_package.sh'
+        wget -O install_script.qs 'https://raw.githubusercontent.com/AdaCore/gnat_community_install_script/refs/heads/master/install_script.qs'
+
+    - name: Install GNAT package
+      run: |
+        chmod +x install_package.sh && ./install_package.sh ./gnat-2021-20210519-x86_64-linux-bin $HOME/gnat-2021 com.adacore.spark2014_discovery
+
+    # Install and setup Alire package manager
+    - uses: alire-project/setup-alire@v2
+      with:
+        version: 2.1.0 # Remove this option to use the default (latest stable release)
+
+    - name: Set up environment for Colibri
+      run: echo "$HOME/gnat-2021/libexec/spark/bin" >> $GITHUB_PATH
+
+    # Run GNATprove in the client to perform automatic formal verification of the SPARK code.
+    - name: Run GNATprove
+      run: cd client && alr gnatprove -j0 --level=4
+      

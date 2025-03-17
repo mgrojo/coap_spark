@@ -41,9 +41,6 @@ jobs:
       - run: cd client && alr --non-interactive build --profiles="*=$PROFILE" -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
         shell: bash
 
-        # Run GNATprove in the client to perform automatic formal verification of the SPARK code.
-      #- run: cd client && alr gnatprove -j0 --level=4
-
         # Install binary crates needed for testing
       - run: alr --non-interactive install gnatcov bbt
         shell: bash
