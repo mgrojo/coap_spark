@@ -60,12 +60,12 @@ jobs:
         shell: bash
 
       - name: CoAP test results
-        run: cat coap_results.md >> $GITHUB_STEP_SUMMARY
+        run: cat client/tests/coap_results.md >> $GITHUB_STEP_SUMMARY
         shell: bash
 
       - if: runner.os == 'Linux'
         name: Secure CoAP (coaps) test results
-        run: cat coaps_results.md >> $GITHUB_STEP_SUMMARY
+        run: cat client/tests/coaps_results.md >> $GITHUB_STEP_SUMMARY
         shell: bash
 
         # Run gcov on the library and the client. This will produce *.gcov files.
