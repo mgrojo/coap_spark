@@ -42,7 +42,7 @@ jobs:
         shell: bash
 
         # Install binary crates needed for testing
-      - run: alr --non-interactive install gnatcov bbt
+      - run: alr --non-interactive install gnatcov bbt~0.0.6
         shell: bash
 
         # Run the instrumented testsuite. This will produce *.gcno and *.gcda files for the coverage analysis.
