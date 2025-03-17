@@ -59,6 +59,15 @@ jobs:
         run: PATH=$HOME/.alire/bin:$PATH make -C client/tests coap_results.md
         shell: bash
 
+      - name: CoAP test results
+        run: cat coap_results.md >> $GITHUB_STEP_SUMMARY
+        shell: bash
+
+      - if: runner.os == 'Linux'
+        name: Secure CoAP (coaps) test results
+        run: cat coaps_results.md >> $GITHUB_STEP_SUMMARY
+        shell: bash
+
         # Run gcov on the library and the client. This will produce *.gcov files.
       - run: |
           alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
