@@ -1,0 +1,24 @@
+# Build using Alire and upload an AppImage to the GitHub releases section.
+name: Build and upload AppImage
+
+on:                    # Run the workflow for each of the following events:
+  push:                # - A branch is pushed or updated.
+  pull_request:        # - A pull-request is opened or updated.
+  workflow_dispatch:   # - A manual run of the workflow is requested from the GitHub web interface.
+  release:
+    types: [created]   # - A release is created.
+
+permissions: write-all
+
+jobs:
+  release:
+    name: Continuous
+    runs-on: ubuntu-20.04
+    steps:
+       - name: Checkout
+         uses: actions/checkout@v2
+       - name: alr2appimage-action
+         uses: mgrojo/alr2appimage-action@main
+         with:
+           alireVersion: 2.0.2
+           createDir: client
