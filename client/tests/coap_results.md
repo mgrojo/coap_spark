@@ -23,6 +23,31 @@
     OK  : And output contains `URI is missing`
   - [X] scenario [no URI](coap_client_tests.md) pass  
 
+    OK  : When I run `../bin/coap_client -k coap://coap.me`
+    OK  : Then I get an error
+    OK  : And output contains `Missing argument for -k`
+  - [X] scenario [no value for -k](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client -v fatal coap://coap.me`
+    OK  : Then I get an error
+    OK  : And output contains `Invalid verbosity level`
+  - [X] scenario [invalid verbosity level](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client -v 10 coap://coap.me`
+    OK  : Then I get an error
+    OK  : And output contains `Verbosity level too high`
+  - [X] scenario [Verbosity level too high](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client -z coap://coap.me`
+    OK  : Then I get an error
+    OK  : And output contains `Invalid option: -z`
+  - [X] scenario [invalid argument](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client coaps://localhost`
+    OK  : Then I get an error
+    OK  : And output contains `Communication problems`
+  - [X] scenario [communication problems](coap_client_tests.md) pass  
+
   ### Feature: ETSI CoAP plugtest  
 
     OK  : When I run `../bin/coap_client -v 4 coap://coap.me/test`
@@ -238,5 +263,5 @@
 
 ------------------
 - Failed     =  0
-- Successful =  47
+- Successful =  52
 - Empty      =  0

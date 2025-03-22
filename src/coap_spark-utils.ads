@@ -66,10 +66,4 @@ is
    function Value (Method : String) return RFLX.CoAP.Method_Code
       with Pre => Is_Valid_As_Method (Method);
 
-   -- Returns the number of occurrences of Char in Source.
-   -- This wraps Ada.Strings.Fixed.Count, which doesn't provide a Postcondition,
-   -- but by definition, the result cannot be greater than the length of Source.
-   function Count (Source : String; Char : Character) return Natural
-   with Post => Count'Result in 0 .. Source'Length, Global => null;
-
 end CoAP_SPARK.Utils;

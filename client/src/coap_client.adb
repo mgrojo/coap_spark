@@ -95,8 +95,7 @@ begin
          if CoAP_SPARK.Utils.Is_Valid_As_Method
               (SPARK_Terminal.Argument (Argument_Index))
          then
-            Method :=
-              CoAP_SPARK.Utils.Value
+            Method := CoAP_SPARK.Utils.Value
                 (SPARK_Terminal.Argument (Argument_Index));
          else
             CoAP_SPARK.Log.Put_Line ("Invalid method", CoAP_SPARK.Log.Error);

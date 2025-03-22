@@ -1,5 +1,4 @@
 with Ada.Strings.Fixed;
-with Ada.Strings.Maps;
 with RFLX.RFLX_Builtin_Types;
 
 package body CoAP_SPARK.Utils
@@ -33,10 +32,5 @@ is
 
    function Value (Method : String) return RFLX.CoAP.Method_Code is
       (RFLX.CoAP.Method_Code'Value (Method)) with SPARK_Mode => Off;
-
-   function Count (Source : String; Char : Character) return Natural
-   is (Ada.Strings.Fixed.Count
-         (Source => Source, Set => Ada.Strings.Maps.To_Set (Char)))
-         with SPARK_Mode => Off;
 
 end CoAP_SPARK.Utils;

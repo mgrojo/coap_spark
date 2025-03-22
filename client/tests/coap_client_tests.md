@@ -29,6 +29,30 @@ Use this command to run the tests: `bbt coap_client_tests.md`
   - Then I get an error
   - And output contains `URI is missing`
 
+### Scenario: no value for -k
+  - When I run `../bin/coap_client -k coap://coap.me`
+  - Then I get an error
+  - And output contains `Missing argument for -k`
+
+### Scenario: invalid verbosity level
+  - When I run `../bin/coap_client -v fatal coap://coap.me`
+  - Then I get an error
+  - And output contains `Invalid verbosity level`
+
+### Scenario: Verbosity level too high
+  - When I run `../bin/coap_client -v 10 coap://coap.me`
+  - Then I get an error
+  - And output contains `Verbosity level too high`
+
+### Scenario: invalid argument
+  - When I run `../bin/coap_client -z coap://coap.me`
+  - Then I get an error
+  - And output contains `Invalid option: -z`
+
+### Scenario: communication problems
+  - When I run `../bin/coap_client coaps://localhost`
+  - Then I get an error
+  - And output contains `Communication problems`
 
 ## Feature: ETSI CoAP plugtest
 The ETSI CoAP plugtest can be run against the server running on coap://coap.me.
