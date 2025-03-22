@@ -20,7 +20,7 @@ jobs:
          with:
            submodules: 'true' # Also checkout recursively the submodules
        - name: alr2appimage-action
-         uses: mgrojo/alr2appimage-action@v1.0.1
+         uses: mgrojo/alr2appimage-action@main
          with:
            alireVersion: 2.0.2
            crateDir: client
