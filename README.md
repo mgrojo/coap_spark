@@ -1,7 +1,7 @@
 [![Build](https://github.com/mgrojo/coap_spark/actions/workflows/main.yml/badge.svg)](https://github.com/mgrojo/coap_spark/actions/workflows/main.yml)
 [![AppImage](https://github.com/mgrojo/coap_spark/actions/workflows/appimage.yml/badge.svg)](https://github.com/mgrojo/coap_spark/actions/workflows/appimage.yml)
 [![GNATprove](https://github.com/mgrojo/coap_spark/actions/workflows/prove.yml/badge.svg)](https://github.com/mgrojo/coap_spark/actions/workflows/prove.yml)
-[![codecov](https://codecov.io/gh/mgrojo/coap_spark/branch/main/graph/badge.svg?token=9PZQ67LBPF)](https://codecov.io/gh/mgrojo/coap_spark)
+[![codecov](https://codecov.io/gh/mgrojo/coap_spark/graph/badge.svg?token=2AEXL06XHU)](https://codecov.io/gh/mgrojo/coap_spark)
 
 # CoAP-SPARK
 CoAP-SPARK is a library implementing the Constrained Application Protocol (CoAP)
