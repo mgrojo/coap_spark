@@ -25,3 +25,4 @@ jobs:
            alireVersion: 2.0.2
            crateDir: client
            alr2appimageArgs: "--terminal --use-version"
+           deleteExistent: true
