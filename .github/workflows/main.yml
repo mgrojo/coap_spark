@@ -1,6 +1,11 @@
+name: Build
 on:                    # Run the workflow for each of the following events:
   push:                # - A branch is pushed or updated.
+    paths-ignore:
+      - 'README.md'
   pull_request:        # - A pull-request is opened or updated.
+    paths-ignore:
+      - 'README.md'
   workflow_dispatch:   # - A manual run of the workflow is requested from the GitHub web interface.
   release:
     types: [created]   # - A release is created.
