@@ -9,7 +9,7 @@ as defined in
 [RFC 7252](https://www.rfc-editor.org/rfc/rfc7252), developed in the SPARK 
 language, the formally verified subset of the Ada programming language.
 
-The objective is to build a (as far as possible) formally verified CoAP
+The objective is to build a formally verified working CoAP
 implementation, mainly for academic purposes.
 
 ## Dependencies
@@ -90,11 +90,18 @@ and before running `gnatprove`, you have to put `{GNAT-2021-HOME}/libexec/spark/
 in the `PATH`, so `gnatprove` can find the `colibri` executable.
 
 ## Status
-CoAP-SPARK is still work in progress. When finished, it will be the subject of my
-Master's Thesis. See [`TODO.org`](TODO.org) for a list of current limitations and pending
-work.
+CoAP-SPARK is a working and verified implementation of CoAP from the client side.
 
-Nevertheless, it's already functional and the implemented client is able to
+The main objective of CoAP-SPARK is to be the subject of my Master's Thesis, but
+I think it can be used in scenarios where this limitations are not an issue:
+- There are no retransmissions.
+- Block-wise transfers are not implemented. This isn't part of main RFC 7252
+  for CoAP, but of the [RFC 7959](https://datatracker.ietf.org/doc/rfc7959/).
+
+There's no server implementation for the moment, but it wouldn't be too difficult
+to add, following the example of the client.
+
+Regarding the implemented client is able to
 substitute libcoap's coap-client when called from a project like
 [ikea-smartlight](https://github.com/slokhorst/ikea-smartlight/).
 

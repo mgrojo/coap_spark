@@ -200,7 +200,6 @@ is
          Server => Address);
 
       if Result /= SPARK_Sockets.Success then
-         -- Socket := (if Socket.Is_Secure then Invalid_Secure_Socket else Invalid_Socket);
          return;
       end if;
 

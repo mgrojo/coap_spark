@@ -1,0 +1,13 @@
+CoAP_SPARK is either licensed for use under the GPLv2 (or at your option any
+later version) or under the APACHE license.
+
+You have to take into account that CoAP_SPARK depends on the dual licensed
+WolfSSL library. If you have a commercial license to wolfSSL, you can choose
+to use the APACHE license, otherwise, by the GPL terms, you have to license any
+work using this library under the GPL license.
+
+If you want to use this library under the Apache license without the WolfSSL
+dependency, you are free to reimplement the `CoAP_SPARK.Channel` package
+without WolfSSL (either removing the DTLS support or using a differently
+licensed TLS library).
+
