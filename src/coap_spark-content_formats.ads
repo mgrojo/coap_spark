@@ -269,8 +269,8 @@ is
          when application.yang_data_Plus_cbor_id_name =>
            "application/yang-data+cbor; id=name",
          when application.voucher_Plus_cose =>
-           "application/voucher+cose (TEMPORARY - registered 2022-04-12, " &
-           "extension registered 2024-03-01, expires 2025-04-12)",
+           "application/voucher+cose", -- (TEMPORARY - registered 2022-04-12,
+           -- extension registered 2024-03-01, expires 2025-04-12)
          when application.vnd_Dot_ocf_Plus_cbor =>
            "application/vnd.ocf+cbor",
          when image.gif =>

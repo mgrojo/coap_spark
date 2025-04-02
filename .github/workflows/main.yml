@@ -64,6 +64,10 @@ jobs:
         run: PATH=$HOME/.alire/bin:$PATH make -C client/tests coap_results.md
         shell: bash
 
+      - name: Library Aunit tests
+        run: cd tests && alr run
+        shell: bash
+
       - name: CoAP test results
         run: cat client/tests/coap_results.md >> $GITHUB_STEP_SUMMARY
         shell: bash
