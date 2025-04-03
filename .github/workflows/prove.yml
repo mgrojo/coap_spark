@@ -2,11 +2,16 @@ name: GNATprove
 
 on:                    # Run the workflow for each of the following events:
   push:                # - A branch is pushed or updated.
-    paths-ignore:
-      - 'README.md'
+    paths: &paths-list # When the sources or dependencies change.
+      - 'src/**'
+      - 'client/src/**'
+      - 'alire.toml'
+      - 'client/alire.toml'
+      - 'coap_spark.gpr'
+      - 'client/coap_client.gpr'
+      - 'libs/wolfssl'
   pull_request:        # - A pull-request is opened or updated.
-    paths-ignore:
-      - 'README.md'  
+    paths: *paths-list # Reuse the paths using a reference.
   workflow_dispatch:   # - A manual run of the workflow is requested from the GitHub web interface.
   release:
     types: [created]   # - A release is created.
