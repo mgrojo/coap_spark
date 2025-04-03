@@ -2,7 +2,7 @@ name: GNATprove
 
 on:                    # Run the workflow for each of the following events:
   push:                # - A branch is pushed or updated.
-    paths: &paths-list # When the sources or dependencies change.
+    paths:             # When the sources or dependencies change.
       - 'src/**'
       - 'client/src/**'
       - 'alire.toml'
@@ -11,7 +11,14 @@ on:                    # Run the workflow for each of the following events:
       - 'client/coap_client.gpr'
       - 'libs/wolfssl'
   pull_request:        # - A pull-request is opened or updated.
-    paths: *paths-list # Reuse the paths using a reference.
+    paths:
+      - 'src/**'
+      - 'client/src/**'
+      - 'alire.toml'
+      - 'client/alire.toml'
+      - 'coap_spark.gpr'
+      - 'client/coap_client.gpr'
+      - 'libs/wolfssl'
   workflow_dispatch:   # - A manual run of the workflow is requested from the GitHub web interface.
   release:
     types: [created]   # - A release is created.
@@ -47,4 +54,4 @@ jobs:
     # Run GNATprove in the client to perform automatic formal verification of the SPARK code.
     - name: Run GNATprove
       run: cd client && alr gnatprove -j0 --level=4
-      
+
