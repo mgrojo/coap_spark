@@ -22,3 +22,6 @@ aunit = "^24.0.0"
 
 [[depends-on]]
 gnatcov = "^22.0.1"
+
+[build-switches]
+"*".Ada_Version = "Ada2022"

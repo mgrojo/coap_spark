@@ -1,6 +1,7 @@
 
 with AUnit.Simple_Test_Cases; use AUnit.Simple_Test_Cases;
 with CoAP_SPARK.Content_Formats.Test;
+with CoAP_SPARK.Options.Test;
 
 package body CoAP_Suite is
 
@@ -9,6 +10,8 @@ package body CoAP_Suite is
    begin
       Ret.Add_Test
          (Test_Case_Access'(new CoAP_SPARK.Content_Formats.Test.Test));
+      Ret.Add_Test
+        (Test_Case_Access'(new CoAP_SPARK.Options.Test.Test));
       return Ret;
    end Suite;
 

@@ -6,7 +6,7 @@ package body CoAP_SPARK.Content_Formats.Test is
    function Name (T : Test) return AUnit.Message_String is
       pragma Unreferenced (T);
    begin
-      return AUnit.Format ("Test CoAP package");
+      return AUnit.Format ("Test Content Formats");
    end Name;
 
    overriding
