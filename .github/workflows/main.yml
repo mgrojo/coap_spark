@@ -65,7 +65,10 @@ jobs:
         shell: bash
 
       - name: Library Aunit tests
-        run: cd tests && alr run
+        run: |
+            cd tests
+            alr --non-interactive build --$PROFILE -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
+            bin/tests
         shell: bash
 
       - name: CoAP test results
@@ -80,6 +83,8 @@ jobs:
         # Run gcov on the library and the client. This will produce *.gcov files.
       - run: |
           alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+          cd tests  && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+          cd -
           cd client && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
         shell: bash
 
