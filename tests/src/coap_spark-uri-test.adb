@@ -12,9 +12,9 @@ package body CoAP_SPARK.URI.Test is
    overriding
    procedure Run_Test (T : in out Test) is
       pragma Unreferenced (T);
-      Valid_URI : URI := Create ("coap://valid.url/test?foo=bar&bar=drink");
-      Invalid_URI : URI := Create ("copa:/bad:port//");
-      HTTP_URI : URI := Create ("http://example.org/");
+      Valid_URI   : constant URI := Create ("coap://valid.url/t?foo=1&bar=a");
+      Invalid_URI : constant URI := Create ("copa:/bad:port//");
+      HTTP_URI    : constant URI := Create ("http://example.org/");
    begin
 
       Assert
