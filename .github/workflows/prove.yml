@@ -53,5 +53,9 @@ jobs:
 
     # Run GNATprove in the client to perform automatic formal verification of the SPARK code.
     - name: Run GNATprove
-      run: cd client && alr gnatprove -j0 --level=4
+      run: |
+        cd client
+        alr build --stop-after=generation
+        alr gnatprove -j0 --level=4
+
 
