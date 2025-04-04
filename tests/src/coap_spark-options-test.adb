@@ -1,4 +1,5 @@
 with AUnit.Assertions; use AUnit.Assertions;
+with CoAP_SPARK.Options.Text_IO;
 
 package body CoAP_SPARK.Options.Test is
 
@@ -27,6 +28,8 @@ package body CoAP_SPARK.Options.Test is
 
       An_Indefinite_Option := To_Indefinite (Regular_Option);
       Final_Option := To_Option (An_Indefinite_Option);
+
+      Options.Text_IO.Print (Final_Option);
 
       Assert
         (Final_Option = Regular_Option,
