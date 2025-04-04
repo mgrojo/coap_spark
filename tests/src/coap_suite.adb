@@ -10,11 +10,10 @@ package body CoAP_Suite is
       Ret : constant Access_Test_Suite := new Test_Suite;
    begin
       Ret.Add_Test
-         (Test_Case_Access'(new CoAP_SPARK.Content_Formats.Test.Test));
-      Ret.Add_Test
-        (Test_Case_Access'(new CoAP_SPARK.Options.Test.Test));
-      Ret.Add_Test
-        (Test_Case_Access'(new CoAP_SPARK.URI.Test.Test));
+        (Test_Case_Access'(new CoAP_SPARK.Content_Formats.Test.Test));
+      Ret.Add_Test (Test_Case_Access'(new CoAP_SPARK.Options.Test.Test));
+      Ret.Add_Test (Test_Case_Access'(new CoAP_SPARK.URI.Test.Test));
+      Ret.Add_Test (Test_Case_Access'(new CoAP_SPARK.URI.Test.Compose_Test));
       return Ret;
    end Suite;
 
