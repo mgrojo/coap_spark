@@ -74,7 +74,7 @@ jobs:
         run: |
             cd tests
             alr --non-interactive build --$PROFILE -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
-            bin/tests --xml > junit.xml
+            bin/tests --xml > test-results.xml
         shell: bash
 
 
@@ -94,8 +94,9 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true # optional (default = false)
 
-      - name: Upload library unit test results to Codecov
-        if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
+      - name: Publish Library Unit Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          files: |
+            tests/test-results.xml
