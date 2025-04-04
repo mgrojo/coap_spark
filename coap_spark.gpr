@@ -4,8 +4,6 @@ with "sparklib.gpr";
 
 with "config/coap_spark_config.gpr";
 
-with "wolfssl_coap.gpr";
-
 project Coap_Spark is
 
    for Library_Name use "Coap_Spark";
