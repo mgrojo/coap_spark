@@ -57,6 +57,12 @@ jobs:
         run: |
             sudo apt install libcoap3-bin 
             PATH=$HOME/.alire/bin:$PATH make -C client/tests
+            cat client/tests/coap_results.md >> $GITHUB_STEP_SUMMARY
+        shell: bash
+
+      - if: runner.os == 'Linux'
+        name: Secure CoAP (coaps) test results
+        run: cat client/tests/coaps_results.md >> $GITHUB_STEP_SUMMARY
         shell: bash
 
         # On Windows and macOS we can only run the plain CoAP tests.
@@ -68,19 +74,11 @@ jobs:
         run: |
             cd tests
             alr --non-interactive build --$PROFILE -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
-            bin/tests
+            bin/tests >> $GITHUB_STEP_SUMMARY
         shell: bash
 
-      - name: CoAP test results
-        run: cat client/tests/coap_results.md >> $GITHUB_STEP_SUMMARY
-        shell: bash
 
-      - if: runner.os == 'Linux'
-        name: Secure CoAP (coaps) test results
-        run: cat client/tests/coaps_results.md >> $GITHUB_STEP_SUMMARY
-        shell: bash
-
-        # Run gcov on the library and the client. This will produce *.gcov files.
+        # Run gcov on the library, the tests and the client. This will produce *.gcov files.
       - run: |
           alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
           cd tests  && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
