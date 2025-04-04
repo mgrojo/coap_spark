@@ -14,51 +14,59 @@ package body CoAP_SPARK.Options.Test is
    procedure Run_Test (T : in out Test) is
       pragma Unreferenced (T);
       Regular_Option, Final_Option, Copied_Option : Option;
-      Value :
+      Value                                       :
         constant RFLX.RFLX_Builtin_Types.Bytes := [0, 1, 2, 3, 4];
-      An_Indefinite_Option :
+      An_Indefinite_Option                        :
         Indefinite_Option (Value'Length);
    begin
 
-      New_Opaque_Option
+      CoAP_SPARK.Options.New_Opaque_Option
         (Number      => RFLX.CoAP.ETag,
          Value       => Value,
          Order_Index => 1,
          Result      => Regular_Option);
 
-      An_Indefinite_Option := To_Indefinite (Regular_Option);
-      Final_Option := To_Option (An_Indefinite_Option);
+      An_Indefinite_Option :=
+        CoAP_SPARK.Options.To_Indefinite (Regular_Option);
+      Final_Option := CoAP_SPARK.Options.To_Option (An_Indefinite_Option);
 
-      Options.Text_IO.Print (Final_Option);
+      CoAP_SPARK.Options.Text_IO.Print (Final_Option);
 
       Assert
-        (Final_Option = Regular_Option,
+        (CoAP_SPARK.Options."=" (Final_Option, Regular_Option),
          Message => "Invalid conversion or ""="" operator");
 
       Assert
-        (not (Final_Option < Regular_Option),
+        (not (CoAP_SPARK.Options."<" (Final_Option, Regular_Option)),
          Message => "Invalid conversion or ""<"" operator");
 
       Assert
-        (not (Final_Option < Regular_Option),
+        (not (CoAP_SPARK.Options."<" (Final_Option, Regular_Option)),
          Message => "Invalid conversion or ""<"" operator");
 
-      Assert (Value_Image (Regular_Option) /= "", "Value_Image is empty");
+      Assert
+        (CoAP_SPARK.Options.Value_Image (Regular_Option) /= "",
+         "Value_Image is empty");
 
       Assert
-        (Get_Value (An_Indefinite_Option) = Value, "Value is not preserved");
+        (CoAP_SPARK.Options.Get_Value (An_Indefinite_Option) = Value,
+         "Value is not preserved");
 
-      Free (Regular_Option);
-      Free (Final_Option);
+      CoAP_SPARK.Options.Free (Regular_Option);
+      CoAP_SPARK.Options.Free (Final_Option);
 
-      New_Empty_Option (Number => RFLX.CoAP.Echo, Result => Regular_Option);
+      CoAP_SPARK.Options.New_Empty_Option
+        (Number => RFLX.CoAP.Echo, Result => Regular_Option);
 
-      Copy (Source => Regular_Option, Target => Copied_Option);
+      CoAP_SPARK.Options.Copy
+        (Source => Regular_Option, Target => Copied_Option);
 
-      Assert (Regular_Option = Copied_Option, Message => "Invalid copy");
+      Assert
+        (CoAP_SPARK.Options."=" (Regular_Option, Copied_Option),
+         Message => "Invalid copy");
 
-      Free (Regular_Option);
-      Free (Copied_Option);
+      CoAP_SPARK.Options.Free (Regular_Option);
+      CoAP_SPARK.Options.Free (Copied_Option);
 
    end Run_Test;
 

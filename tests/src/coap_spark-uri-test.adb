@@ -12,17 +12,23 @@ package body CoAP_SPARK.URI.Test is
    overriding
    procedure Run_Test (T : in out Test) is
       pragma Unreferenced (T);
-      Valid_URI   : constant URI := Create ("coap://valid.url/t?foo=1&bar=a");
-      Invalid_URI : constant URI := Create ("copa:/bad:port//");
-      HTTP_URI    : constant URI := Create ("http://example.org/");
+      Valid_URI   : constant URI :=
+        CoAP_SPARK.URI.Create ("coap://valid.url/t?foo=1&bar=a");
+      Invalid_URI : constant URI := CoAP_SPARK.URI.Create ("copa:/bad:port//");
+      HTTP_URI    : constant URI :=
+        CoAP_SPARK.URI.Create ("http://example.org/");
    begin
 
-      Assert (Is_Valid (Valid_URI), Message => "Valid URI is invalid");
-
-      Assert (not Is_Valid (Invalid_URI), Message => "Invalid URI is valid");
+      Assert
+        (CoAP_SPARK.URI.Is_Valid (Valid_URI),
+         Message => "Valid URI is invalid");
 
       Assert
-        (not Is_Valid (HTTP_URI),
+        (not CoAP_SPARK.URI.Is_Valid (Invalid_URI),
+         Message => "Invalid URI is valid");
+
+      Assert
+        (not CoAP_SPARK.URI.Is_Valid (HTTP_URI),
          Message => "URI with invalid scheme is valid");
 
    end Run_Test;
@@ -37,15 +43,17 @@ package body CoAP_SPARK.URI.Test is
    overriding
    procedure Run_Test (T : in out Compose_Test) is
       pragma Unreferenced (T);
-      Valid_URI   : constant URI :=
-        Create
+      Valid_URI : constant URI :=
+        CoAP_SPARK.URI.Create
           (Scheme => "coap",
            Host   => "valid.url",
            Path   => "t",
            Query  => "foo=1&bar=a");
    begin
 
-      Assert (Is_Valid (Valid_URI), Message => "Valid URI is invalid");
+      Assert
+        (CoAP_SPARK.URI.Is_Valid (Valid_URI),
+         Message => "Valid URI is invalid");
 
    end Run_Test;
 
