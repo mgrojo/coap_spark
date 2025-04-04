@@ -5,7 +5,7 @@ pragma Style_Checks (Off);
 package Coap_Spark_Config is
    pragma Pure;
 
-   Crate_Version : constant String := "0.1.0-dev";
+   Crate_Version : constant String := "0.2.0-dev";
    Crate_Name : constant String := "coap_spark";
 
    Alire_Host_OS : constant String := "linux";
@@ -15,6 +15,6 @@ package Coap_Spark_Config is
    Alire_Host_Distro : constant String := "ubuntu";
 
    type Build_Profile_Kind is (release, validation, development);
-   Build_Profile : constant Build_Profile_Kind := development;
+   Build_Profile : constant Build_Profile_Kind := release;
 
 end Coap_Spark_Config;

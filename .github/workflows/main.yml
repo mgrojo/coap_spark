@@ -74,16 +74,16 @@ jobs:
         run: |
             cd tests
             alr --non-interactive build --$PROFILE -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
-            bin/tests >> $GITHUB_STEP_SUMMARY
+            bin/tests --xml > junit.xml
         shell: bash
 
 
         # Run gcov on the library, the tests and the client. This will produce *.gcov files.
       - run: |
           alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-          cd tests  && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-          cd -
           cd client && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+          cd -
+          cd tests  && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
         shell: bash
 
         # Upload results to codecov.io
@@ -93,3 +93,9 @@ jobs:
           name: codecov-umbrella # optional
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true # optional (default = false)
+
+      - name: Upload library unit test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
