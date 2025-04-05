@@ -19,4 +19,7 @@ package body CoAP_Suite is
 
    procedure Check_Or_Fail is null;
 
+begin
+   -- Coverage for the workaround for SPARKLib.
+   Check_Or_Fail;
 end CoAP_Suite;
