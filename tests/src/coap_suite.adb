@@ -17,4 +17,6 @@ package body CoAP_Suite is
       return Ret;
    end Suite;
 
+   procedure Check_Or_Fail is null;
+
 end CoAP_Suite;

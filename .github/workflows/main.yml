@@ -55,7 +55,7 @@ jobs:
       - name: Library Aunit tests
         run: |
             cd tests
-            alr --non-interactive build --$PROFILE -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
+            alr --non-interactive build --profiles="*=$PROFILE" -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
             echo "## Aunit test results" >> $GITHUB_STEP_SUMMARY
             NO_COLOR=1 bin/tests >> $GITHUB_STEP_SUMMARY
         shell: bash
@@ -84,14 +84,12 @@ jobs:
         # Run gcov on the library, the tests and the client. This will produce *.gcov files.
       - run: |
           alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-          # We need to run gcov also for the release profile, because the unit tests are built with it.
-          alr exec -- gcov -o obj/release src/*.ad[sb]
           cd tests  && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
           cd -
           cd client && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
         shell: bash
 
-        # Upload results to codecov.io (Linux has the most complete test coverage)
+        # Upload results to codecov.io
       - uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true # optional (default = false)
