@@ -83,9 +83,10 @@ jobs:
 
         # Run gcov on the library, the tests and the client. This will produce *.gcov files.
       - run: |
-          alr           exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-          alr -C client exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-          alr -C tests  exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+          alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+          cd client && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+          cd -
+          cd tests  && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
         shell: bash
 
         # Upload results to codecov.io (Linux has the most complete test coverage)
