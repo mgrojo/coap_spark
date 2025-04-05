@@ -80,7 +80,7 @@ private
       (Socket.Attached_Socket.Exists);
 
    function Is_Valid (Socket : Socket_Type) return Boolean is
-      (Socket.Attached_Socket.Exists
+      (Has_Attached_Socket (Socket)
        and then
        (if Socket.Is_Secure then Socket.Result = WolfSSL.Success and then
           WolfSSL.Is_Valid (Socket.Ssl) and then
