@@ -52,24 +52,6 @@ jobs:
 
         # Run the instrumented testsuite. This will produce *.gcno and *.gcda files for the coverage analysis.
 
-        # On Linux we can run all the testsuite, after installing coap-server-openssl from libcoap3-bin package.
-      - if: runner.os == 'Linux'
-        run: |
-            sudo apt install libcoap3-bin 
-            PATH=$HOME/.alire/bin:$PATH make -C client/tests
-            cat client/tests/coap_results.md >> $GITHUB_STEP_SUMMARY
-        shell: bash
-
-      - if: runner.os == 'Linux'
-        name: Secure CoAP (coaps) test results
-        run: cat client/tests/coaps_results.md >> $GITHUB_STEP_SUMMARY
-        shell: bash
-
-        # On Windows and macOS we can only run the plain CoAP tests.
-      - if: runner.os == 'Windows' || runner.os == 'macOS'
-        run: PATH=$HOME/.alire/bin:$PATH make -C client/tests coap_results.md
-        shell: bash
-
       - name: Library Aunit tests
         run: |
             cd tests
@@ -78,6 +60,26 @@ jobs:
             NO_COLOR=1 bin/tests >> $GITHUB_STEP_SUMMARY
         shell: bash
 
+        # On Linux we can run all the testsuite, after installing coap-server-openssl from libcoap3-bin package.
+      - if: runner.os == 'Linux'
+        run: |
+            sudo apt install libcoap3-bin 
+            PATH=$HOME/.alire/bin:$PATH make -C client/tests
+        shell: bash
+
+        # On Windows and macOS we can only run the plain CoAP tests.
+      - if: runner.os == 'Windows' || runner.os == 'macOS'
+        run: PATH=$HOME/.alire/bin:$PATH make -C client/tests coap_results.md
+        shell: bash
+
+      - name: CoAP test results
+        run: cat client/tests/coap_results.md >> $GITHUB_STEP_SUMMARY
+        shell: bash
+
+      - if: runner.os == 'Linux'
+        name: Secure CoAP (coaps) test results
+        run: cat client/tests/coaps_results.md >> $GITHUB_STEP_SUMMARY
+        shell: bash
 
         # Run gcov on the library, the tests and the client. This will produce *.gcov files.
       - run: |
@@ -87,8 +89,7 @@ jobs:
         shell: bash
 
         # Upload results to codecov.io (Linux has the most complete test coverage)
-      - if: runner.os == 'Linux'
-        uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true # optional (default = false)
           name: codecov-umbrella # optional

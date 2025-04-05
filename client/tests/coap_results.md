@@ -5,7 +5,7 @@
 
     OK  : When I run `../bin/coap_client --version`
     OK  : Then I get no error
-    OK  : And output contains `coap_client v0.1.`
+    OK  : And output contains `coap_client v0.`
   - [X] scenario [version message](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client --help`
