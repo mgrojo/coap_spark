@@ -123,7 +123,6 @@ project SPARKlib extends "sparklib_external" is
       -- "spark-pointers-pointers_with_aliasing_separate_memory.adb",
       -- "spark-pointers-pointers_with_aliasing_separate_memory.ads",
       -- "spark-tests.ads",
-      -- The following is excluded to avoid problems with gnatcov
       "spark-tests-array_lemmas.adb",
       "spark-tests-array_lemmas.ads",
       "spark-containers-functional-sets-higher_order.ads",

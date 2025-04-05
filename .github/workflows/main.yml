@@ -47,7 +47,7 @@ jobs:
         shell: bash
 
         # Install binary crates needed for testing
-      - run: alr --non-interactive install gnatcov bbt~0.0.6
+      - run: alr --non-interactive install bbt~0.0.6
         shell: bash
 
         # Run the instrumented testsuite. This will produce *.gcno and *.gcda files for the coverage analysis.
@@ -74,15 +74,16 @@ jobs:
         run: |
             cd tests
             alr --non-interactive build --$PROFILE -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
+            echo "## Aunit test results" >> $GITHUB_STEP_SUMMARY
             NO_COLOR=1 bin/tests >> $GITHUB_STEP_SUMMARY
         shell: bash
 
 
         # Run gcov on the library, the tests and the client. This will produce *.gcov files.
       - run: |
-          alr exec -- gcov --preserve-paths -o client/obj/$PROFILE client/src/*.ad[sb]
-          alr exec -- gcov --preserve-paths -o tests/obj/$PROFILE tests/src/*.ad[sb]
           alr exec -- gcov --preserve-paths -o obj/$PROFILE src/*.ad[sb]
+          alr exec -C client -- gcov --preserve-paths -o obj/$PROFILE src/*.ad[sb]
+          alr exec -C tets -- gcov --preserve-paths -o obj/$PROFILE src/*.ad[sb]
         shell: bash
 
         # Upload results to codecov.io (Linux has the most complete test coverage)
