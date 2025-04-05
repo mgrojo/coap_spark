@@ -84,6 +84,8 @@ jobs:
         # Run gcov on the library, the tests and the client. This will produce *.gcov files.
       - run: |
           alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+          # We need to run gcov also for the release profile, because the unit tests are built with it.
+          alr exec -- gcov -o obj/release src/*.ad[sb]
           cd tests  && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
           cd -
           cd client && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
