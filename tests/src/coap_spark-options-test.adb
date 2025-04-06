@@ -56,7 +56,7 @@ package body CoAP_SPARK.Options.Test is
       CoAP_SPARK.Options.Free (Final_Option);
 
       CoAP_SPARK.Options.New_Empty_Option
-        (Number => RFLX.CoAP.Echo, Result => Regular_Option);
+        (Number => RFLX.CoAP.If_None_Match, Result => Regular_Option);
 
       CoAP_SPARK.Options.Copy
         (Source => Regular_Option, Target => Copied_Option);

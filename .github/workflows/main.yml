@@ -47,22 +47,24 @@ jobs:
         shell: bash
 
         # Install binary crates needed for testing
-      - run: alr --non-interactive install gnatcov bbt~0.0.6
+      - run: alr --non-interactive install bbt~0.0.6
         shell: bash
 
         # Run the instrumented testsuite. This will produce *.gcno and *.gcda files for the coverage analysis.
+
+      - name: Library Aunit tests
+        run: |
+            cd tests
+            alr --non-interactive build --profiles="*=$PROFILE" -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
+            echo "## Aunit test results" >> $GITHUB_STEP_SUMMARY
+            NO_COLOR=1 bin/tests >> $GITHUB_STEP_SUMMARY
+        shell: bash
 
         # On Linux we can run all the testsuite, after installing coap-server-openssl from libcoap3-bin package.
       - if: runner.os == 'Linux'
         run: |
             sudo apt install libcoap3-bin 
             PATH=$HOME/.alire/bin:$PATH make -C client/tests
-            cat client/tests/coap_results.md >> $GITHUB_STEP_SUMMARY
-        shell: bash
-
-      - if: runner.os == 'Linux'
-        name: Secure CoAP (coaps) test results
-        run: cat client/tests/coaps_results.md >> $GITHUB_STEP_SUMMARY
         shell: bash
 
         # On Windows and macOS we can only run the plain CoAP tests.
@@ -70,20 +72,21 @@ jobs:
         run: PATH=$HOME/.alire/bin:$PATH make -C client/tests coap_results.md
         shell: bash
 
-      - name: Library Aunit tests
-        run: |
-            cd tests
-            alr --non-interactive build --$PROFILE -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
-            bin/tests --xml > junit.xml
+      - name: CoAP test results
+        run: cat client/tests/coap_results.md >> $GITHUB_STEP_SUMMARY
         shell: bash
 
+      - if: runner.os == 'Linux'
+        name: Secure CoAP (coaps) test results
+        run: cat client/tests/coaps_results.md >> $GITHUB_STEP_SUMMARY
+        shell: bash
 
         # Run gcov on the library, the tests and the client. This will produce *.gcov files.
       - run: |
           alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-          cd client && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-          cd -
           cd tests  && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+          cd -
+          cd client && alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
         shell: bash
 
         # Upload results to codecov.io
@@ -93,9 +96,3 @@ jobs:
           name: codecov-umbrella # optional
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true # optional (default = false)
-
-      - name: Upload library unit test results to Codecov
-        if: ${{ !cancelled() }}
-        uses: codecov/test-results-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}

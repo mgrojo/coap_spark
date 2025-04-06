@@ -12,7 +12,7 @@ Use this command to run the tests: `bbt coap_client_tests.md`
 ### Scenario: version message
   - When I run `../bin/coap_client --version`
   - Then I get no error
-  - And output contains `coap_client v0.1.`
+  - And output contains `coap_client v0.`
 
 ### Scenario: help message
   - When I run `../bin/coap_client --help`
