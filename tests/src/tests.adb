@@ -15,4 +15,5 @@ begin
    Reporter.Set_Use_ANSI_Colors (Use_Colors);
    Runner (Reporter);
 
+   Check_Or_Fail;
 end Tests;
