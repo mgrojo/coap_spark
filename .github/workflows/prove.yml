@@ -57,5 +57,7 @@ jobs:
         cd client
         alr build --stop-after=generation
         alr gnatprove -j0 --level=4
+        cat obj/development/gnatprove/gnatprove.out >> $GITHUB_STEP_SUMMARY 
+
 
 
