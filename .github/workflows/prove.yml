@@ -3,6 +3,7 @@ name: GNATprove
 on:                    # Run the workflow for each of the following events:
   push:                # - A branch is pushed or updated.
     paths:             # When the sources or dependencies change.
+      - '.github/workflows/prove.yml'
       - 'src/**'
       - 'client/src/**'
       - 'alire.toml'
@@ -12,6 +13,7 @@ on:                    # Run the workflow for each of the following events:
       - 'libs/wolfssl'
   pull_request:        # - A pull-request is opened or updated.
     paths:
+      - '.github/workflows/prove.yml'
       - 'src/**'
       - 'client/src/**'
       - 'alire.toml'
@@ -57,7 +59,10 @@ jobs:
         cd client
         alr build --stop-after=generation
         alr gnatprove -j0 --level=4
-        cat obj/development/gnatprove/gnatprove.out >> $GITHUB_STEP_SUMMARY 
+        # Get a summary for the action from the first (most relevant) lines of gnatprove.out
+        echo '```' >> $GITHUB_STEP_SUMMARY 
+        head -23 obj/development/gnatprove/gnatprove.out >> $GITHUB_STEP_SUMMARY 
+        echo '```' >> $GITHUB_STEP_SUMMARY
 
 
 
