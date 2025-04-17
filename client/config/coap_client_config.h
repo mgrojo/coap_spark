@@ -2,7 +2,7 @@
 #ifndef COAP_CLIENT_CONFIG_H
 #define COAP_CLIENT_CONFIG_H
 
-#define CRATE_VERSION "0.1.0-dev"
+#define CRATE_VERSION "0.2.0-dev"
 #define CRATE_NAME "coap_client"
 
 #define ALIRE_HOST_OS "linux"

@@ -5,7 +5,7 @@ pragma Style_Checks (Off);
 package Coap_Client_Config is
    pragma Pure;
 
-   Crate_Version : constant String := "0.1.0-dev";
+   Crate_Version : constant String := "0.2.0-dev";
    Crate_Name : constant String := "coap_client";
 
    Alire_Host_OS : constant String := "linux";
