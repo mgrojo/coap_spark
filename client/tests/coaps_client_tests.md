@@ -132,6 +132,19 @@ very long resource name
 4.05 Method Not Allowed
 ```
 
+### Scenario: delete method with path
+  - When I run `../bin/coap_client -m delete -k COAP_SPARK_KEY_5684 -u coap_spark coaps://localhost/test`
+  - Then I get no error
+  - And there is no output
+
+### Scenario: explicit get method with path of just deleted resource
+  - When I run `../bin/coap_client -m get -k COAP_SPARK_KEY_5684 -u coap_spark coaps://localhost/test`
+  - Then I get no error
+  - And the output is
+```
+4.04 Not Found
+```
+
 ## Feature: some miscelaneous error conditions
 Tests for incorrect URIs or incompatibities with the server.
 

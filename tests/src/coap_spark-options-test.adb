@@ -41,7 +41,7 @@ package body CoAP_SPARK.Options.Test is
          Message => "Invalid conversion or ""<"" operator");
 
       Assert
-        (not (CoAP_SPARK.Options."<" (Final_Option, Regular_Option)),
+        (not (CoAP_SPARK.Options."<" (Regular_Option, Final_Option)),
          Message => "Invalid conversion or ""<"" operator");
 
       Assert

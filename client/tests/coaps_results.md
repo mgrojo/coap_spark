@@ -77,6 +77,16 @@
     OK  : And output is
   - [X] scenario [post method error 4.05](coaps_client_tests.md) pass  
 
+    OK  : When I run `../bin/coap_client -m delete -k COAP_SPARK_KEY_5684 -u coap_spark coaps://localhost/test`
+    OK  : Then I get no error
+    OK  : And there is no output
+  - [X] scenario [delete method with path](coaps_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client -m get -k COAP_SPARK_KEY_5684 -u coap_spark coaps://localhost/test`
+    OK  : Then I get no error
+    OK  : And the output is
+  - [X] scenario [explicit get method with path of deleted resource](coaps_client_tests.md) pass  
+
   ### Feature: some miscelaneous error conditions  
 
     OK  : When I run `../bin/coap_client -m get -k COAP_SPARK_KEY_5684 -u coap_spark coaps://coap.me/test`
@@ -87,5 +97,5 @@
 
 ------------------
 - Failed     =  0
-- Successful =  16
+- Successful =  18
 - Empty      =  0
