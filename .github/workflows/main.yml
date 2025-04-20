@@ -17,7 +17,7 @@ jobs:
       fail-fast: false # Don't stop all the workflows when one of them fails.
     
       matrix:
-        os: [ubuntu-22.04, windows-latest, macos-latest] # List of GitHub Actions platform to run the workflow on
+        os: [ubuntu-latest, windows-latest, macos-latest] # List of GitHub Actions platform to run the workflow on
     env:
       # For WolfSSL:
       #  set the value of the environment variable OS to Windows when running on the Windows operating system and to Linux_Or_Mac otherwise
@@ -35,8 +35,6 @@ jobs:
 
         # Install and setup Alire package manager
       - uses: alire-project/setup-alire@v2
-        with:
-          version: 2.1.0 # Remove this option to use the default (latest stable release)
 
         # Build the project using the validation build profile to enforce static analysis and coding style.
       - run: alr --non-interactive build --$PROFILE -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
