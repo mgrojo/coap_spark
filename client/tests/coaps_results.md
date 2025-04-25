@@ -85,7 +85,7 @@
     OK  : When I run `../bin/coap_client -m get -k COAP_SPARK_KEY_5684 -u coap_spark coaps://localhost/test`
     OK  : Then I get no error
     OK  : And the output is
-  - [X] scenario [explicit get method with path of deleted resource](coaps_client_tests.md) pass  
+  - [X] scenario [explicit get method with path of just deleted resource](coaps_client_tests.md) pass  
 
   ### Feature: some miscelaneous error conditions  
 

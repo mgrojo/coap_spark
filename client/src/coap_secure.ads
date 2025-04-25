@@ -11,6 +11,9 @@ package CoAP_Secure
    with SPARK_Mode
 is
 
+   use type Interfaces.C.unsigned;
+   use type Interfaces.C.Strings.chars_ptr;
+
    function PSK_Client_Callback
      (Unused         : WolfSSL.WolfSSL_Type;
       Hint           : Interfaces.C.Strings.chars_ptr;
@@ -18,8 +21,13 @@ is
       Id_Max_Length  : Interfaces.C.unsigned;
       Key            : Interfaces.C.Strings.chars_ptr;
       Key_Max_Length : Interfaces.C.unsigned) return Interfaces.C.unsigned
-   with Convention => C,
-      Side_Effects;
+   with
+     Pre => 
+        Hint /= Interfaces.C.Strings.Null_Ptr and then
+        Identity /= Interfaces.C.Strings.Null_Ptr and then
+        Key /= Interfaces.C.Strings.Null_Ptr,
+     Convention => C,
+     Side_Effects;
 
    procedure Initialize (Socket : out CoAP_SPARK.Channel.Socket_Type) with
       Global =>
