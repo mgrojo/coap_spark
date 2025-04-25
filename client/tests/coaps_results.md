@@ -94,8 +94,13 @@
     OK  : And output contains `Communication problems.`
   - [X] scenario [coaps not supported by server](coaps_client_tests.md) pass  
 
+    OK  : When I run `../bin/coap_client -m get -k COAP_SPARK_KEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY -u coap_spark coaps://localhost/`
+    OK  : Then I get an error
+    OK  : And output contains `Key too long`
+  - [X] scenario [Key too long](coaps_client_tests.md) pass  
+
 
 ------------------
 - Failed     =  0
-- Successful =  18
+- Successful =  19
 - Empty      =  0

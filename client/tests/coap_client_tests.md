@@ -25,7 +25,7 @@ Use this command to run the tests: `bbt coap_client_tests.md`
   - And output contains `Usage: coap_client`
 
 ### Scenario: no URI
-  - When I run `../bin/coap_client -e Payload`
+  - When I run `../bin/coap_client -B 5 -e Payload`
   - Then I get an error
   - And output contains `URI is missing`
 
@@ -33,6 +33,11 @@ Use this command to run the tests: `bbt coap_client_tests.md`
   - When I run `../bin/coap_client -k coap://coap.me`
   - Then I get an error
   - And output contains `Missing argument for -k`
+
+### Scenario: Payload already provided
+  - When I run `../bin/coap_client -e payload1 -e payload2 coap://coap.me`
+  - Then I get an error
+  - And output contains `Payload already provided`
 
 ### Scenario: invalid verbosity level
   - When I run `../bin/coap_client -v fatal coap://coap.me`

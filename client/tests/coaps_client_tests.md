@@ -152,3 +152,9 @@ Tests for incorrect URIs or incompatibities with the server.
   - When I run `../bin/coap_client -m get -k COAP_SPARK_KEY_5684 -u coap_spark coaps://coap.me/test`
   - Then I get an error
   - And output contains `Communication problems.`
+
+
+### Scenario: Key too long
+  - When I run `../bin/coap_client -m get -k COAP_SPARK_KEYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY -u coap_spark coaps://localhost/`
+  - Then I get an error
+  - And output contains `Key too long`

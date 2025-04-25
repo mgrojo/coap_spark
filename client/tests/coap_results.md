@@ -18,7 +18,7 @@
     OK  : And output contains `Usage: coap_client`
   - [X] scenario [usage message on unrecognized option](coap_client_tests.md) pass  
 
-    OK  : When I run `../bin/coap_client -e Payload`
+    OK  : When I run `../bin/coap_client -B 5 -e Payload`
     OK  : Then I get an error
     OK  : And output contains `URI is missing`
   - [X] scenario [no URI](coap_client_tests.md) pass  
@@ -27,6 +27,11 @@
     OK  : Then I get an error
     OK  : And output contains `Missing argument for -k`
   - [X] scenario [no value for -k](coap_client_tests.md) pass  
+
+    OK  : When I run `../bin/coap_client -e payload1 -e payload2 coap://coap.me`
+    OK  : Then I get an error
+    OK  : And output contains `Payload already provided`
+  - [X] scenario [Payload already provided](coap_client_tests.md) pass  
 
     OK  : When I run `../bin/coap_client -v fatal coap://coap.me`
     OK  : Then I get an error
@@ -263,5 +268,5 @@
 
 ------------------
 - Failed     =  0
-- Successful =  52
+- Successful =  53
 - Empty      =  0
