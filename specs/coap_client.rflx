@@ -26,18 +26,19 @@ package CoAP_Client is
       with function Get_Random_Token return Token_Data;
       with function Get_Options_And_Payload return Options_And_Payload_Data;
       with function Put_Options_And_Payload (Data : Opaque) return Boolean;
+      with function Are_Equal_Tokens (Left : Opaque; Right : Opaque) return Boolean;
       with function Put_Client_Error (Error_Code : CoAP::Client_Error_Response) return Boolean;
       with function Put_Server_Error (Error_Code : CoAP::Server_Error_Response) return Boolean;
    machine Session is
       Request : CoAP::CoAP_Message;
       Response : CoAP::CoAP_Message;
-      Messsage_ID : CoAP::Message_ID_Type;
    begin
 
       state Create_Request is
          Random_Token : Token_Data;
          Method : CoAP::Method_Code;
          Options_And_Payload : Options_And_Payload_Data;
+         Messsage_ID : CoAP::Message_ID_Type;
       begin
          Messsage_ID := Get_New_Message_ID;
          Method := Get_Method;
@@ -45,7 +46,7 @@ package CoAP_Client is
          Options_And_Payload := Get_Options_And_Payload;
 
          Request := CoAP::CoAP_Message'(Ver => CoAP::First_Version,
-                     T => CoAP::Confirmable,
+                     T => CoAP::Non_Confirmable,
                      TKL => Random_Token.Length,
                      Class => CoAP::Request,
                      Method => Method,
@@ -71,11 +72,11 @@ package CoAP_Client is
          Transport'Read (Response);
       transition
          goto Success
-            if Response'Valid and Response.Message_ID = Messsage_ID and Response.Class = CoAP::Success
+            if Response'Valid and Are_Equal_Tokens (Response.Token, Request.Token) and Response.Class = CoAP::Success
          goto Treat_Error_Response
-            if Response'Valid and Response.Message_ID = Messsage_ID and
+            if Response'Valid and Are_Equal_Tokens (Response.Token, Request.Token) and
                (Response.Class = CoAP::Client_Error or Response.Class = CoAP::Server_Error)
-         -- Ignore invalid messages and messages with an unexpected Message ID
+         -- Ignore invalid messages and messages with an unexpected Token
          goto Receive_Response
       exception
          goto Failure

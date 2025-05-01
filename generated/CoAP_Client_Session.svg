@@ -54,7 +54,7 @@
 <!-- Receive_Response&#45;&gt;Success -->
 <g id="edge3" class="edge">
 <title>Receive_Response&#45;&gt;Success</title>
-<g id="a_edge3"><a xlink:title="Receive_Response → Success&#10;&#10;[0] (Response&#39;Valid&#10; and Response.Message_ID = Messsage_ID)&#10;and Response.Class = CoAP::Success">
+<g id="a_edge3"><a xlink:title="Receive_Response → Success&#10;&#10;[0] (Response&#39;Valid&#10; and Are_Equal_Tokens (Response.Token, Request.Token))&#10;and Response.Class = CoAP::Success">
 <path fill="none" stroke="#6f6f6f" stroke-width="2.5" d="M187.28,-317.94C182.6,-308.17 178,-295.51 178,-283.5 178,-283.5 178,-283.5 178,-229.5 178,-222.11 147.54,-209.39 116.82,-198.45"/>
 <polygon fill="#6f6f6f" stroke="#6f6f6f" stroke-width="2.5" points="117.9,-195.12 107.31,-195.11 115.59,-201.72 117.9,-195.12"/>
 </a>
@@ -69,7 +69,7 @@
 <!-- Receive_Response&#45;&gt;Treat_Error_Response -->
 <g id="edge4" class="edge">
 <title>Receive_Response&#45;&gt;Treat_Error_Response</title>
-<g id="a_edge4"><a xlink:title="Receive_Response → Treat_Error_Response&#10;&#10;[1] (Response&#39;Valid&#10; and Response.Message_ID = Messsage_ID)&#10;and (Response.Class = CoAP::Client_Error&#10; &#160;&#160;&#160;&#160;or Response.Class = CoAP::Server_Error)">
+<g id="a_edge4"><a xlink:title="Receive_Response → Treat_Error_Response&#10;&#10;[1] (Response&#39;Valid&#10; and Are_Equal_Tokens (Response.Token, Request.Token))&#10;and (Response.Class = CoAP::Client_Error&#10; &#160;&#160;&#160;&#160;or Response.Class = CoAP::Server_Error)">
 <path fill="none" stroke="#6f6f6f" stroke-width="2.5" d="M227.5,-317.99C247.73,-306.71 274.48,-291.8 296.35,-279.61"/>
 <polygon fill="#6f6f6f" stroke="#6f6f6f" stroke-width="2.5" points="298.06,-282.66 305.09,-274.74 294.65,-276.55 298.06,-282.66"/>
 </a>

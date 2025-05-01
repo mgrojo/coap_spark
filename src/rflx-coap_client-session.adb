@@ -94,6 +94,18 @@ is
 
    end Get_Random_Token;
 
+   procedure Are_Equal_Tokens
+     (State       : in out RFLX.CoAP_Client.Session_Environment.State;
+      Left        : RFLX_Types.Bytes;
+      Right       : RFLX_Types.Bytes;
+      RFLX_Result : out Boolean)
+   is
+      pragma Unreferenced (State);
+      use type RFLX_Types.Bytes;
+   begin
+      RFLX_Result := Left = Right;
+   end Are_Equal_Tokens;
+
    function To_Option_Extended16_Type
      (Option : RFLX.CoAP.Option_Numbers)
       return RFLX.CoAP.Option_Extended16_Type
