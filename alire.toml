@@ -1,6 +1,19 @@
 name = "coap_spark"
 description = "CoAP implementation formally verified with SPARK/Ada"
-version = "0.2.0-dev"
+long_description = """
+CoAP-SPARK is a library implementing the Constrained Application Protocol (CoAP)
+as defined in
+[RFC 7252](https://www.rfc-editor.org/rfc/rfc7252), developed in the SPARK 
+language, the formally verified subset of the Ada programming language.
+
+This version implements the client side of the protocol with some limitations:
+- It does not support block-wise transfers.
+- It does not support retransmission of messages.
+- It only supports NoSec and PreSharedKey security modes.
+
+See LICENSING for licensing information.
+"""
+version = "0.9.0"
 
 authors = ["Manuel Gomez"]
 maintainers = ["Manuel Gomez <mgrojo@gmail.com>"]
