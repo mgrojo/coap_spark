@@ -2,7 +2,7 @@
 #ifndef COAP_SPARK_CONFIG_H
 #define COAP_SPARK_CONFIG_H
 
-#define CRATE_VERSION "0.2.0-dev"
+#define CRATE_VERSION "0.9.0"
 #define CRATE_NAME "coap_spark"
 
 #define ALIRE_HOST_OS "linux"
