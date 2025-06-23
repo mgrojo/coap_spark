@@ -1,0 +1,83 @@
+with CoAP;
+
+package CoAP_Server is
+
+   type Options_And_Payload_Data is
+      message
+         Length : CoAP::Length_16;
+         Options_And_Payload : Opaque
+            with Size => Length * 8;
+      end message;
+
+   type Definite_Message is
+      message
+         Length : CoAP::Length_16;
+         Message_Data : Opaque
+            with Size => Length * 8;
+      end message;
+
+   for Definite_Message use (Message_Data => CoAP::CoAP_Message);
+
+   generic
+      Transport : Channel with Readable, Writable;
+      with function Get_Response (Request : Definite_Message) return Definite_Message;
+      with function Get_Error_Options_And_Payload return Options_And_Payload_Data;
+   machine Server_Loop is
+      Request : CoAP::CoAP_Message;
+      Response : CoAP::CoAP_Message;
+   begin
+
+      state Receive_Request is
+      begin
+         Transport'Read (Request);
+      transition
+         goto Treat_Request
+      end Receive_Request;
+
+      state Treat_Request is
+         Definite_Request : Definite_Message;
+         Definite_Response : Definite_Message;
+      begin
+         Definite_Request.Length := Request'Size / 8;
+         Definite_Request.Message_Data := Request'Opaque;
+
+         Definite_Response := Get_Response (Definite_Request);
+         Response := CoAP::CoAP_Message (Definite_Response.Message_Data);
+
+      transition
+         goto Send_Response
+            if Response'Valid
+         goto Failure
+      exception
+         goto Failure
+      end Treat_Request;
+
+      state Send_Response is
+      begin
+         Transport'Write (Response);
+      transition
+         goto Receive_Request
+      end Send_Response;
+
+      state Failure is
+         Error_Data : Options_And_Payload_Data;
+      begin
+         Error_Data := Get_Error_Options_And_Payload;
+
+         Response := CoAP::CoAP_Message'(Ver => CoAP::First_Version,
+                     T => CoAP::Non_Confirmable,
+                     TKL => Request.Token'Size / 8,
+                     Class => CoAP::Server_Error,
+                     Server_Error_Code => CoAP::Internal_Server_Error,
+                     Message_ID => Request.Message_ID,
+                     Token => Request.Token,
+                     Options_And_Payload => Error_Data.Options_And_Payload);
+
+      transition
+         goto Send_Response
+      exception
+         goto Receive_Request
+      end Failure;
+   end Server_Loop;
+
+end CoAP_Server;

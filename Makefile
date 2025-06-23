@@ -1,6 +1,6 @@
 RFLX_HOME := tools/RecordFlux/
 RFLX := $(RFLX_HOME)/.venv/bin/rflx
-SPECS := specs/coap_client.rflx # $(wildcard specs/*.rflx)
+SPECS := specs/coap_client.rflx specs/coap_server.rflx # $(wildcard specs/*.rflx)
 GNATPROVE := gnatprove
 
 GENERATED := $(patsubst specs/%,generated/%,$(SPECS:.rflx=.ads))
