@@ -12,12 +12,13 @@ pragma Restrictions (No_Streams);
 pragma Ada_2012;
 pragma Style_Checks ("N3aAbCdefhiIklnOprStux");
 pragma Warnings (Off, "redundant conversion");
-with RFLX.CoAP_Client.Session.FSM_Allocator;
+with RFLX.CoAP_Server.Server_Loop.FSM_Allocator;
 with RFLX.RFLX_Types;
 with RFLX.CoAP;
 with RFLX.CoAP.CoAP_Message;
+with RFLX.CoAP_Server.Definite_Message;
 
-package RFLX.CoAP_Client.Session.FSM with
+package RFLX.CoAP_Server.Server_Loop.FSM with
   SPARK_Mode
 is
 
@@ -27,14 +28,14 @@ is
 
    type Channel is (C_Transport);
 
-   type State is (S_Create_Request, S_Send_Request, S_Receive_Response, S_Treat_Error_Response, S_Treat_Client_Error_Response, S_Treat_Server_Error_Response, S_Success, S_Failure, S_Final);
+   type State is (S_Receive_Request, S_Treat_Request, S_Send_Response, S_Failure, S_Final);
 
    type Private_Context is private;
 
    type Context is limited
       record
          P : Private_Context;
-         E : RFLX.CoAP_Client.Session_Environment.State;
+         E : RFLX.CoAP_Server.Server_Loop_Environment.State;
       end record;
 
    pragma Unevaluated_Use_Of_Old (Allow);
@@ -131,17 +132,21 @@ private
 
    type Private_Context is
       record
-         Next_State : State := S_Create_Request;
+         Next_State : State := S_Receive_Request;
          Request_Ctx : CoAP.CoAP_Message.Context;
          Response_Ctx : CoAP.CoAP_Message.Context;
-         Slots : CoAP_Client.Session.FSM_Allocator.Slots;
-         Memory : CoAP_Client.Session.FSM_Allocator.Memory;
+         Definite_Request_Ctx : CoAP_Server.Definite_Message.Context;
+         Definite_Response_Ctx : CoAP_Server.Definite_Message.Context;
+         Slots : CoAP_Server.Server_Loop.FSM_Allocator.Slots;
+         Memory : CoAP_Server.Server_Loop.FSM_Allocator.Memory;
       end record;
 
    function Uninitialized (Ctx : Context) return Boolean is
      (not CoAP.CoAP_Message.Has_Buffer (Ctx.P.Request_Ctx)
       and not CoAP.CoAP_Message.Has_Buffer (Ctx.P.Response_Ctx)
-      and CoAP_Client.Session.FSM_Allocator.Uninitialized (Ctx.P.Slots));
+      and not CoAP_Server.Definite_Message.Has_Buffer (Ctx.P.Definite_Request_Ctx)
+      and not CoAP_Server.Definite_Message.Has_Buffer (Ctx.P.Definite_Response_Ctx)
+      and CoAP_Server.Server_Loop.FSM_Allocator.Uninitialized (Ctx.P.Slots));
 
    function Global_Initialized (Ctx : Context) return Boolean is
      (CoAP.CoAP_Message.Has_Buffer (Ctx.P.Request_Ctx)
@@ -149,10 +154,16 @@ private
       and then Ctx.P.Request_Ctx.Buffer_Last = RFLX_Types.Index'First + 4095
       and then CoAP.CoAP_Message.Has_Buffer (Ctx.P.Response_Ctx)
       and then Ctx.P.Response_Ctx.Buffer_First = RFLX_Types.Index'First
-      and then Ctx.P.Response_Ctx.Buffer_Last = RFLX_Types.Index'First + 4095);
+      and then Ctx.P.Response_Ctx.Buffer_Last = RFLX_Types.Index'First + 4095
+      and then CoAP_Server.Definite_Message.Has_Buffer (Ctx.P.Definite_Request_Ctx)
+      and then Ctx.P.Definite_Request_Ctx.Buffer_First = RFLX_Types.Index'First
+      and then Ctx.P.Definite_Request_Ctx.Buffer_Last = RFLX_Types.Index'First + 4095
+      and then CoAP_Server.Definite_Message.Has_Buffer (Ctx.P.Definite_Response_Ctx)
+      and then Ctx.P.Definite_Response_Ctx.Buffer_First = RFLX_Types.Index'First
+      and then Ctx.P.Definite_Response_Ctx.Buffer_Last = RFLX_Types.Index'First + 4095);
 
    function Global_Allocated (Ctx : Context) return Boolean is
-     (CoAP_Client.Session.FSM_Allocator.Global_Allocated (Ctx.P.Slots));
+     (CoAP_Server.Server_Loop.FSM_Allocator.Global_Allocated (Ctx.P.Slots));
 
    function Initialized (Ctx : Context) return Boolean is
      (Global_Initialized (Ctx)
@@ -168,9 +179,9 @@ private
      ((case Chan is
           when C_Transport =>
              (case Ctx.P.Next_State is
-                 when S_Send_Request =>
-                    CoAP.CoAP_Message.Well_Formed_Message (Ctx.P.Request_Ctx)
-                    and CoAP.CoAP_Message.Byte_Size (Ctx.P.Request_Ctx) > 0,
+                 when S_Send_Response =>
+                    CoAP.CoAP_Message.Well_Formed_Message (Ctx.P.Response_Ctx)
+                    and CoAP.CoAP_Message.Byte_Size (Ctx.P.Response_Ctx) > 0,
                  when others =>
                     False)));
 
@@ -178,8 +189,8 @@ private
      ((case Chan is
           when C_Transport =>
              (case Ctx.P.Next_State is
-                 when S_Send_Request =>
-                    CoAP.CoAP_Message.Byte_Size (Ctx.P.Request_Ctx),
+                 when S_Send_Response =>
+                    CoAP.CoAP_Message.Byte_Size (Ctx.P.Response_Ctx),
                  when others =>
                     RFLX_Types.Unreachable)));
 
@@ -187,7 +198,7 @@ private
      ((case Chan is
           when C_Transport =>
              (case Ctx.P.Next_State is
-                 when S_Receive_Response =>
+                 when S_Receive_Request =>
                     True,
                  when others =>
                     False)));
@@ -196,9 +207,9 @@ private
      ((case Chan is
           when C_Transport =>
              (case Ctx.P.Next_State is
-                 when S_Receive_Response =>
-                    CoAP.CoAP_Message.Buffer_Length (Ctx.P.Response_Ctx),
+                 when S_Receive_Request =>
+                    CoAP.CoAP_Message.Buffer_Length (Ctx.P.Request_Ctx),
                  when others =>
                     RFLX_Types.Unreachable)));
 
-end RFLX.CoAP_Client.Session.FSM;
+end RFLX.CoAP_Server.Server_Loop.FSM;

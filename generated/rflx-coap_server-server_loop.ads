@@ -8,14 +8,20 @@
 --                                                                          --
 ------------------------------------------------------------------------------
 
+pragma Restrictions (No_Streams);
 pragma Ada_2012;
 pragma Style_Checks ("N3aAbCdefhiIklnOprStux");
 pragma Warnings (Off, "redundant conversion");
-pragma SPARK_Mode;
-with RFLX.RFLX_Message_Sequence;
-with RFLX.CoAP.Option_Type;
-pragma Warnings (Off, "unit ""*RFLX_Types"" is not referenced");
-with RFLX.RFLX_Types;
-pragma Warnings (On, "unit ""*RFLX_Types"" is not referenced");
+with RFLX.CoAP_Server.Server_Loop_Environment;
+with RFLX.CoAP_Server.Definite_Message;
+with RFLX.CoAP_Server.Options_And_Payload_Data;
 
-package RFLX.CoAP.Option_Sequence is new RFLX.RFLX_Message_Sequence (RFLX.CoAP.Option_Type.Context, RFLX.CoAP.Option_Type.Initialize, RFLX.CoAP.Option_Type.Take_Buffer, RFLX.CoAP.Option_Type.Copy, RFLX.CoAP.Option_Type.Has_Buffer, RFLX.CoAP.Option_Type.Size, RFLX.CoAP.Option_Type.Message_Last, RFLX.CoAP.Option_Type.Initialized, RFLX.CoAP.Option_Type.Well_Formed_Message);
+package RFLX.CoAP_Server.Server_Loop with
+  SPARK_Mode
+is
+
+   procedure Get_Response (State : in out RFLX.CoAP_Server.Server_Loop_Environment.State; Request : RFLX.CoAP_Server.Definite_Message.Structure; RFLX_Result : out RFLX.CoAP_Server.Definite_Message.Structure);
+
+   procedure Get_Error_Options_And_Payload (State : in out RFLX.CoAP_Server.Server_Loop_Environment.State; RFLX_Result : out RFLX.CoAP_Server.Options_And_Payload_Data.Structure);
+
+end RFLX.CoAP_Server.Server_Loop;

@@ -28,8 +28,8 @@ generate: $(GENERATED)
 generated/%.ads: specs/%.rflx
 	@echo "Generating $@ from $<" 
 	@mkdir -p $(dir $@)
-	@$(RFLX) generate $(RFLX_DEBUG) -d $(dir $@) $<
-	@$(RFLX) graph -d $(dir $@) $<
+	@$(RFLX) generate $(RFLX_DEBUG) -d $(dir $@) specs/*.rflx
+	@$(RFLX) graph -d $(dir $@) specs/*.rflx
 
 test:
 	$(MAKE) -C tests test

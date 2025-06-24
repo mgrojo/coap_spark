@@ -15,7 +15,7 @@ with RFLX.RFLX_Types;
 with RFLX.CoAP;
 use RFLX.CoAP;
 
-package RFLX.CoAP_Client.Options_And_Payload_Data with
+package RFLX.CoAP_Server.Options_And_Payload_Data with
   SPARK_Mode,
   Always_Terminates
 is
@@ -131,7 +131,7 @@ is
    procedure Reset (Ctx : in out Context) with
      Pre =>
        not Ctx'Constrained
-       and RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx),
+       and RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx),
      Post =>
        Has_Buffer (Ctx)
        and Ctx.Buffer_First = Ctx.Buffer_First'Old
@@ -143,7 +143,7 @@ is
    procedure Reset (Ctx : in out Context; First : RFLX_Types.Bit_Index; Last : RFLX_Types.Bit_Length) with
      Pre =>
        not Ctx'Constrained
-       and RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
        and RFLX_Types.To_Index (First) >= Ctx.Buffer_First
        and RFLX_Types.To_Index (Last) <= Ctx.Buffer_Last
        and First <= Last + 1
@@ -160,7 +160,7 @@ is
 
    procedure Take_Buffer (Ctx : in out Context; Buffer : out RFLX_Types.Bytes_Ptr) with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx),
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx),
      Post =>
        not Has_Buffer (Ctx)
        and then Buffer /= null
@@ -178,15 +178,15 @@ is
 
    procedure Copy (Ctx : Context; Buffer : out RFLX_Types.Bytes) with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Well_Formed_Message (Ctx)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Byte_Size (Ctx) = Buffer'Length;
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Well_Formed_Message (Ctx)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Byte_Size (Ctx) = Buffer'Length;
 
    function Read (Ctx : Context) return RFLX_Types.Bytes with
      Ghost,
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Well_Formed_Message (Ctx);
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Well_Formed_Message (Ctx);
 
    pragma Warnings (Off, "formal parameter ""*"" is not referenced");
 
@@ -204,8 +204,8 @@ is
       with function Pre (Buffer : RFLX_Types.Bytes) return Boolean is Always_Valid;
    procedure Generic_Read (Ctx : Context) with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Well_Formed_Message (Ctx)
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Well_Formed_Message (Ctx)
        and then Pre (Read (Ctx));
 
    pragma Warnings (Off, "formal parameter ""*"" is not referenced");
@@ -225,9 +225,9 @@ is
    procedure Generic_Write (Ctx : in out Context; Offset : RFLX_Types.Length := 0) with
      Pre =>
        not Ctx'Constrained
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then Offset < RFLX.CoAP_Client.Options_And_Payload_Data.Buffer_Length (Ctx)
-       and then Pre (RFLX.CoAP_Client.Options_And_Payload_Data.Buffer_Length (Ctx), Offset),
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and then Offset < RFLX.CoAP_Server.Options_And_Payload_Data.Buffer_Length (Ctx)
+       and then Pre (RFLX.CoAP_Server.Options_And_Payload_Data.Buffer_Length (Ctx), Offset),
      Post =>
        Has_Buffer (Ctx)
        and Ctx.Buffer_First = Ctx.Buffer_First'Old
@@ -239,11 +239,11 @@ is
 
    function Buffer_Length (Ctx : Context) return RFLX_Types.Length with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx);
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx);
 
    function Buffer_Size (Ctx : Context) return RFLX_Types.Bit_Length with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx);
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx);
 
    function Size (Ctx : Context) return RFLX_Types.Bit_Length with
      Post =>
@@ -257,9 +257,9 @@ is
 
    procedure Data (Ctx : Context; Data : out RFLX_Types.Bytes) with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Well_Formed_Message (Ctx)
-       and then Data'Length = RFLX.CoAP_Client.Options_And_Payload_Data.Byte_Size (Ctx);
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Well_Formed_Message (Ctx)
+       and then Data'Length = RFLX.CoAP_Server.Options_And_Payload_Data.Byte_Size (Ctx);
 
    pragma Warnings (Off, "postcondition does not mention function result");
 
@@ -273,9 +273,9 @@ is
 
    function Field_Condition (Ctx : Context; Fld : Field) return Boolean with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, Fld)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Sufficient_Space (Ctx, Fld),
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, Fld)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Sufficient_Space (Ctx, Fld),
      Post =>
        True;
 
@@ -283,7 +283,7 @@ is
 
    function Field_Size (Ctx : Context; Fld : Field) return RFLX_Types.Bit_Length with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, Fld),
+       RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, Fld),
      Post =>
        (case Fld is
            when F_Options_And_Payload =>
@@ -295,7 +295,7 @@ is
 
    function Field_First (Ctx : Context; Fld : Field) return RFLX_Types.Bit_Index with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, Fld),
+       RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, Fld),
      Post =>
        True;
 
@@ -303,8 +303,8 @@ is
 
    function Field_Last (Ctx : Context; Fld : Field) return RFLX_Types.Bit_Length with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, Fld)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Sufficient_Space (Ctx, Fld),
+       RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, Fld)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Sufficient_Space (Ctx, Fld),
      Post =>
        (case Fld is
            when F_Options_And_Payload =>
@@ -316,20 +316,20 @@ is
 
    function Available_Space (Ctx : Context; Fld : Field) return RFLX_Types.Bit_Length with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, Fld);
+       RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, Fld);
 
    function Sufficient_Space (Ctx : Context; Fld : Field) return Boolean with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, Fld);
+       RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, Fld);
 
    function Equal (Ctx : Context; Fld : Field; Data : RFLX_Types.Bytes) return Boolean with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, Fld);
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, Fld);
 
    procedure Verify (Ctx : in out Context; Fld : Field) with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx),
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx),
      Post =>
        Has_Buffer (Ctx)
        and Ctx.Buffer_First = Ctx.Buffer_First'Old
@@ -339,7 +339,7 @@ is
 
    procedure Verify_Message (Ctx : in out Context) with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx),
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx),
      Post =>
        Has_Buffer (Ctx)
        and Ctx.Buffer_First = Ctx.Buffer_First'Old
@@ -361,11 +361,11 @@ is
 
    function Well_Formed_Message (Ctx : Context) return Boolean with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx);
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx);
 
    function Valid_Message (Ctx : Context) return Boolean with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx);
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx);
 
    pragma Warnings (Off, "postcondition does not mention function result");
 
@@ -379,25 +379,25 @@ is
 
    function Get_Length (Ctx : Context) return RFLX.CoAP.Length_16 with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Valid (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Length);
+       RFLX.CoAP_Server.Options_And_Payload_Data.Valid (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Length);
 
    pragma Warnings (On, "precondition is always False");
 
    function Get_Options_And_Payload (Ctx : Context) return RFLX_Types.Bytes with
      Ghost,
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Well_Formed (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload),
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Well_Formed (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload),
      Post =>
        Get_Options_And_Payload'Result'Length = RFLX_Types.To_Length (Field_Size (Ctx, F_Options_And_Payload));
 
    procedure Get_Options_And_Payload (Ctx : Context; Data : out RFLX_Types.Bytes) with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Well_Formed (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload)
-       and then Data'Length = RFLX_Types.To_Length (RFLX.CoAP_Client.Options_And_Payload_Data.Field_Size (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload)),
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Well_Formed (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload)
+       and then Data'Length = RFLX_Types.To_Length (RFLX.CoAP_Server.Options_And_Payload_Data.Field_Size (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload)),
      Post =>
        Equal (Ctx, F_Options_And_Payload, Data);
 
@@ -405,14 +405,14 @@ is
       with procedure Process_Options_And_Payload (Options_And_Payload : RFLX_Types.Bytes);
    procedure Generic_Get_Options_And_Payload (Ctx : Context) with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and RFLX.CoAP_Client.Options_And_Payload_Data.Present (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload);
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and RFLX.CoAP_Server.Options_And_Payload_Data.Present (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload);
 
    pragma Warnings (Off, "postcondition does not mention function result");
 
    function Valid_Length (Ctx : Context; Fld : Field; Length : RFLX_Types.Length) return Boolean with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, Fld),
+       RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, Fld),
      Post =>
        True;
 
@@ -424,11 +424,11 @@ is
      Inline_Always,
      Pre =>
        not Ctx'Constrained
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Length)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Length)
        and then RFLX.CoAP.Valid_Length_16 (RFLX.CoAP.To_Base_Integer (Val))
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Available_Space (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Length) >= RFLX.CoAP_Client.Options_And_Payload_Data.Field_Size (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Length)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Field_Condition (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Length),
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Available_Space (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Length) >= RFLX.CoAP_Server.Options_And_Payload_Data.Field_Size (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Length)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Field_Condition (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Length),
      Post =>
        Has_Buffer (Ctx)
        and Valid (Ctx, F_Length)
@@ -447,11 +447,11 @@ is
    procedure Set_Options_And_Payload_Empty (Ctx : in out Context) with
      Pre =>
        not Ctx'Constrained
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Available_Space (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload) >= RFLX.CoAP_Client.Options_And_Payload_Data.Field_Size (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Field_Condition (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Field_Size (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload) = 0,
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Available_Space (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload) >= RFLX.CoAP_Server.Options_And_Payload_Data.Field_Size (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Field_Condition (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Field_Size (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload) = 0,
      Post =>
        Has_Buffer (Ctx)
        and Well_Formed (Ctx, F_Options_And_Payload)
@@ -467,9 +467,9 @@ is
    procedure Initialize_Options_And_Payload (Ctx : in out Context) with
      Pre =>
        not Ctx'Constrained
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Available_Space (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload) >= RFLX.CoAP_Client.Options_And_Payload_Data.Field_Size (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload),
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Available_Space (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload) >= RFLX.CoAP_Server.Options_And_Payload_Data.Field_Size (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload),
      Post =>
        Has_Buffer (Ctx)
        and then Well_Formed (Ctx, F_Options_And_Payload)
@@ -485,12 +485,12 @@ is
    procedure Set_Options_And_Payload (Ctx : in out Context; Data : RFLX_Types.Bytes) with
      Pre =>
        not Ctx'Constrained
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Available_Space (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload) >= RFLX.CoAP_Client.Options_And_Payload_Data.Field_Size (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Length (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload, Data'Length)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Available_Space (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload) >= Data'Length * RFLX_Types.Byte'Size
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Field_Condition (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload),
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Available_Space (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload) >= RFLX.CoAP_Server.Options_And_Payload_Data.Field_Size (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Length (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload, Data'Length)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Available_Space (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload) >= Data'Length * RFLX_Types.Byte'Size
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Field_Condition (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload),
      Post =>
        Has_Buffer (Ctx)
        and Well_Formed (Ctx, F_Options_And_Payload)
@@ -510,11 +510,11 @@ is
    procedure Generic_Set_Options_And_Payload (Ctx : in out Context; Length : RFLX_Types.Length) with
      Pre =>
        not Ctx'Constrained
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Available_Space (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload) >= RFLX.CoAP_Client.Options_And_Payload_Data.Field_Size (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Length (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload, Length)
-       and then RFLX_Types.To_Length (RFLX.CoAP_Client.Options_And_Payload_Data.Available_Space (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Options_And_Payload)) >= Length
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Available_Space (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload) >= RFLX.CoAP_Server.Options_And_Payload_Data.Field_Size (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Length (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload, Length)
+       and then RFLX_Types.To_Length (RFLX.CoAP_Server.Options_And_Payload_Data.Available_Space (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload)) >= Length
        and then Process_Data_Pre (Length),
      Post =>
        Has_Buffer (Ctx)
@@ -553,8 +553,8 @@ is
 
    procedure To_Structure (Ctx : Context; Struct : out Structure) with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Well_Formed_Message (Ctx),
+       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Well_Formed_Message (Ctx),
      Post =>
        Valid_Structure (Struct);
 
@@ -563,9 +563,9 @@ is
    procedure To_Context (Struct : Structure; Ctx : in out Context) with
      Pre =>
        not Ctx'Constrained
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Structure (Struct)
-       and then RFLX.CoAP_Client.Options_And_Payload_Data.Sufficient_Buffer_Length (Ctx, Struct),
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Structure (Struct)
+       and then RFLX.CoAP_Server.Options_And_Payload_Data.Sufficient_Buffer_Length (Ctx, Struct),
      Post =>
        Has_Buffer (Ctx)
        and Well_Formed_Message (Ctx)
@@ -786,7 +786,7 @@ private
    function Initialized (Ctx : Context) return Boolean is
      (Ctx.Verified_Last = Ctx.First - 1
       and then Valid_Next (Ctx, F_Length)
-      and then RFLX.CoAP_Client.Options_And_Payload_Data.Field_First (Ctx, RFLX.CoAP_Client.Options_And_Payload_Data.F_Length) rem RFLX_Types.Byte'Size = 1
+      and then RFLX.CoAP_Server.Options_And_Payload_Data.Field_First (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Length) rem RFLX_Types.Byte'Size = 1
       and then Available_Space (Ctx, F_Length) = Ctx.Last - Ctx.First + 1
       and then (for all F in Field =>
                    Invalid (Ctx, F)));
@@ -881,7 +881,7 @@ private
      (Size = Field_Size (Ctx, Fld))
     with
      Pre =>
-       RFLX.CoAP_Client.Options_And_Payload_Data.Valid_Next (Ctx, Fld);
+       RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, Fld);
 
    function Valid_Length (Ctx : Context; Fld : Field; Length : RFLX_Types.Length) return Boolean is
      (Valid_Size (Ctx, Fld, RFLX_Types.To_Bit_Length (Length)));
@@ -907,4 +907,4 @@ private
    function Field_Size_Options_And_Payload (Struct : Structure) return RFLX_Types.Bit_Length is
      (RFLX_Types.Bit_Length (Struct.Length) * 8);
 
-end RFLX.CoAP_Client.Options_And_Payload_Data;
+end RFLX.CoAP_Server.Options_And_Payload_Data;

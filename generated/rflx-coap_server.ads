@@ -11,11 +11,9 @@
 pragma Ada_2012;
 pragma Style_Checks ("N3aAbCdefhiIklnOprStux");
 pragma Warnings (Off, "redundant conversion");
-pragma SPARK_Mode;
-with RFLX.RFLX_Message_Sequence;
-with RFLX.CoAP.Option_Type;
-pragma Warnings (Off, "unit ""*RFLX_Types"" is not referenced");
-with RFLX.RFLX_Types;
-pragma Warnings (On, "unit ""*RFLX_Types"" is not referenced");
 
-package RFLX.CoAP.Option_Sequence is new RFLX.RFLX_Message_Sequence (RFLX.CoAP.Option_Type.Context, RFLX.CoAP.Option_Type.Initialize, RFLX.CoAP.Option_Type.Take_Buffer, RFLX.CoAP.Option_Type.Copy, RFLX.CoAP.Option_Type.Has_Buffer, RFLX.CoAP.Option_Type.Size, RFLX.CoAP.Option_Type.Message_Last, RFLX.CoAP.Option_Type.Initialized, RFLX.CoAP.Option_Type.Well_Formed_Message);
+package RFLX.CoAP_Server with
+  SPARK_Mode
+is
+
+end RFLX.CoAP_Server;

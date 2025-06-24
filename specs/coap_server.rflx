@@ -25,6 +25,11 @@ package CoAP_Server is
    machine Server_Loop is
       Request : CoAP::CoAP_Message;
       Response : CoAP::CoAP_Message;
+
+      -- These two variables must be global as a workaround for the issue:
+      -- https://github.com/AdaCore/RecordFlux/issues/1309
+      Definite_Request : Definite_Message;
+      Definite_Response : Definite_Message;
    begin
 
       state Receive_Request is
@@ -35,8 +40,6 @@ package CoAP_Server is
       end Receive_Request;
 
       state Treat_Request is
-         Definite_Request : Definite_Message;
-         Definite_Response : Definite_Message;
       begin
          Definite_Request.Length := Request'Size / 8;
          Definite_Request.Message_Data := Request'Opaque;
