@@ -3,13 +3,10 @@ with CoAP_SPARK.Messages;
 with CoAP_SPARK.Options;
 with Interfaces;
 with RFLX.CoAP;
-with RFLX.RFLX_Types;
 
 package RFLX.CoAP_Client.Session_Environment with
    SPARK_Mode
 is
-
-   use type RFLX.RFLX_Types.Index;
 
    type Status_Type is
      (OK,
@@ -38,7 +35,7 @@ is
    --
    procedure Initialize
      (Method        : RFLX.CoAP.Method_Code;
-      Server        : String;
+      Server        : CoAP_SPARK.Options.Hostname;
       Port          : Interfaces.Unsigned_16;
       Path          : String;
       Query         : String;
@@ -47,8 +44,7 @@ is
       Payload       : in out CoAP_SPARK.Messages.Payload_Ptr;
       Session_State : out State)
    with Always_Terminates,
-      Pre => Server'Length <= CoAP_SPARK.Options.Option_Properties_Table
-                                 (RFLX.CoAP.Uri_Host).Maximum_Length and then
+      Pre =>
           Path'Length <= CoAP_SPARK.Max_URI_Length and then
           Query'Length <= CoAP_SPARK.Max_URI_Length,
       Post => Payload in null;

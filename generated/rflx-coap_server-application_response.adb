@@ -13,7 +13,7 @@ pragma Style_Checks ("N3aAbCdefhiIklnOprStux");
 pragma Warnings (Off, "redundant conversion");
 with RFLX.RFLX_Types.Operations;
 
-package body RFLX.CoAP_Server.Options_And_Payload_Data with
+package body RFLX.CoAP_Server.Application_Response with
   SPARK_Mode
 is
 
@@ -28,7 +28,7 @@ is
       Buffer_First : constant RFLX_Types.Index := Buffer'First;
       Buffer_Last : constant RFLX_Types.Index := Buffer'Last;
    begin
-      Ctx := (Buffer_First, Buffer_Last, First, Last, First - 1, (if Written_Last = 0 then First - 1 else Written_Last), Buffer, (F_Length => (State => S_Invalid, others => <>), others => <>));
+      Ctx := (Buffer_First, Buffer_Last, First, Last, First - 1, (if Written_Last = 0 then First - 1 else Written_Last), Buffer, (F_Message_Class => (State => S_Invalid, others => <>), others => <>));
       Buffer := null;
    end Initialize;
 
@@ -39,7 +39,7 @@ is
 
    procedure Reset (Ctx : in out Context; First : RFLX_Types.Bit_Index; Last : RFLX_Types.Bit_Length) is
    begin
-      Ctx := (Ctx.Buffer_First, Ctx.Buffer_Last, First, Last, First - 1, First - 1, Ctx.Buffer, (F_Length => (State => S_Invalid, others => <>), others => <>));
+      Ctx := (Ctx.Buffer_First, Ctx.Buffer_Last, First, Last, First - 1, First - 1, Ctx.Buffer, (F_Message_Class => (State => S_Invalid, others => <>), others => <>));
    end Reset;
 
    procedure Take_Buffer (Ctx : in out Context; Buffer : out RFLX_Types.Bytes_Ptr) is
@@ -78,9 +78,19 @@ is
 
    function Invalid_Successor (Ctx : Context; Fld : Field) return Boolean is
      ((case Fld is
-          when F_Length =>
-             Invalid (Ctx.Cursors (F_Options_And_Payload)),
-          when F_Options_And_Payload =>
+          when F_Message_Class =>
+             Invalid (Ctx.Cursors (F_Success_Code)),
+          when F_Success_Code =>
+             Invalid (Ctx.Cursors (F_Client_Error_Code)),
+          when F_Client_Error_Code =>
+             Invalid (Ctx.Cursors (F_Server_Error_Code)),
+          when F_Server_Error_Code =>
+             Invalid (Ctx.Cursors (F_Padding)),
+          when F_Padding =>
+             Invalid (Ctx.Cursors (F_Options_And_Payload_Length)),
+          when F_Options_And_Payload_Length =>
+             Invalid (Ctx.Cursors (F_Options_And_Payload_Options_And_Payload)),
+          when F_Options_And_Payload_Options_And_Payload =>
              True));
 
    function Sufficient_Buffer_Length (Ctx : Context; Fld : Field) return Boolean is
@@ -90,13 +100,13 @@ is
       and Field_First (Ctx, Fld) + Field_Size (Ctx, Fld) - 1 <= Ctx.Written_Last)
     with
      Pre =>
-       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, Fld);
+       RFLX.CoAP_Server.Application_Response.Has_Buffer (Ctx)
+       and RFLX.CoAP_Server.Application_Response.Valid_Next (Ctx, Fld);
 
    function Equal (Ctx : Context; Fld : Field; Data : RFLX_Types.Bytes) return Boolean is
      (Sufficient_Buffer_Length (Ctx, Fld)
       and then (case Fld is
-                   when F_Options_And_Payload =>
+                   when F_Options_And_Payload_Options_And_Payload =>
                       Data'Length = RFLX_Types.To_Index (Field_Last (Ctx, Fld)) - RFLX_Types.To_Index (Field_First (Ctx, Fld)) + 1
                       and then (for all I in RFLX_Types.Index range RFLX_Types.To_Index (Field_First (Ctx, Fld)) .. RFLX_Types.To_Index (Field_Last (Ctx, Fld)) =>
                                    Ctx.Buffer.all (I) = Data (Data'First + (I - RFLX_Types.To_Index (Field_First (Ctx, Fld))))),
@@ -105,7 +115,7 @@ is
 
    procedure Reset_Dependent_Fields (Ctx : in out Context; Fld : Field) with
      Pre =>
-       RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, Fld),
+       RFLX.CoAP_Server.Application_Response.Valid_Next (Ctx, Fld),
      Post =>
        Valid_Next (Ctx, Fld)
        and Ctx.Buffer_First = Ctx.Buffer_First'Old
@@ -129,14 +139,14 @@ is
    end Reset_Dependent_Fields;
 
    function Composite_Field (Fld : Field) return Boolean is
-     (Fld in F_Options_And_Payload);
+     (Fld in F_Options_And_Payload_Options_And_Payload);
 
    function Get (Ctx : Context; Fld : Field) return RFLX_Types.Base_Integer with
      Pre =>
-       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, Fld)
-       and then RFLX.CoAP_Server.Options_And_Payload_Data.Sufficient_Buffer_Length (Ctx, Fld)
-       and then not RFLX.CoAP_Server.Options_And_Payload_Data.Composite_Field (Fld)
+       RFLX.CoAP_Server.Application_Response.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Application_Response.Valid_Next (Ctx, Fld)
+       and then RFLX.CoAP_Server.Application_Response.Sufficient_Buffer_Length (Ctx, Fld)
+       and then not RFLX.CoAP_Server.Application_Response.Composite_Field (Fld)
    is
       First : constant RFLX_Types.Bit_Index := Field_First (Ctx, Fld);
       Last : constant RFLX_Types.Bit_Index := Field_Last (Ctx, Fld);
@@ -144,7 +154,13 @@ is
       Buffer_Last : constant RFLX_Types.Index := RFLX_Types.To_Index (Last);
       Offset : constant RFLX_Types.Offset := RFLX_Types.Offset ((RFLX_Types.Byte'Size - Last mod RFLX_Types.Byte'Size) mod RFLX_Types.Byte'Size);
       Size : constant Positive := (case Fld is
-          when F_Length =>
+          when F_Message_Class =>
+             3,
+          when F_Success_Code | F_Client_Error_Code | F_Server_Error_Code =>
+             5,
+          when F_Padding =>
+             6,
+          when F_Options_And_Payload_Length =>
              16,
           when others =>
              Positive'Last);
@@ -166,7 +182,10 @@ is
                Valid_Value (Fld, Value)
                and then Field_Condition (Ctx, Fld)
             then
-               pragma Assert ((if Fld = F_Options_And_Payload then Field_Last (Ctx, Fld) mod RFLX_Types.Byte'Size = 0));
+               pragma Assert ((if
+                                  Fld = F_Options_And_Payload_Options_And_Payload
+                               then
+                                  Field_Last (Ctx, Fld) mod RFLX_Types.Byte'Size = 0));
                pragma Assert ((((Field_Last (Ctx, Fld) + RFLX_Types.Byte'Size - 1) / RFLX_Types.Byte'Size) * RFLX_Types.Byte'Size) mod RFLX_Types.Byte'Size = 0);
                Ctx.Verified_Last := ((Field_Last (Ctx, Fld) + RFLX_Types.Byte'Size - 1) / RFLX_Types.Byte'Size) * RFLX_Types.Byte'Size;
                pragma Assert (Field_Last (Ctx, Fld) <= Ctx.Verified_Last);
@@ -196,37 +215,37 @@ is
       end loop;
    end Verify_Message;
 
-   function Get_Options_And_Payload (Ctx : Context) return RFLX_Types.Bytes is
-      First : constant RFLX_Types.Index := RFLX_Types.To_Index (Ctx.Cursors (F_Options_And_Payload).First);
-      Last : constant RFLX_Types.Index := RFLX_Types.To_Index (Ctx.Cursors (F_Options_And_Payload).Last);
+   function Get_Options_And_Payload_Options_And_Payload (Ctx : Context) return RFLX_Types.Bytes is
+      First : constant RFLX_Types.Index := RFLX_Types.To_Index (Ctx.Cursors (F_Options_And_Payload_Options_And_Payload).First);
+      Last : constant RFLX_Types.Index := RFLX_Types.To_Index (Ctx.Cursors (F_Options_And_Payload_Options_And_Payload).Last);
    begin
       return Ctx.Buffer.all (First .. Last);
-   end Get_Options_And_Payload;
+   end Get_Options_And_Payload_Options_And_Payload;
 
-   procedure Get_Options_And_Payload (Ctx : Context; Data : out RFLX_Types.Bytes) is
-      First : constant RFLX_Types.Index := RFLX_Types.To_Index (Ctx.Cursors (F_Options_And_Payload).First);
-      Last : constant RFLX_Types.Index := RFLX_Types.To_Index (Ctx.Cursors (F_Options_And_Payload).Last);
+   procedure Get_Options_And_Payload_Options_And_Payload (Ctx : Context; Data : out RFLX_Types.Bytes) is
+      First : constant RFLX_Types.Index := RFLX_Types.To_Index (Ctx.Cursors (F_Options_And_Payload_Options_And_Payload).First);
+      Last : constant RFLX_Types.Index := RFLX_Types.To_Index (Ctx.Cursors (F_Options_And_Payload_Options_And_Payload).Last);
    begin
       Data := (others => RFLX_Types.Byte'First);
       Data (Data'First .. Data'First + (Last - First)) := Ctx.Buffer.all (First .. Last);
-   end Get_Options_And_Payload;
+   end Get_Options_And_Payload_Options_And_Payload;
 
-   procedure Generic_Get_Options_And_Payload (Ctx : Context) is
-      First : constant RFLX_Types.Index := RFLX_Types.To_Index (Ctx.Cursors (F_Options_And_Payload).First);
-      Last : constant RFLX_Types.Index := RFLX_Types.To_Index (Ctx.Cursors (F_Options_And_Payload).Last);
+   procedure Generic_Get_Options_And_Payload_Options_And_Payload (Ctx : Context) is
+      First : constant RFLX_Types.Index := RFLX_Types.To_Index (Ctx.Cursors (F_Options_And_Payload_Options_And_Payload).First);
+      Last : constant RFLX_Types.Index := RFLX_Types.To_Index (Ctx.Cursors (F_Options_And_Payload_Options_And_Payload).Last);
    begin
-      Process_Options_And_Payload (Ctx.Buffer.all (First .. Last));
-   end Generic_Get_Options_And_Payload;
+      Process_Options_And_Payload_Options_And_Payload (Ctx.Buffer.all (First .. Last));
+   end Generic_Get_Options_And_Payload_Options_And_Payload;
 
    procedure Set (Ctx : in out Context; Fld : Field; Val : RFLX_Types.Base_Integer; Size : RFLX_Types.Bit_Length; State_Valid : Boolean; Buffer_First : out RFLX_Types.Index; Buffer_Last : out RFLX_Types.Index; Offset : out RFLX_Types.Offset) with
      Pre =>
-       RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, Fld)
-       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Value (Fld, Val)
-       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Size (Ctx, Fld, Size)
-       and then Size <= RFLX.CoAP_Server.Options_And_Payload_Data.Available_Space (Ctx, Fld)
+       RFLX.CoAP_Server.Application_Response.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Application_Response.Valid_Next (Ctx, Fld)
+       and then RFLX.CoAP_Server.Application_Response.Valid_Value (Fld, Val)
+       and then RFLX.CoAP_Server.Application_Response.Valid_Size (Ctx, Fld, Size)
+       and then Size <= RFLX.CoAP_Server.Application_Response.Available_Space (Ctx, Fld)
        and then (if
-                    RFLX.CoAP_Server.Options_And_Payload_Data.Composite_Field (Fld)
+                    RFLX.CoAP_Server.Application_Response.Composite_Field (Fld)
                  then
                     Size mod RFLX_Types.Byte'Size = 0
                  else
@@ -251,7 +270,7 @@ is
        and then (if State_Valid and Size > 0 then Valid (Ctx, Fld) else Well_Formed (Ctx, Fld))
        and then (Ctx.Cursors (Fld).Value = Val
                  and then (if
-                              Fld in F_Options_And_Payload
+                              Fld in F_Options_And_Payload_Options_And_Payload
                               and then Well_Formed_Message (Ctx)
                            then
                               Message_Last (Ctx) = Field_Last (Ctx, Fld)))
@@ -282,21 +301,21 @@ is
    procedure Set_Scalar (Ctx : in out Context; Fld : Field; Val : RFLX_Types.Base_Integer) with
      Pre =>
        not Ctx'Constrained
-       and then RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, Fld)
-       and then Fld in F_Length
-       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Value (Fld, Val)
-       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Size (Ctx, Fld, RFLX.CoAP_Server.Options_And_Payload_Data.Field_Size (Ctx, Fld))
-       and then RFLX.CoAP_Server.Options_And_Payload_Data.Available_Space (Ctx, Fld) >= RFLX.CoAP_Server.Options_And_Payload_Data.Field_Size (Ctx, Fld)
-       and then RFLX.CoAP_Server.Options_And_Payload_Data.Field_Size (Ctx, Fld) in 1 .. RFLX_Types.Base_Integer'Size
-       and then RFLX_Types.Fits_Into (Val, Natural (RFLX.CoAP_Server.Options_And_Payload_Data.Field_Size (Ctx, Fld))),
+       and then RFLX.CoAP_Server.Application_Response.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Application_Response.Valid_Next (Ctx, Fld)
+       and then Fld in F_Message_Class | F_Success_Code | F_Client_Error_Code | F_Server_Error_Code | F_Padding | F_Options_And_Payload_Length
+       and then RFLX.CoAP_Server.Application_Response.Valid_Value (Fld, Val)
+       and then RFLX.CoAP_Server.Application_Response.Valid_Size (Ctx, Fld, RFLX.CoAP_Server.Application_Response.Field_Size (Ctx, Fld))
+       and then RFLX.CoAP_Server.Application_Response.Available_Space (Ctx, Fld) >= RFLX.CoAP_Server.Application_Response.Field_Size (Ctx, Fld)
+       and then RFLX.CoAP_Server.Application_Response.Field_Size (Ctx, Fld) in 1 .. RFLX_Types.Base_Integer'Size
+       and then RFLX_Types.Fits_Into (Val, Natural (RFLX.CoAP_Server.Application_Response.Field_Size (Ctx, Fld))),
      Post =>
        Has_Buffer (Ctx)
        and Valid (Ctx, Fld)
        and Invalid_Successor (Ctx, Fld)
        and (Ctx.Cursors (Fld).Value = Val
             and then (if
-                         Fld in F_Options_And_Payload
+                         Fld in F_Options_And_Payload_Options_And_Payload
                          and then Well_Formed_Message (Ctx)
                       then
                          Message_Last (Ctx) = Field_Last (Ctx, Fld)))
@@ -318,86 +337,125 @@ is
       RFLX_Types.Operations.Insert (Val, Ctx.Buffer.all, Buffer_First, Buffer_Last, Offset, Positive (Size), RFLX_Types.High_Order_First);
    end Set_Scalar;
 
-   procedure Set_Length (Ctx : in out Context; Val : RFLX.CoAP.Length_16) is
+   procedure Set_Message_Class (Ctx : in out Context; Val : RFLX.CoAP.Code_Class) is
    begin
-      Set_Scalar (Ctx, F_Length, RFLX.CoAP.To_Base_Integer (Val));
-   end Set_Length;
+      Set_Scalar (Ctx, F_Message_Class, RFLX.CoAP.To_Base_Integer (Val));
+   end Set_Message_Class;
 
-   procedure Set_Options_And_Payload_Empty (Ctx : in out Context) is
+   procedure Set_Success_Code (Ctx : in out Context; Val : RFLX.CoAP.Success_Response) is
+   begin
+      Set_Scalar (Ctx, F_Success_Code, RFLX.CoAP.To_Base_Integer (Val));
+   end Set_Success_Code;
+
+   procedure Set_Client_Error_Code (Ctx : in out Context; Val : RFLX.CoAP.Client_Error_Response) is
+   begin
+      Set_Scalar (Ctx, F_Client_Error_Code, RFLX.CoAP.To_Base_Integer (Val));
+   end Set_Client_Error_Code;
+
+   procedure Set_Server_Error_Code (Ctx : in out Context; Val : RFLX.CoAP.Server_Error_Response) is
+   begin
+      Set_Scalar (Ctx, F_Server_Error_Code, RFLX.CoAP.To_Base_Integer (Val));
+   end Set_Server_Error_Code;
+
+   procedure Set_Padding (Ctx : in out Context; Val : RFLX.CoAP_Server.Unused_6) is
+   begin
+      Set_Scalar (Ctx, F_Padding, RFLX.CoAP_Server.To_Base_Integer (Val));
+   end Set_Padding;
+
+   procedure Set_Options_And_Payload_Length (Ctx : in out Context; Val : RFLX.CoAP.Length_16) is
+   begin
+      Set_Scalar (Ctx, F_Options_And_Payload_Length, RFLX.CoAP.To_Base_Integer (Val));
+   end Set_Options_And_Payload_Length;
+
+   procedure Set_Options_And_Payload_Options_And_Payload_Empty (Ctx : in out Context) is
       Unused_Buffer_First, Unused_Buffer_Last : RFLX_Types.Index;
       Unused_Offset : RFLX_Types.Offset;
    begin
-      Set (Ctx, F_Options_And_Payload, 0, 0, True, Unused_Buffer_First, Unused_Buffer_Last, Unused_Offset);
-   end Set_Options_And_Payload_Empty;
+      Set (Ctx, F_Options_And_Payload_Options_And_Payload, 0, 0, True, Unused_Buffer_First, Unused_Buffer_Last, Unused_Offset);
+   end Set_Options_And_Payload_Options_And_Payload_Empty;
 
-   procedure Initialize_Options_And_Payload_Private (Ctx : in out Context; Length : RFLX_Types.Length) with
+   procedure Initialize_Options_And_Payload_Options_And_Payload_Private (Ctx : in out Context; Length : RFLX_Types.Length) with
      Pre =>
        not Ctx'Constrained
-       and then RFLX.CoAP_Server.Options_And_Payload_Data.Has_Buffer (Ctx)
-       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Next (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload)
-       and then RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Length (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload, Length)
-       and then RFLX_Types.To_Length (RFLX.CoAP_Server.Options_And_Payload_Data.Available_Space (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload)) >= Length,
+       and then RFLX.CoAP_Server.Application_Response.Has_Buffer (Ctx)
+       and then RFLX.CoAP_Server.Application_Response.Valid_Next (Ctx, RFLX.CoAP_Server.Application_Response.F_Options_And_Payload_Options_And_Payload)
+       and then RFLX.CoAP_Server.Application_Response.Valid_Length (Ctx, RFLX.CoAP_Server.Application_Response.F_Options_And_Payload_Options_And_Payload, Length)
+       and then RFLX_Types.To_Length (RFLX.CoAP_Server.Application_Response.Available_Space (Ctx, RFLX.CoAP_Server.Application_Response.F_Options_And_Payload_Options_And_Payload)) >= Length,
      Post =>
        Has_Buffer (Ctx)
-       and then Well_Formed (Ctx, F_Options_And_Payload)
-       and then Field_Size (Ctx, F_Options_And_Payload) = RFLX_Types.To_Bit_Length (Length)
-       and then Ctx.Verified_Last = Field_Last (Ctx, F_Options_And_Payload)
+       and then Well_Formed (Ctx, F_Options_And_Payload_Options_And_Payload)
+       and then Field_Size (Ctx, F_Options_And_Payload_Options_And_Payload) = RFLX_Types.To_Bit_Length (Length)
+       and then Ctx.Verified_Last = Field_Last (Ctx, F_Options_And_Payload_Options_And_Payload)
        and then Ctx.Buffer_First = Ctx.Buffer_First'Old
        and then Ctx.Buffer_Last = Ctx.Buffer_Last'Old
        and then Ctx.First = Ctx.First'Old
        and then Ctx.Last = Ctx.Last'Old
-       and then Valid_Next (Ctx, F_Options_And_Payload) = Valid_Next (Ctx, F_Options_And_Payload)'Old
-       and then Get_Length (Ctx) = Get_Length (Ctx)'Old
-       and then Field_First (Ctx, F_Options_And_Payload) = Field_First (Ctx, F_Options_And_Payload)'Old
+       and then Valid_Next (Ctx, F_Options_And_Payload_Options_And_Payload) = Valid_Next (Ctx, F_Options_And_Payload_Options_And_Payload)'Old
+       and then Get_Message_Class (Ctx) = Get_Message_Class (Ctx)'Old
+       and then Get_Success_Code (Ctx) = Get_Success_Code (Ctx)'Old
+       and then Get_Client_Error_Code (Ctx) = Get_Client_Error_Code (Ctx)'Old
+       and then Get_Server_Error_Code (Ctx) = Get_Server_Error_Code (Ctx)'Old
+       and then Get_Options_And_Payload_Length (Ctx) = Get_Options_And_Payload_Length (Ctx)'Old
+       and then Field_First (Ctx, F_Options_And_Payload_Options_And_Payload) = Field_First (Ctx, F_Options_And_Payload_Options_And_Payload)'Old
    is
-      First : constant RFLX_Types.Bit_Index := Field_First (Ctx, F_Options_And_Payload);
-      Last : constant RFLX_Types.Bit_Index := Field_First (Ctx, F_Options_And_Payload) + RFLX_Types.Bit_Length (Length) * RFLX_Types.Byte'Size - 1;
+      First : constant RFLX_Types.Bit_Index := Field_First (Ctx, F_Options_And_Payload_Options_And_Payload);
+      Last : constant RFLX_Types.Bit_Index := Field_First (Ctx, F_Options_And_Payload_Options_And_Payload) + RFLX_Types.Bit_Length (Length) * RFLX_Types.Byte'Size - 1;
    begin
       pragma Assert (Last mod RFLX_Types.Byte'Size = 0);
-      Reset_Dependent_Fields (Ctx, F_Options_And_Payload);
+      Reset_Dependent_Fields (Ctx, F_Options_And_Payload_Options_And_Payload);
       pragma Warnings (Off, "attribute Update is an obsolescent feature");
       Ctx := Ctx'Update (Verified_Last => Last, Written_Last => Last);
       pragma Warnings (On, "attribute Update is an obsolescent feature");
-      Ctx.Cursors (F_Options_And_Payload) := (State => S_Well_Formed, First => First, Last => Last, Value => 0);
-   end Initialize_Options_And_Payload_Private;
+      Ctx.Cursors (F_Options_And_Payload_Options_And_Payload) := (State => S_Well_Formed, First => First, Last => Last, Value => 0);
+   end Initialize_Options_And_Payload_Options_And_Payload_Private;
 
-   procedure Initialize_Options_And_Payload (Ctx : in out Context) is
+   procedure Initialize_Options_And_Payload_Options_And_Payload (Ctx : in out Context) is
    begin
-      Initialize_Options_And_Payload_Private (Ctx, RFLX_Types.To_Length (Field_Size (Ctx, F_Options_And_Payload)));
-   end Initialize_Options_And_Payload;
+      Initialize_Options_And_Payload_Options_And_Payload_Private (Ctx, RFLX_Types.To_Length (Field_Size (Ctx, F_Options_And_Payload_Options_And_Payload)));
+   end Initialize_Options_And_Payload_Options_And_Payload;
 
-   procedure Set_Options_And_Payload (Ctx : in out Context; Data : RFLX_Types.Bytes) is
-      Buffer_First : constant RFLX_Types.Index := RFLX_Types.To_Index (Field_First (Ctx, F_Options_And_Payload));
+   procedure Set_Options_And_Payload_Options_And_Payload (Ctx : in out Context; Data : RFLX_Types.Bytes) is
+      Buffer_First : constant RFLX_Types.Index := RFLX_Types.To_Index (Field_First (Ctx, F_Options_And_Payload_Options_And_Payload));
       Buffer_Last : constant RFLX_Types.Index := Buffer_First + Data'Length - 1;
    begin
-      Initialize_Options_And_Payload_Private (Ctx, Data'Length);
-      pragma Assert (Buffer_Last = RFLX_Types.To_Index (Field_Last (Ctx, F_Options_And_Payload)));
+      Initialize_Options_And_Payload_Options_And_Payload_Private (Ctx, Data'Length);
+      pragma Assert (Buffer_Last = RFLX_Types.To_Index (Field_Last (Ctx, F_Options_And_Payload_Options_And_Payload)));
       Ctx.Buffer.all (Buffer_First .. Buffer_Last) := Data;
-      pragma Assert (Ctx.Buffer.all (RFLX_Types.To_Index (Field_First (Ctx, F_Options_And_Payload)) .. RFLX_Types.To_Index (Field_Last (Ctx, F_Options_And_Payload))) = Data);
-   end Set_Options_And_Payload;
+      pragma Assert (Ctx.Buffer.all (RFLX_Types.To_Index (Field_First (Ctx, F_Options_And_Payload_Options_And_Payload)) .. RFLX_Types.To_Index (Field_Last (Ctx, F_Options_And_Payload_Options_And_Payload))) = Data);
+   end Set_Options_And_Payload_Options_And_Payload;
 
-   procedure Generic_Set_Options_And_Payload (Ctx : in out Context; Length : RFLX_Types.Length) is
-      First : constant RFLX_Types.Index := RFLX_Types.To_Index (Field_First (Ctx, F_Options_And_Payload));
+   procedure Generic_Set_Options_And_Payload_Options_And_Payload (Ctx : in out Context; Length : RFLX_Types.Length) is
+      First : constant RFLX_Types.Index := RFLX_Types.To_Index (Field_First (Ctx, F_Options_And_Payload_Options_And_Payload));
    begin
       if Length > 0 then
-         Process_Options_And_Payload (Ctx.Buffer.all (First .. First + RFLX_Types.Index (Length) - 1));
+         Process_Options_And_Payload_Options_And_Payload (Ctx.Buffer.all (First .. First + RFLX_Types.Index (Length) - 1));
       end if;
-      pragma Assert (RFLX.CoAP_Server.Options_And_Payload_Data.Valid_Length (Ctx, RFLX.CoAP_Server.Options_And_Payload_Data.F_Options_And_Payload, Length));
-      Initialize_Options_And_Payload_Private (Ctx, Length);
-   end Generic_Set_Options_And_Payload;
+      pragma Assert (RFLX.CoAP_Server.Application_Response.Valid_Length (Ctx, RFLX.CoAP_Server.Application_Response.F_Options_And_Payload_Options_And_Payload, Length));
+      Initialize_Options_And_Payload_Options_And_Payload_Private (Ctx, Length);
+   end Generic_Set_Options_And_Payload_Options_And_Payload;
 
    procedure To_Structure (Ctx : Context; Struct : out Structure) is
    begin
-      Struct.Length := Get_Length (Ctx);
-      Struct.Options_And_Payload := (others => 0);
-      Get_Options_And_Payload (Ctx, Struct.Options_And_Payload (Struct.Options_And_Payload'First .. Struct.Options_And_Payload'First + RFLX_Types.Index (RFLX_Types.To_Length (Field_Size (Ctx, F_Options_And_Payload)) + 1) - 2));
+      Struct.Message_Class := Get_Message_Class (Ctx);
+      Struct.Success_Code := Get_Success_Code (Ctx);
+      Struct.Client_Error_Code := Get_Client_Error_Code (Ctx);
+      Struct.Server_Error_Code := Get_Server_Error_Code (Ctx);
+      Struct.Padding := Get_Padding (Ctx);
+      Struct.Options_And_Payload_Length := Get_Options_And_Payload_Length (Ctx);
+      Struct.Options_And_Payload_Options_And_Payload := (others => 0);
+      Get_Options_And_Payload_Options_And_Payload (Ctx, Struct.Options_And_Payload_Options_And_Payload (Struct.Options_And_Payload_Options_And_Payload'First .. Struct.Options_And_Payload_Options_And_Payload'First + RFLX_Types.Index (RFLX_Types.To_Length (Field_Size (Ctx, F_Options_And_Payload_Options_And_Payload)) + 1) - 2));
    end To_Structure;
 
    procedure To_Context (Struct : Structure; Ctx : in out Context) is
    begin
       Reset (Ctx);
-      Set_Length (Ctx, Struct.Length);
-      Set_Options_And_Payload (Ctx, Struct.Options_And_Payload (Struct.Options_And_Payload'First .. Struct.Options_And_Payload'First + RFLX_Types.Index (RFLX_Types.To_Length (RFLX_Types.Bit_Length (Struct.Length) * 8) + 1) - 2));
+      Set_Message_Class (Ctx, Struct.Message_Class);
+      Set_Success_Code (Ctx, Struct.Success_Code);
+      Set_Client_Error_Code (Ctx, Struct.Client_Error_Code);
+      Set_Server_Error_Code (Ctx, Struct.Server_Error_Code);
+      Set_Padding (Ctx, Struct.Padding);
+      Set_Options_And_Payload_Length (Ctx, Struct.Options_And_Payload_Length);
+      Set_Options_And_Payload_Options_And_Payload (Ctx, Struct.Options_And_Payload_Options_And_Payload (Struct.Options_And_Payload_Options_And_Payload'First .. Struct.Options_And_Payload_Options_And_Payload'First + RFLX_Types.Index (RFLX_Types.To_Length (RFLX_Types.Bit_Length (Struct.Options_And_Payload_Length) * 8) + 1) - 2));
    end To_Context;
 
-end RFLX.CoAP_Server.Options_And_Payload_Data;
+end RFLX.CoAP_Server.Application_Response;

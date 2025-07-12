@@ -4,6 +4,8 @@ with Ada.Containers;
 
 with CoAP_SPARK.Options.Lists;
 
+with RFLX.RFLX_Types;
+
 package body RFLX.CoAP_Client.Session_Environment with
   SPARK_Mode
 is
@@ -95,7 +97,7 @@ is
 
    procedure Initialize
      (Method        : RFLX.CoAP.Method_Code;
-      Server        : String;
+      Server        : CoAP_SPARK.Options.Hostname;
       Port          : Interfaces.Unsigned_16;
       Path          : String;
       Query         : String;

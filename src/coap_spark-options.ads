@@ -330,6 +330,10 @@ is
 
    function To_UInt (Value : UInt_Bytes) return Interfaces.Unsigned_32;
 
+   subtype Hostname is String with 
+      Dynamic_Predicate =>
+         Hostname'Length <= Option_Properties_Table (RFLX.CoAP.Uri_Host).Maximum_Length;
+
 private
 
    use type RFLX.RFLX_Types.Bytes;
