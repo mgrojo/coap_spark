@@ -65,3 +65,6 @@ wolfssl = { path='libs/wolfssl/wrapper/Ada' }
 # This is needed only for compatibility with https://github.com/mgrojo/ikea-smartlight
 # You can set it to false, if you meed to disable it.
 wolfssl.STATIC_PSK = true
+
+[[depends-on]]
+gnat_native = "^14"
