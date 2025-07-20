@@ -17,7 +17,7 @@ is
       record
          case Code_Class is
             when RFLX.CoAP.Success =>
-               null;
+               Success_Code : RFLX.CoAP.Success_Response;
             when RFLX.CoAP.Client_Error =>
                Client_Error_Code : RFLX.CoAP.Client_Error_Response;
             when RFLX.CoAP.Server_Error =>

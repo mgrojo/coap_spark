@@ -8,15 +8,7 @@ package RFLX.CoAP_Client.Session_Environment with
    SPARK_Mode
 is
 
-   type Status_Type is
-     (OK,
-      Capacity_Error,
-      Invalid_Request,
-      Malformed_Message,
-      Unknown_Critical_Option,
-      Communication_Problems,
-      Unexpected_Case);
-
+   type Status_Type is new CoAP_SPARK.Status_Type;
 
    type State is record
       Method : RFLX.CoAP.Method_Code := RFLX.CoAP.Get;

@@ -5,15 +5,6 @@ package RFLX.CoAP_Server.Main_Loop_Environment
   with SPARK_Mode
 is
 
-   type Status_Type is
-     (OK,
-      Capacity_Error,
-      Invalid_Request,
-      Malformed_Message,
-      Unknown_Critical_Option,
-      Communication_Problems,
-      Unexpected_Case);
-
    type Handle_Request_Callback is
      access procedure
        (Method           : RFLX.CoAP.Method_Code;
@@ -22,7 +13,7 @@ is
         Response_Content : out CoAP_SPARK.Messages.Content);
 
    type State is record
-      Current_Status     : Status_Type := OK;
+      Current_Status     : CoAP_SPARK.Status_Type := CoAP_SPARK.OK;
       Request_Handler    : Handle_Request_Callback := null;
       Is_First_Message   : Boolean := True;
    end record;

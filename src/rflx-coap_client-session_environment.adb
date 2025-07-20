@@ -193,7 +193,9 @@ is
       Session_State.Response_Content.Options :=
         CoAP_SPARK.Options.Lists.Empty_Vector;
       Session_State.Response_Content.Payload := null;
-      Session_State.Response_Codes := (Code_Class => RFLX.CoAP.Success);
+      Session_State.Response_Codes :=
+        (Code_Class => RFLX.CoAP.Success,
+         Success_Code => RFLX.CoAP.Success_Response'First);
 
    end Initialize;
 

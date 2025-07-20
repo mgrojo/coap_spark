@@ -11,7 +11,7 @@ is
    begin
 
       Session_State :=
-        (Current_Status   => OK,
+        (Current_Status   => CoAP_SPARK.OK,
          Request_Handler  => Request_Handler,
          Is_First_Message => True);
    end Initialize;

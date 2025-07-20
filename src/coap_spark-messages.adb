@@ -51,7 +51,7 @@ is
          then
            " ("
            & (case Item.Code_Class is
-                when RFLX.CoAP.Success => RFLX.CoAP.Success'Image,
+                when RFLX.CoAP.Success => Item.Success_Code'Image,
                 when RFLX.CoAP.Client_Error =>
                   RFLX.CoAP.Client_Error_Response'Image
                     (Item.Client_Error_Code),
