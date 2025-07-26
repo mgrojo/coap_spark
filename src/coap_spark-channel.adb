@@ -303,7 +303,7 @@ is
                Input.Buffer'Length <= Buffer'Length
             then
                Length := RFLX.RFLX_Builtin_Types.Length (Input.Last);
-               Buffer (1 .. RFLX.RFLX_Builtin_Types.Index (Length)) :=
+               Buffer (1 .. RFLX.RFLX_Builtin_Types.Index'Base (Length)) :=
                  To_RFLX_Bytes (Input.Buffer);
             else
                Socket.Result :=

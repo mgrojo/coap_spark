@@ -478,6 +478,8 @@ package body CoAP_SPARK.Messages.Encoding is
    is
    begin
 
+      Status := OK;
+
       if Data'Length = 0 then
 
          CoAP_SPARK.Log.Put_Line ("Options and payload are empty");

@@ -34,7 +34,7 @@ is
    type Content is record
       Options : CoAP_SPARK.Options.Lists.Vector;
       Format : Interfaces.Unsigned_32 := 0;
-      Payload : Payload_Ptr;
+      Payload : Payload_Ptr := null;
    end record;
 
    --  Log the content of a message according to the log levels for options and
