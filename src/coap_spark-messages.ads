@@ -56,6 +56,16 @@ is
    is (CoAP_SPARK.Options.Lists.Is_Empty (Item.Options)
        and then Item.Payload = null);
 
+   --  Set the payload of Item to Text and set the appropriate content format.
+   --  The payload is freed if it is not null.
+   procedure Initialize_With_Text_Payload
+     (Text : String;
+      Item : out Content)
+   with
+     Pre => Text'Length <= CoAP_SPARK.Max_Payload_Length,
+     Post => not Is_Empty (Item) and then
+      Item.Payload'Length = Text'Length;
+
    procedure Finalize (Item : in out Content)
    with
      Post => Is_Empty (Item);

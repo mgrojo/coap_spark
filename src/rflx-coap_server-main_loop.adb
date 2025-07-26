@@ -34,6 +34,15 @@ is
 
    begin
 
+      RFLX_Result :=
+         (Message_Class        => RFLX.CoAP.Server_Error,
+          Success_Code         => RFLX.CoAP.Success_Response'Last,
+          Client_Error_Code    => RFLX.CoAP.Client_Error_Response'Last,
+          Server_Error_Code    => RFLX.CoAP.Internal_Server_Error,
+          Padding              => 0,
+          Options_And_Payload_Options_And_Payload => [others => 0],
+          Options_And_Payload_Length => 0);
+
       RFLX.CoAP.CoAP_Message.Initialize
         (Ctx    => Context,
          Buffer => Buffer,
@@ -74,7 +83,6 @@ is
               RFLX.CoAP.Client_Error_Response'Last;
             RFLX_Result.Server_Error_Code :=
               RFLX.CoAP.Server_Error_Response'Last;
-            RFLX_Result.Padding := 0;
             RFLX_Result.Message_Class := Response_Codes.Code_Class;
 
             case CoAP_SPARK.Messages.Response_Code (Response_Codes.Code_Class)
@@ -97,13 +105,64 @@ is
          end if;
       end if;
 
+      RFLX.CoAP.CoAP_Message.Take_Buffer
+        (Ctx    => Context,
+         Buffer => Buffer);
+      pragma Assert (not RFLX.CoAP.CoAP_Message.Has_Buffer (Context));
+
+      RFLX.RFLX_Types.Free (Buffer);
    end Get_Response;
 
    procedure Get_Error_Options_And_Payload
      (State       : in out RFLX.CoAP_Server.Main_Loop_Environment.State;
-      RFLX_Result : out RFLX.CoAP_Server.Options_And_Payload_Data.Structure) is
+      RFLX_Result : out RFLX.CoAP_Server.Options_And_Payload_Data.Structure)
+   is
+      use type CoAP_SPARK.Status_Type;
+
+      Status_Image : constant String :=
+        CoAP_SPARK.Status_Type'Image (State.Current_Status);
+      Buffer  : RFLX_Types.Bytes_Ptr :=
+        new RFLX_Types.Bytes'([1 .. RFLX_Result.Options_And_Payload'Length => 0]);
+      Context : RFLX.CoAP.CoAP_Message.Context;
+
+      Response_Content : CoAP_SPARK.Messages.Content;
+
    begin
-      null;
+      RFLX.CoAP.CoAP_Message.Initialize
+        (Ctx    => Context,
+         Buffer => Buffer);
+
+      -- This procedure is only called when there is an error in the
+      -- main loop state machine, so if we haven't set an error status yet,
+      -- we have to set it to Unexpected_Case, since the cause is unknown.
+      if State.Current_Status = CoAP_SPARK.OK or else
+         Status_Image'Length > CoAP_SPARK.Max_Payload_Length
+      then
+         CoAP_SPARK.Messages.Initialize_With_Text_Payload
+           (Text => "Unexpected case in main loop",
+            Item => Response_Content);
+      else
+         CoAP_SPARK.Messages.Initialize_With_Text_Payload
+           (Text => Status_Image,
+            Item => Response_Content);
+      end if;
+
+      CoAP_SPARK.Messages.Encoding.Encode_Options_And_Payload
+        (Options_And_Payload => Response_Content,
+         Status              => State.Current_Status,
+         Encoded_Data        => RFLX_Result.Options_And_Payload,
+         Encoded_Length      => RFLX.CoAP.Length_16
+            (RFLX_Result.Length));
+
+      CoAP_SPARK.Messages.Finalize (Response_Content);
+      pragma Assert (CoAP_SPARK.Messages.Is_Empty (Response_Content));
+
+      RFLX.CoAP.CoAP_Message.Take_Buffer
+        (Ctx    => Context,
+         Buffer => Buffer);
+      pragma Assert (not RFLX.CoAP.CoAP_Message.Has_Buffer (Context));
+
+      RFLX.RFLX_Types.Free (Buffer);
    end Get_Error_Options_And_Payload;
 
 end RFLX.CoAP_Server.Main_Loop;

@@ -73,8 +73,6 @@ is
    is
    begin
 
-      RFLX_Result := (Length => 0, Options_And_Payload => [others => 0]);
-
       CoAP_SPARK.Messages.Encoding.Encode_Options_And_Payload
         (Options_And_Payload => State.Request_Content,
          Status              => CoAP_SPARK.Status_Type (State.Current_Status),
@@ -91,6 +89,11 @@ is
    is
       use type CoAP_Client.Session_Environment.Status_Type;
    begin
+
+      if not CoAP_SPARK.Messages.Is_Empty (State.Response_Content) then
+         CoAP_SPARK.Messages.Finalize (State.Response_Content);
+         pragma Assert (CoAP_SPARK.Messages.Is_Empty (State.Response_Content));
+      end if;
 
       CoAP_SPARK.Messages.Encoding.Decode_Options_And_Payload
         (Data            => Data,

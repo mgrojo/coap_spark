@@ -1,3 +1,4 @@
+with Ada.Unchecked_Conversion;
 
 with CoAP_SPARK.Content_Formats;
 with CoAP_SPARK.Options.Text_IO;
@@ -68,6 +69,26 @@ is
         & CoAP_SPARK.Utils.Padded_Image (Source => Detail_Number, Count => 2)
         & Detail_Image;
    end Image;
+
+   procedure Initialize_With_Text_Payload
+     (Text : String;
+      Item : out Content)
+   is
+      use type RFLX.RFLX_Types.Index;
+      function To_Byte
+        is new Ada.Unchecked_Conversion (Character, RFLX.RFLX_Types.Byte);
+   begin
+      Item.Options := CoAP_SPARK.Options.Lists.Empty_Vector;
+      Item.Format := CoAP_SPARK.Content_Formats.text.plain_charset_utf_8;
+
+      Item.Payload :=
+         new RFLX.RFLX_Types.Bytes'([1 .. Text'Length => 0]);
+
+      for I in Item.Payload.all'Range loop
+         Item.Payload (I) :=
+           To_Byte (Text (Text'First - 1 + Integer (I)));
+      end loop;
+   end Initialize_With_Text_Payload;
 
    procedure Finalize (Item : in out Content)
    is
