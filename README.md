@@ -104,8 +104,7 @@ I think it can be used in scenarios where this limitations are not an issue:
   for CoAP, but of the [RFC 7959](https://datatracker.ietf.org/doc/rfc7959/).
 - It only supports NoSec and PreSharedKey security modes.
 
-There's no server implementation for the moment, but it wouldn't be too difficult
-to add, following the example of the client.
+The server implementation is ongoing, following the example of the client.
 
 Regarding the implemented client is able to
 substitute libcoap's coap-client when called from a project like
