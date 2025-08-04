@@ -48,6 +48,7 @@
                 "gnatprove",
                 "${command:ada.gprProjectArgs}",
                 "-j0",
+                "--level=4",
                 "-cargs",
                 "-gnatef"
             ],
