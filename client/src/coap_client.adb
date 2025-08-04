@@ -22,8 +22,6 @@ with RFLX.RFLX_Types;
 -- explained in the package itself (related to the use of SPARK).
 with SPARK_Terminal;
 
-with Workarounds;
-
 procedure CoAP_Client is
    package FSM renames RFLX.CoAP_Client.Session.FSM;
    package Session_Environment renames RFLX.CoAP_Client.Session_Environment;
@@ -59,7 +57,155 @@ procedure CoAP_Client is
             else SPARK_Terminal.Exit_Status_Success));
    end Usage;
 
-   Ctx : FSM.Context;
+   procedure Run_Session
+     (Method : RFLX.CoAP.Method_Code;
+      URI_String : String;
+      Payload : in out CoAP_SPARK.Messages.Payload_Ptr)
+   with
+      Pre =>
+        URI_String'Length <= CoAP_SPARK.Max_URI_Length
+   is
+      URI        : constant CoAP_SPARK.URI.URI :=
+        CoAP_SPARK.URI.Create (URI_String);
+      Ctx        : FSM.Context;
+      Skt        :
+        CoAP_SPARK.Channel.Socket_Type
+          (Is_Secure =>
+             CoAP_SPARK.URI.Scheme (URI) = CoAP_SPARK.Secure_Scheme);
+      Valid_URI : Boolean := True;
+   begin
+
+      if URI_String = "" or else URI_String (URI_String'First) = '-' then
+         CoAP_SPARK.Log.Put ("Unrecognized option: ", CoAP_SPARK.Log.Error);
+         CoAP_SPARK.Log.Put_Line (URI_String, CoAP_SPARK.Log.Error);
+         Valid_URI := False;
+      elsif not CoAP_SPARK.URI.Is_Valid (URI)
+        or else not CoAP_SPARK.URI.Has_Valid_Lengths (URI)
+      then
+         CoAP_SPARK.Log.Put ("Invalid URI: ", CoAP_SPARK.Log.Error);
+         CoAP_SPARK.Log.Put_Line (URI_String, CoAP_SPARK.Log.Error);
+         Valid_URI := False;
+      end if;
+
+      if not Valid_URI then
+         Usage;
+         return;
+      end if;
+
+      CoAP_SPARK.Log.Put ("Method: ");
+      CoAP_SPARK.Log.Put_Line (RFLX.CoAP.Method_Code'Image (Method));
+      CoAP_SPARK.Log.Put ("Scheme: ");
+      CoAP_SPARK.Log.Put_Line (CoAP_SPARK.URI.Scheme (URI));
+      CoAP_SPARK.Log.Put ("Host: ");
+      CoAP_SPARK.Log.Put_Line (CoAP_SPARK.URI.Host (URI));
+      CoAP_SPARK.Log.Put ("Port:");
+      CoAP_SPARK.Log.Put_Line
+        (Interfaces.Unsigned_16'Image (CoAP_SPARK.URI.Port (URI)));
+      CoAP_SPARK.Log.Put ("Path: ");
+      CoAP_SPARK.Log.Put_Line (CoAP_SPARK.URI.Path (URI));
+      CoAP_SPARK.Log.Put ("Query: ");
+      CoAP_SPARK.Log.Put_Line (CoAP_SPARK.URI.Query (URI));
+
+      CoAP_Secure.Initialize (Socket => Skt);
+      if not CoAP_SPARK.Channel.Is_Valid (Skt) then
+         CoAP_SPARK.Log.Put_Line
+           ("Communication problems.", CoAP_SPARK.Log.Error);
+         RFLX.RFLX_Types.Free (Payload);
+         return;
+      end if;
+
+      Session_Environment.Initialize
+        (Method        => Method,
+         Server        => CoAP_SPARK.URI.Host (URI),
+         Port          => CoAP_SPARK.URI.Port (URI),
+         Path          => CoAP_SPARK.URI.Path (URI),
+         Query         => CoAP_SPARK.URI.Query (URI),
+         Payload       => Payload,
+         Session_State => Ctx.E);
+
+      if Ctx.E.Current_Status /= Session_Environment.OK then
+         CoAP_SPARK.Log.Put_Line
+           (Ctx.E.Current_Status'Image, CoAP_SPARK.Log.Error);
+         RFLX.RFLX_Types.Free (Payload);
+         Session_Environment.Finalize (Ctx.E);
+         pragma Assert (Session_Environment.Is_Finalized (Ctx.E));
+         return;
+      end if;
+      pragma Assert (FSM.Uninitialized (Ctx));
+
+      FSM.Initialize (Ctx);
+      Channel.Connect
+        (Socket => Skt,
+         Server => CoAP_SPARK.URI.Host (URI),
+         Port   => CoAP_SPARK.Channel.Port_Type (CoAP_SPARK.URI.Port (URI)));
+
+      if not CoAP_SPARK.Channel.Is_Valid (Skt) then
+         CoAP_SPARK.Log.Put_Line
+           ("Connection problems.", CoAP_SPARK.Log.Error);
+         RFLX.RFLX_Types.Free (Payload);
+         FSM.Finalize (Ctx);
+         pragma Assert (FSM.Uninitialized (Ctx));
+         Session_Environment.Finalize (Ctx.E);
+         pragma Assert (Session_Environment.Is_Finalized (Ctx.E));
+         return;
+      end if;
+
+      CoAP_SPARK.Log.Put_Line ("REQUEST: ");
+      CoAP_SPARK.Messages.Print_Content
+        (Item => Ctx.E.Request_Content,
+         Log_Level_Payload => CoAP_SPARK.Log.Debug);
+
+      CoAP_SPARK.Client_Session.Run_Session_Loop (Ctx, Skt);
+
+      CoAP_SPARK.Channel.Finalize (Skt);
+      pragma Assert (not CoAP_SPARK.Channel.Is_Valid (Skt));
+
+      CoAP_SPARK.Log.New_Line;
+      if Ctx.E.Current_Status in RFLX.CoAP_Client.Session_Environment.OK then
+         CoAP_SPARK.Log.Put_Line ("RESPONSE: ");
+
+         case Ctx.E.Response_Codes.Code_Class is
+            when RFLX.CoAP.Success =>
+
+               CoAP_SPARK.Log.Put_Line ("Server answered with success.");
+
+            when RFLX.CoAP.Client_Error =>
+
+               CoAP_SPARK.Log.Put ("Server answered with client error: ");
+               CoAP_SPARK.Log.Put_Line
+               (CoAP_SPARK.Messages.Image (Ctx.E.Response_Codes));
+
+               CoAP_SPARK.Log.Put
+               (CoAP_SPARK.Messages.Image (Ctx.E.Response_Codes, Long => False),
+                  CoAP_SPARK.Log.Info);
+               CoAP_SPARK.Log.Put (" ", CoAP_SPARK.Log.Info);
+
+            when RFLX.CoAP.Server_Error =>
+
+               CoAP_SPARK.Log.Put ("Server answered with server error: ");
+               CoAP_SPARK.Log.Put_Line
+               (CoAP_SPARK.Messages.Image (Ctx.E.Response_Codes));
+
+               CoAP_SPARK.Log.Put
+               (CoAP_SPARK.Messages.Image (Ctx.E.Response_Codes, Long => False),
+                  CoAP_SPARK.Log.Info);
+               CoAP_SPARK.Log.Put (" ", CoAP_SPARK.Log.Info);
+         end case;
+
+         CoAP_SPARK.Messages.Print_Content (Ctx.E.Response_Content);
+      else
+         CoAP_SPARK.Log.Put ("Aborted with error: ", CoAP_SPARK.Log.Error);
+         CoAP_SPARK.Log.Put_Line
+         (Ctx.E.Current_Status'Image, CoAP_SPARK.Log.Error);
+         SPARK_Terminal.Set_Exit_Status (SPARK_Terminal.Exit_Status_Failure);
+      end if;
+
+      FSM.Finalize (Ctx);
+      pragma Assert (FSM.Uninitialized (Ctx));
+
+      Session_Environment.Finalize (Ctx.E);
+      pragma Assert (Session_Environment.Is_Finalized (Ctx.E));
+   end Run_Session;
 
    Method : RFLX.CoAP.Method_Code := RFLX.CoAP.Get;
    Payload : CoAP_SPARK.Messages.Payload_Ptr := null;
@@ -209,151 +355,11 @@ begin
       return;
    end if;
 
-   declare
-      URI_String : constant String := SPARK_Terminal.Argument (Argument_Index);
-      URI        : constant CoAP_SPARK.URI.URI :=
-        CoAP_SPARK.URI.Create (URI_String);
-      Skt        :
-        CoAP_SPARK.Channel.Socket_Type
-          (Is_Secure =>
-             CoAP_SPARK.URI.Scheme (URI) = CoAP_SPARK.Secure_Scheme);
-   begin
-
-      if URI_String = "" or else URI_String (URI_String'First) = '-' then
-         CoAP_SPARK.Log.Put ("Unrecognized option: ", CoAP_SPARK.Log.Error);
-         CoAP_SPARK.Log.Put_Line (URI_String, CoAP_SPARK.Log.Error);
-         Valid_Command_Line := False;
-      elsif not CoAP_SPARK.URI.Is_Valid (URI)
-        or else not CoAP_SPARK.URI.Has_Valid_Lengths (URI)
-      then
-         CoAP_SPARK.Log.Put ("Invalid URI: ", CoAP_SPARK.Log.Error);
-         CoAP_SPARK.Log.Put_Line (URI_String, CoAP_SPARK.Log.Error);
-         Valid_Command_Line := False;
-      end if;
-
-      if not Valid_Command_Line then
-         RFLX.RFLX_Types.Free (Payload);
-         Usage;
-         return;
-      end if;
-
-      CoAP_SPARK.Log.Put ("Method: ");
-      CoAP_SPARK.Log.Put_Line (RFLX.CoAP.Method_Code'Image (Method));
-      CoAP_SPARK.Log.Put ("Scheme: ");
-      CoAP_SPARK.Log.Put_Line (CoAP_SPARK.URI.Scheme (URI));
-      CoAP_SPARK.Log.Put ("Host: ");
-      CoAP_SPARK.Log.Put_Line (CoAP_SPARK.URI.Host (URI));
-      CoAP_SPARK.Log.Put ("Port:");
-      CoAP_SPARK.Log.Put_Line
-        (Interfaces.Unsigned_16'Image (CoAP_SPARK.URI.Port (URI)));
-      CoAP_SPARK.Log.Put ("Path: ");
-      CoAP_SPARK.Log.Put_Line (CoAP_SPARK.URI.Path (URI));
-      CoAP_SPARK.Log.Put ("Query: ");
-      CoAP_SPARK.Log.Put_Line (CoAP_SPARK.URI.Query (URI));
-
-      CoAP_Secure.Initialize (Socket => Skt);
-      if not CoAP_SPARK.Channel.Is_Valid (Skt) then
-         CoAP_SPARK.Log.Put_Line
-           ("Communication problems.", CoAP_SPARK.Log.Error);
-         RFLX.RFLX_Types.Free (Payload);
-         return;
-      end if;
-
-      Session_Environment.Initialize
-        (Method        => Method,
-         Server        => CoAP_SPARK.URI.Host (URI),
-         Port          => CoAP_SPARK.URI.Port (URI),
-         Path          => CoAP_SPARK.URI.Path (URI),
-         Query         => CoAP_SPARK.URI.Query (URI),
-         Payload       => Payload,
-         Session_State => Ctx.E);
-
-      if Ctx.E.Current_Status /= Session_Environment.OK then
-         CoAP_SPARK.Log.Put_Line
-           (Ctx.E.Current_Status'Image, CoAP_SPARK.Log.Error);
-         RFLX.RFLX_Types.Free (Payload);
-         Session_Environment.Finalize (Ctx.E);
-         pragma Assert (Session_Environment.Is_Finalized (Ctx.E));
-         return;
-      end if;
-      pragma Assert (FSM.Uninitialized (Ctx));
-
-      FSM.Initialize (Ctx);
-      Channel.Connect
-        (Socket => Skt,
-         Server => CoAP_SPARK.URI.Host (URI),
-         Port   => CoAP_SPARK.Channel.Port_Type (CoAP_SPARK.URI.Port (URI)));
-
-      if not CoAP_SPARK.Channel.Is_Valid (Skt) then
-         CoAP_SPARK.Log.Put_Line
-           ("Connection problems.", CoAP_SPARK.Log.Error);
-         RFLX.RFLX_Types.Free (Payload);
-         FSM.Finalize (Ctx);
-         pragma Assert (FSM.Uninitialized (Ctx));
-         Session_Environment.Finalize (Ctx.E);
-         pragma Assert (Session_Environment.Is_Finalized (Ctx.E));
-         return;
-      end if;
-
-      CoAP_SPARK.Log.Put_Line ("REQUEST: ");
-      CoAP_SPARK.Messages.Print_Content
-        (Item => Ctx.E.Request_Content,
-         Log_Level_Payload => CoAP_SPARK.Log.Debug);
-
-      CoAP_SPARK.Client_Session.Run_Session_Loop (Ctx, Skt);
-
-      CoAP_SPARK.Channel.Finalize (Skt);
-      pragma Assert (not CoAP_SPARK.Channel.Is_Valid (Skt));
-   end;
-
-   CoAP_SPARK.Log.New_Line;
-   if Ctx.E.Current_Status in RFLX.CoAP_Client.Session_Environment.OK then
-      CoAP_SPARK.Log.Put_Line ("RESPONSE: ");
-
-      case Ctx.E.Response_Codes.Code_Class is
-         when RFLX.CoAP.Success =>
-
-            CoAP_SPARK.Log.Put_Line ("Server answered with success.");
-
-         when RFLX.CoAP.Client_Error =>
-
-            CoAP_SPARK.Log.Put ("Server answered with client error: ");
-            CoAP_SPARK.Log.Put_Line
-              (CoAP_SPARK.Messages.Image (Ctx.E.Response_Codes));
-
-            CoAP_SPARK.Log.Put
-              (CoAP_SPARK.Messages.Image (Ctx.E.Response_Codes, Long => False),
-               CoAP_SPARK.Log.Info);
-            CoAP_SPARK.Log.Put (" ", CoAP_SPARK.Log.Info);
-
-         when RFLX.CoAP.Server_Error =>
-
-            CoAP_SPARK.Log.Put ("Server answered with server error: ");
-            CoAP_SPARK.Log.Put_Line
-              (CoAP_SPARK.Messages.Image (Ctx.E.Response_Codes));
-
-            CoAP_SPARK.Log.Put
-              (CoAP_SPARK.Messages.Image (Ctx.E.Response_Codes, Long => False),
-               CoAP_SPARK.Log.Info);
-            CoAP_SPARK.Log.Put (" ", CoAP_SPARK.Log.Info);
-      end case;
-
-      CoAP_SPARK.Messages.Print_Content (Ctx.E.Response_Content);
-   else
-      CoAP_SPARK.Log.Put ("Aborted with error: ", CoAP_SPARK.Log.Error);
-      CoAP_SPARK.Log.Put_Line
-        (Ctx.E.Current_Status'Image, CoAP_SPARK.Log.Error);
-      SPARK_Terminal.Set_Exit_Status (SPARK_Terminal.Exit_Status_Failure);
-   end if;
+   Run_Session
+     (URI_String => SPARK_Terminal.Argument (Argument_Index),
+      Method     => Method,
+      Payload    => Payload);
 
    RFLX.RFLX_Types.Free (Payload);
-   FSM.Finalize (Ctx);
-   pragma Assert (FSM.Uninitialized (Ctx));
 
-   Session_Environment.Finalize (Ctx.E);
-   pragma Assert (Session_Environment.Is_Finalized (Ctx.E));
-
-   -- This has no effect, but it is needed to avoid a linking error with
-   -- SPARKLib in the validation profile.
-   Workarounds.Check_Or_Fail;
 end CoAP_Client;
