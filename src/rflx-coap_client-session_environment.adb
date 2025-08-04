@@ -112,11 +112,12 @@ is
       Session_State.Current_Status := OK;
       Session_State.Is_First_Message := True;
       Session_State.Current_Message_ID := 0;
-      Session_State.Request_Content.Format := Format;
-      Session_State.Request_Content.Options :=
-        CoAP_SPARK.Options.Lists.Empty_Vector;
-      -- Move payload.
-      Session_State.Request_Content.Payload := Payload;
+      Session_State.Request_Content :=
+        (Options => CoAP_SPARK.Options.Lists.Empty_Vector,
+         Format  => Format,
+         Payload => Payload);
+
+      -- Payload was moved.
       Payload := null;
 
       declare
@@ -189,10 +190,11 @@ is
          end if;
       end;
 
-      Session_State.Response_Content.Format := 0;
-      Session_State.Response_Content.Options :=
-        CoAP_SPARK.Options.Lists.Empty_Vector;
-      Session_State.Response_Content.Payload := null;
+      Session_State.Response_Content :=
+        (Options => CoAP_SPARK.Options.Lists.Empty_Vector,
+         Format  => 0,
+         Payload => null);
+
       Session_State.Response_Codes :=
         (Code_Class => RFLX.CoAP.Success,
          Success_Code => RFLX.CoAP.Success_Response'First);
