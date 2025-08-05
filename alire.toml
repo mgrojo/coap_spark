@@ -67,4 +67,4 @@ wolfssl = { path='libs/wolfssl/wrapper/Ada' }
 wolfssl.STATIC_PSK = true
 
 [[depends-on]]
-gnat_native = "^14"
+gnat_native = "^14.2"
