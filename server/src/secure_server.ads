@@ -26,8 +26,9 @@ is
      Convention => C,
      Side_Effects;
 
-   procedure Initialize (Socket : out CoAP_SPARK.Channel.Socket_Type) with
-      Global =>
-         null;
+   procedure Initialize
+     (Socket : out CoAP_SPARK.Channel.Socket_Type;
+      Port   : CoAP_SPARK.Channel.Port_Type)
+   with Global => null;
 
 end Secure_Server;

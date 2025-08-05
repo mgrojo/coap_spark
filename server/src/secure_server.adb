@@ -92,14 +92,19 @@ is
       end;
    end PSK_Server_Callback;
 
-   procedure Initialize (Socket : out CoAP_SPARK.Channel.Socket_Type)
-   with SPARK_Mode => Off
-   -- Access to function with side effects is not allowed in SPARK
+   procedure Initialize
+     (Socket : out CoAP_SPARK.Channel.Socket_Type;
+      Port   : CoAP_SPARK.Channel.Port_Type)
+   with
+     SPARK_Mode => Off
+     -- Access to function with side effects is not allowed in SPARK
    is
    begin
       CoAP_SPARK.Channel.Initialize
         (Socket              => Socket,
-         PSK_Server_Callback => Secure_Server.PSK_Server_Callback'Access);
+         PSK_Server_Callback => Secure_Server.PSK_Server_Callback'Access,
+         Port                => Port,
+         Server              => True);
    end Initialize;
    
 end Secure_Server;
