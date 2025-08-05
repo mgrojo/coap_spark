@@ -8,225 +8,227 @@ is
    -- https://www.iana.org/assignments/core-parameters/core-parameters.xhtml
    -- From the registry with id="content-formats"
 
+   type Content_Type is new Interfaces.Unsigned_32;
+
    package text is
 
       -- text/plain; charset=utf-8
-      plain_charset_utf_8 : constant := 0;
+      plain_charset_utf_8 : constant Content_Type := 0;
 
       -- text/css
-      css : constant := 20000;
+      css : constant Content_Type := 20000;
 
    end text;
 
    package application is
 
       -- application/cose; cose-type="cose-encrypt0"
-      cose_encrypt0 : constant := 16;
+      cose_encrypt0 : constant Content_Type := 16;
 
       -- application/cose; cose-type="cose-mac0"
-      cose_mac0 : constant := 17;
+      cose_mac0 : constant Content_Type := 17;
 
       -- application/cose; cose-type="cose-sign1"
-      cose_sign1 : constant := 18;
+      cose_sign1 : constant Content_Type := 18;
 
       -- application/ace+cbor
-      ace_Plus_cbor : constant := 19;
+      ace_Plus_cbor : constant Content_Type := 19;
 
       -- application/link-format
-      link_format : constant := 40;
+      link_format : constant Content_Type := 40;
 
       -- application/xml
-      xml : constant := 41;
+      xml : constant Content_Type := 41;
 
       -- application/octet-stream
-      octet_stream : constant := 42;
+      octet_stream : constant Content_Type := 42;
 
       -- application/exi
-      exi : constant := 47;
+      exi : constant Content_Type := 47;
 
       -- application/json
-      json : constant := 50;
+      json : constant Content_Type := 50;
 
       -- application/json-patch+json
-      json_patch_Plus_json : constant := 51;
+      json_patch_Plus_json : constant Content_Type := 51;
 
       -- application/merge-patch+json
-      merge_patch_Plus_json : constant := 52;
+      merge_patch_Plus_json : constant Content_Type := 52;
 
       -- application/cbor
-      cbor : constant := 60;
+      cbor : constant Content_Type := 60;
 
       -- application/cwt
-      cwt : constant := 61;
+      cwt : constant Content_Type := 61;
 
       -- application/multipart-core
-      multipart_core : constant := 62;
+      multipart_core : constant Content_Type := 62;
 
       -- application/cbor-seq
-      cbor_seq : constant := 63;
+      cbor_seq : constant Content_Type := 63;
 
       -- application/edhoc+cbor-seq
-      edhoc_Plus_cbor_seq : constant := 64;
+      edhoc_Plus_cbor_seq : constant Content_Type := 64;
 
       -- application/cid-edhoc+cbor-seq
-      cid_edhoc_Plus_cbor_seq : constant := 65;
+      cid_edhoc_Plus_cbor_seq : constant Content_Type := 65;
 
       -- application/cose; cose-type="cose-encrypt"
-      cose_encrypt : constant := 96;
+      cose_encrypt : constant Content_Type := 96;
 
       -- application/cose; cose-type="cose-mac"
-      cose_mac : constant := 97;
+      cose_mac : constant Content_Type := 97;
 
       -- application/cose; cose-type="cose-sign"
-      cose_sign : constant := 98;
+      cose_sign : constant Content_Type := 98;
 
       -- application/cose-key
-      cose_key : constant := 101;
+      cose_key : constant Content_Type := 101;
 
       -- application/cose-key-set
-      cose_key_set : constant := 102;
+      cose_key_set : constant Content_Type := 102;
 
       -- application/senml+json
-      senml_Plus_json : constant := 110;
+      senml_Plus_json : constant Content_Type := 110;
 
       -- application/sensml+json
-      sensml_Plus_json : constant := 111;
+      sensml_Plus_json : constant Content_Type := 111;
 
       -- application/senml+cbor
-      senml_Plus_cbor : constant := 112;
+      senml_Plus_cbor : constant Content_Type := 112;
 
       -- application/sensml+cbor
-      sensml_Plus_cbor : constant := 113;
+      sensml_Plus_cbor : constant Content_Type := 113;
 
       -- application/senml-exi
-      senml_exi : constant := 114;
+      senml_exi : constant Content_Type := 114;
 
       -- application/sensml-exi
-      sensml_exi : constant := 115;
+      sensml_exi : constant Content_Type := 115;
 
       -- application/yang-data+cbor; id=sid
-      yang_data_Plus_cbor_id_sid : constant := 140;
+      yang_data_Plus_cbor_id_sid : constant Content_Type := 140;
 
       -- application/coap-group+json
-      coap_group_Plus_json : constant := 256;
+      coap_group_Plus_json : constant Content_Type := 256;
 
       -- application/concise-problem-details+cbor
-      concise_problem_details_Plus_cbor : constant := 257;
+      concise_problem_details_Plus_cbor : constant Content_Type := 257;
 
       -- application/swid+cbor
-      swid_Plus_cbor : constant := 258;
+      swid_Plus_cbor : constant Content_Type := 258;
 
       -- application/pkixcmp
-      pkixcmp : constant := 259;
+      pkixcmp : constant Content_Type := 259;
 
       -- application/yang-sid+json
-      yang_sid_Plus_json : constant := 260;
+      yang_sid_Plus_json : constant Content_Type := 260;
 
       -- application/ace-groupcomm+cbor
-      ace_groupcomm_Plus_cbor : constant := 261;
+      ace_groupcomm_Plus_cbor : constant Content_Type := 261;
 
       -- application/dots+cbor
-      dots_Plus_cbor : constant := 271;
+      dots_Plus_cbor : constant Content_Type := 271;
 
       -- application/missing-blocks+cbor-seq
-      missing_blocks_Plus_cbor_seq : constant := 272;
+      missing_blocks_Plus_cbor_seq : constant Content_Type := 272;
 
       -- application/pkcs7-mime; smime-type=server-generated-key
-      pkcs7_mime_smime_type_server_generated_key : constant := 280;
+      pkcs7_mime_smime_type_server_generated_key : constant Content_Type := 280;
 
       -- application/pkcs7-mime; smime-type=certs-only
-      pkcs7_mime_smime_type_certs_only : constant := 281;
+      pkcs7_mime_smime_type_certs_only : constant Content_Type := 281;
 
       -- application/pkcs8
-      pkcs8 : constant := 284;
+      pkcs8 : constant Content_Type := 284;
 
       -- application/csrattrs
-      csrattrs : constant := 285;
+      csrattrs : constant Content_Type := 285;
 
       -- application/pkcs10
-      pkcs10 : constant := 286;
+      pkcs10 : constant Content_Type := 286;
 
       -- application/pkix-cert
-      pkix_cert : constant := 287;
+      pkix_cert : constant Content_Type := 287;
 
       -- application/aif+cbor
-      aif_Plus_cbor : constant := 290;
+      aif_Plus_cbor : constant Content_Type := 290;
 
       -- application/aif+json
-      aif_Plus_json : constant := 291;
+      aif_Plus_json : constant Content_Type := 291;
 
       -- application/senml+xml
-      senml_Plus_xml : constant := 310;
+      senml_Plus_xml : constant Content_Type := 310;
 
       -- application/sensml+xml
-      sensml_Plus_xml : constant := 311;
+      sensml_Plus_xml : constant Content_Type := 311;
 
       -- application/senml-etch+json
-      senml_etch_Plus_json : constant := 320;
+      senml_etch_Plus_json : constant Content_Type := 320;
 
       -- application/senml-etch+cbor
-      senml_etch_Plus_cbor : constant := 322;
+      senml_etch_Plus_cbor : constant Content_Type := 322;
 
       -- application/yang-data+cbor
-      yang_data_Plus_cbor : constant := 340;
+      yang_data_Plus_cbor : constant Content_Type := 340;
 
       -- application/yang-data+cbor; id=name
-      yang_data_Plus_cbor_id_name : constant := 341;
+      yang_data_Plus_cbor_id_name : constant Content_Type := 341;
 
       -- application/td+json
-      td_Plus_json : constant := 432;
+      td_Plus_json : constant Content_Type := 432;
 
       -- application/tm+json
-      tm_Plus_json : constant := 433;
+      tm_Plus_json : constant Content_Type := 433;
 
-      -- application/voucher+cose
-      -- (TEMPORARY - registered 2022-04-12, extension registered 2024-03-01, expires 2025-04-12)
-      voucher_Plus_cose : constant := 836;
+      -- application/voucher+cose (TEMPORARY - registered 2022-04-12,
+      --  extension registered 2024-03-01, expires 2025-04-12)
+      voucher_Plus_cose : constant Content_Type := 836;
 
       -- application/vnd.ocf+cbor
-      vnd_Dot_ocf_Plus_cbor : constant := 10000;
+      vnd_Dot_ocf_Plus_cbor : constant Content_Type := 10000;
 
       -- application/oscore
-      oscore : constant := 10001;
+      oscore : constant Content_Type := 10001;
 
       -- application/javascript
-      javascript : constant := 10002;
+      javascript : constant Content_Type := 10002;
 
       -- application/json
-      json_deflate : constant := 11050;
+      json_deflate : constant Content_Type := 11050;
 
       -- application/cbor
-      cbor_deflate : constant := 11060;
+      cbor_deflate : constant Content_Type := 11060;
 
       -- application/vnd.oma.lwm2m+tlv
-      vnd_Dot_oma_Dot_lwm2m_Plus_tlv : constant := 11542;
+      vnd_Dot_oma_Dot_lwm2m_Plus_tlv : constant Content_Type := 11542;
 
       -- application/vnd.oma.lwm2m+json
-      vnd_Dot_oma_Dot_lwm2m_Plus_json : constant := 11543;
+      vnd_Dot_oma_Dot_lwm2m_Plus_json : constant Content_Type := 11543;
 
       -- application/vnd.oma.lwm2m+cbor
-      vnd_Dot_oma_Dot_lwm2m_Plus_cbor : constant := 11544;
+      vnd_Dot_oma_Dot_lwm2m_Plus_cbor : constant Content_Type := 11544;
 
    end application;
 
    package image is
 
       -- image/gif
-      gif : constant := 21;
+      gif : constant Content_Type := 21;
 
       -- image/jpeg
-      jpeg : constant := 22;
+      jpeg : constant Content_Type := 22;
 
       -- image/png
-      png : constant := 23;
+      png : constant Content_Type := 23;
 
       -- image/svg+xml
-      svg_Plus_xml : constant := 30000;
+      svg_Plus_xml : constant Content_Type := 30000;
 
    end image;
 
-   function Is_Text (Content_Type : Interfaces.Unsigned_32) return Boolean
-   is (case Content_Type is
+   function Is_Text (Content : Content_Type) return Boolean
+   is (case Content is
 
           when application.yang_sid_Plus_json => True,
           when application.coap_group_Plus_json => True,
@@ -250,8 +252,8 @@ is
           when application.senml_Plus_json => True,
           when others => False);
 
-   function To_String (Content_Type : Interfaces.Unsigned_32) return String
-   is (case Content_Type is
+   function To_String (Content : Content_Type) return String
+   is (case Content is
          when application.pkixcmp =>
            "application/pkixcmp",
          when application.ace_Plus_cbor =>

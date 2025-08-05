@@ -101,7 +101,7 @@ is
       Port          : Interfaces.Unsigned_16;
       Path          : String;
       Query         : String;
-      Format        : Interfaces.Unsigned_32 :=
+      Format        : CoAP_SPARK.Content_Formats.Content_Type :=
         CoAP_SPARK.Content_Formats.text.plain_charset_utf_8;
       Payload       : in out CoAP_SPARK.Messages.Payload_Ptr;
       Session_State : out State)
@@ -176,7 +176,8 @@ is
                else
                   CoAP_SPARK.Options.New_UInt_Option
                     (Number => RFLX.CoAP.Content_Format,
-                     Value  => Session_State.Request_Content.Format,
+                     Value  => Interfaces.Unsigned_32
+                        (Session_State.Request_Content.Format),
                      Result => Option);
 
                   CoAP_SPARK.Options.Lists.Append

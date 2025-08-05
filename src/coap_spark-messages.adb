@@ -1,6 +1,5 @@
 with Ada.Unchecked_Conversion;
 
-with CoAP_SPARK.Content_Formats;
 with CoAP_SPARK.Options.Text_IO;
 with CoAP_SPARK.Utils;
 

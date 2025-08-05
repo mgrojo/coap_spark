@@ -1,6 +1,7 @@
+with CoAP_SPARK.Content_Formats;
 with CoAP_SPARK.Log;
 with CoAP_SPARK.Options.Lists;
-with Interfaces;
+
 with RFLX.CoAP;
 with RFLX.RFLX_Types;
 
@@ -33,7 +34,7 @@ is
 
    type Content is record
       Options : CoAP_SPARK.Options.Lists.Vector;
-      Format : Interfaces.Unsigned_32 := 0;
+      Format  : CoAP_SPARK.Content_Formats.Content_Type := 0;
       Payload : Payload_Ptr := null;
    end record;
 

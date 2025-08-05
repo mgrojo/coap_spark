@@ -1,7 +1,9 @@
 with CoAP_SPARK.Content_Formats;
 with CoAP_SPARK.Messages;
 with CoAP_SPARK.Options;
+
 with Interfaces;
+
 with RFLX.CoAP;
 
 package RFLX.CoAP_Client.Session_Environment with
@@ -31,7 +33,7 @@ is
       Port          : Interfaces.Unsigned_16;
       Path          : String;
       Query         : String;
-      Format        : Interfaces.Unsigned_32 :=
+      Format        : CoAP_SPARK.Content_Formats.Content_Type :=
         CoAP_SPARK.Content_Formats.text.plain_charset_utf_8;
       Payload       : in out CoAP_SPARK.Messages.Payload_Ptr;
       Session_State : out State)

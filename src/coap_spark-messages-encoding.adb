@@ -427,8 +427,8 @@ package body CoAP_SPARK.Messages.Encoding is
               (Ctx => Option_Cxt, Data => Option_Value.all);
 
             if Option_Number = RFLX.CoAP.Content_Format then
-               Decoded_Content.Format :=
-                  CoAP_SPARK.Options.To_UInt (Value => Option_Value.all);
+               Decoded_Content.Format := CoAP_SPARK.Content_Formats.Content_Type
+                  (CoAP_SPARK.Options.To_UInt (Value => Option_Value.all));
             end if;
 
             CoAP_SPARK.Options.New_Encoded_Option
