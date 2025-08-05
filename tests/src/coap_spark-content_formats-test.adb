@@ -19,8 +19,7 @@ package body CoAP_SPARK.Content_Formats.Test is
       loop
          declare
             MIME_Type : constant String :=
-              CoAP_SPARK.Content_Formats.To_String
-                (Interfaces.Unsigned_32 (Content_Format));
+              CoAP_SPARK.Content_Formats.To_String (Content_Format);
          begin
             Assert
               ((for all E of MIME_Type => E in 'a' .. 'z' |  '0' .. '9' |
