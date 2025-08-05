@@ -9,6 +9,7 @@
 ------------------------------------------------------------------------------
 
 with CoAP_SPARK.Messages.Encoding;
+with CoAP_SPARK.Log;
 
 with RFLX.CoAP;
 with RFLX.CoAP.CoAP_Message;
@@ -62,6 +63,12 @@ is
          if State.Current_Status = CoAP_SPARK.OK
            and then State.Request_Handler not in null
          then
+
+            CoAP_SPARK.Log.Put_Line ("REQUEST: ");
+            CoAP_SPARK.Messages.Print_Content
+              (Item              => Request_Content,
+               Log_Level_Payload => CoAP_SPARK.Log.Debug);
+
             -- Call the request handler with the decoded content
             State.Request_Handler
               (Method           => RFLX.CoAP.CoAP_Message.Get_Method (Context),
@@ -69,14 +76,19 @@ is
                Response_Codes   => Response_Codes,
                Response_Content => Response_Content);
 
+            CoAP_SPARK.Log.Put_Line ("RESPONSE: ");
+            CoAP_SPARK.Messages.Print_Content
+              (Item              => Response_Content,
+               Log_Level_Payload => CoAP_SPARK.Log.Debug);
+            CoAP_SPARK.Messages.Print_Response_Kind (Item => Response_Codes);
+
             CoAP_SPARK.Messages.Encoding.Encode_Options_And_Payload
               (Options_And_Payload => Response_Content,
                Status              => State.Current_Status,
                Encoded_Data        =>
                  RFLX_Result.Options_And_Payload_Options_And_Payload,
                Encoded_Length      =>
-                 RFLX.CoAP.Length_16
-                   (RFLX_Result.Options_And_Payload_Length));
+                 RFLX.CoAP.Length_16 (RFLX_Result.Options_And_Payload_Length));
 
             RFLX_Result.Success_Code := RFLX.CoAP.Success_Response'Last;
             RFLX_Result.Client_Error_Code :=

@@ -1,7 +1,7 @@
 with SPARK_Terminal;
 with CoAP_SPARK.Log;
 
-package body CoAP_Secure
+package body Secure_Server
    with SPARK_Mode => On
 is
 
@@ -35,21 +35,15 @@ is
         (Item => Item, Offset => 0, Str => Str, Check => False);
    end Update;
 
-   function PSK_Client_Callback
+
+   function PSK_Server_Callback
      (Unused         : WolfSSL.WolfSSL_Type;
-      Hint           : Interfaces.C.Strings.chars_ptr;
       Identity       : Interfaces.C.Strings.chars_ptr;
-      Id_Max_Length  : Interfaces.C.unsigned;
       Key            : Interfaces.C.Strings.chars_ptr;
       Key_Max_Length : Interfaces.C.unsigned) return Interfaces.C.unsigned
    is
-      Hint_String : constant String := Interfaces.C.Strings.Value (Hint);
- 
       Identity_Index, Key_Index : Natural := 0;
    begin
-
-      CoAP_SPARK.Log.Put ("Hint: ");
-      CoAP_SPARK.Log.Put_Line (Hint_String);
 
       for I in 1 .. SPARK_Terminal.Argument_Count - 2 loop
 
@@ -74,18 +68,16 @@ is
            SPARK_Terminal.Argument (Key_Index);
       begin
 
-         if Identity_String'Length > Id_Max_Length then
+         if Interfaces.C.Strings.Value
+            (Item   => Identity,
+            Length => Identity_String'Length) /= Identity_String 
+         then
             CoAP_SPARK.Log.Put_Line
-              ("Identity too long", CoAP_SPARK.Log.Error);
+              ("Identity not known", CoAP_SPARK.Log.Debug);
             return 0;
          end if;
 
-         Update
-           (Item        => Identity,
-            Item_Length => Id_Max_Length,
-            Str         => Identity_String);
-
-         if Key_String'Length > Key_Max_Length then
+         if Key_Max_Length < Key_String'Length then
             CoAP_SPARK.Log.Put_Line
               ("Key too long", CoAP_SPARK.Log.Error);
             return 0;
@@ -98,7 +90,7 @@ is
 
          return Key_String'Length;
       end;
-   end PSK_Client_Callback;
+   end PSK_Server_Callback;
 
    procedure Initialize (Socket : out CoAP_SPARK.Channel.Socket_Type)
    with SPARK_Mode => Off
@@ -107,7 +99,7 @@ is
    begin
       CoAP_SPARK.Channel.Initialize
         (Socket              => Socket,
-         PSK_Client_Callback => CoAP_Secure.PSK_Client_Callback'Access);
+         PSK_Server_Callback => Secure_Server.PSK_Server_Callback'Access);
    end Initialize;
    
-end CoAP_Secure;
+end Secure_Server;

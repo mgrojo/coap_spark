@@ -36,6 +36,53 @@ is
       end if;
    end Print_Content;
 
+   procedure Print_Response_Kind
+     (Item              : Response_Kind;
+      General_Log_Level : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Debug;
+      Log_Level_Errors  : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Info)
+   is
+   begin
+
+      case Item.Code_Class is
+         when RFLX.CoAP.Success =>
+
+            CoAP_SPARK.Log.Put_Line
+              (Item => "Server answered with success:",
+               Level => General_Log_Level);
+            CoAP_SPARK.Log.Put_Line
+              (Item => Image (Item),
+               Level => Log_Level_Errors);
+
+         when RFLX.CoAP.Client_Error =>
+
+            CoAP_SPARK.Log.Put
+              (Item => "Server answered with client error: ",
+               Level => General_Log_Level);
+            CoAP_SPARK.Log.Put_Line
+              (Item => Image (Item),
+               Level => General_Log_Level);
+
+            CoAP_SPARK.Log.Put
+              (Item => Image (Item, Long => False),
+               Level => Log_Level_Errors);
+            CoAP_SPARK.Log.Put (" ", Log_Level_Errors);
+
+         when RFLX.CoAP.Server_Error =>
+
+            CoAP_SPARK.Log.Put
+              (Item => "Server answered with server error: ",
+               Level => General_Log_Level);
+            CoAP_SPARK.Log.Put_Line
+              (Item => Image (Item),
+               Level => General_Log_Level);
+
+            CoAP_SPARK.Log.Put
+              (Item => Image (Item, Long => False),
+               Level => Log_Level_Errors);
+            CoAP_SPARK.Log.Put (" ", Log_Level_Errors);
+      end case;
+   end Print_Response_Kind;
+
    function Image (Item : Response_Kind; Long : Boolean := True) return String is
       Detail_Number : constant Integer :=
         (case Item.Code_Class is

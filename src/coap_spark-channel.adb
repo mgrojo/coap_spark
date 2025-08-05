@@ -103,30 +103,31 @@ is
    end To_RFLX_Bytes;
 
    procedure Initialize
-     (Socket       : out Socket_Type;
-      Port         : Port_Type := Default_Port;
-      PSK_Callback : WolfSSL.PSK_Client_Callback := null;
-      Server       : Boolean := False)
+     (Socket              : out Socket_Type;
+      Port                : Port_Type := Default_Port;
+      PSK_Client_Callback : WolfSSL.PSK_Client_Callback := null;
+      PSK_Server_Callback : WolfSSL.PSK_Server_Callback := null;
+      Server              : Boolean := False)
    is
       Result : SPARK_Sockets.Subprogram_Result;
    begin
 
       Socket.Attached_Socket := (Exists => False);
 
-      SPARK_Sockets.Create_Datagram_Socket
-        (Socket => Socket.Attached_Socket);
+      SPARK_Sockets.Create_Datagram_Socket (Socket => Socket.Attached_Socket);
 
       if not Socket.Attached_Socket.Exists then
          return;
       end if;
 
       if Server then
-         Result := SPARK_Sockets.Bind_Socket
-           (Socket  => Socket.Attached_Socket.Socket,
-            Address =>
-              (Family => SPARK_Sockets.Family_Inet,
-               Addr   => SPARK_Sockets.Any_Inet_Addr,
-               Port   => SPARK_Sockets.Port_Type (Port)));
+         Result :=
+           SPARK_Sockets.Bind_Socket
+             (Socket  => Socket.Attached_Socket.Socket,
+              Address =>
+                (Family => SPARK_Sockets.Family_Inet,
+                 Addr   => SPARK_Sockets.Any_Inet_Addr,
+                 Port   => SPARK_Sockets.Port_Type (Port)));
 
          if Result /= SPARK_Sockets.Success then
             return;
@@ -150,10 +151,13 @@ is
             WolfSSL.Create_WolfSSL (Context => Socket.Ctx, Ssl => Socket.Ssl);
 
             if WolfSSL.Is_Valid (Socket.Ssl) then
-               -- Use PSK for authentication.
-               WolfSSL.Set_PSK_Client_Callback
-                 (Ssl      => Socket.Ssl,
-                  Callback => PSK_Callback);
+               if Server then
+                  WolfSSL.Set_PSK_Server_Callback
+                    (Ssl => Socket.Ssl, Callback => PSK_Server_Callback);
+               else
+                  WolfSSL.Set_PSK_Client_Callback
+                    (Ssl => Socket.Ssl, Callback => PSK_Client_Callback);
+               end if;
             end if;
          end if;
       end if;

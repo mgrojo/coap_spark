@@ -46,6 +46,14 @@ is
       Log_Level_Payload : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Info)
       with Pre => CoAP_SPARK.Log."<=" (General_Log_Level, Log_Level_Payload);
 
+   --  Log the content of response kind according to the log levels for success
+   --  output and errror output.
+   procedure Print_Response_Kind
+     (Item              : Response_Kind;
+      General_Log_Level : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Debug;
+      Log_Level_Errors  : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Info)
+      with Pre => CoAP_SPARK.Log."<=" (General_Log_Level, Log_Level_Errors);
+
    -- Return the image of a response kind. When Long is True, the image includes
    -- the human readable description of the response code, otherwise it only
    -- includes the code in standard format.

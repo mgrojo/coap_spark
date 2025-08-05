@@ -13,14 +13,22 @@ is
 
    type Port_Type is mod 2 ** 16;
 
-   procedure Initialize (Socket : out Socket_Type;
-                         Port   : Port_Type := Default_Port;
-                         PSK_Callback : WolfSSL.PSK_Client_Callback := null;
-                         Server : Boolean := False) with
-      Pre => (if Socket.Is_Secure then PSK_Callback not in null else True),
-      Relaxed_Initialization => Socket,
-      Global =>
-         null;
+   procedure Initialize
+     (Socket              : out Socket_Type;
+      Port                : Port_Type := Default_Port;
+      PSK_Client_Callback : WolfSSL.PSK_Client_Callback := null;
+      PSK_Server_Callback : WolfSSL.PSK_Server_Callback := null;
+      Server              : Boolean := False)
+   with
+     Pre                    =>
+       (if Socket.Is_Secure
+        then
+          (not Server and then PSK_Client_Callback not in null)
+          xor (Server and then PSK_Server_Callback not in null)
+        else
+          (PSK_Client_Callback in null and then PSK_Server_Callback in null)),
+     Relaxed_Initialization => Socket,
+     Global                 => null;
 
    function Is_Valid (Socket : Socket_Type) return Boolean with
       Global =>
