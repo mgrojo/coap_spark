@@ -11,9 +11,11 @@ is
      (Ctx : in out FSM.Context;
       Skt : in out CoAP_SPARK.Channel.Socket_Type)
    with
-     Pre =>
+      Pre =>
         FSM.Initialized (Ctx)
         and then CoAP_SPARK.Channel.Is_Valid (Skt),
-      Post => FSM.Initialized (Ctx);
+      Post => FSM.Initialized (Ctx),
+      Global =>
+         null;
 
 end CoAP_SPARK.Client_Session;
