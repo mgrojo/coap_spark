@@ -1,5 +1,6 @@
 pragma SPARK_Mode;
 
+with Ada.Text_IO;
 with Coap_Client_Config;
 
 with CoAP_Secure;
@@ -8,6 +9,7 @@ with CoAP_SPARK.Channel;
 with CoAP_SPARK.Client_Session;
 with CoAP_SPARK.Log;
 with CoAP_SPARK.Messages;
+with CoAP_SPARK.Random;
 with CoAP_SPARK.URI;
 with CoAP_SPARK.Utils;
 
@@ -65,7 +67,11 @@ procedure CoAP_Client is
       Payload : in out CoAP_SPARK.Messages.Payload_Ptr)
    with
       Pre =>
-        URI_String'Length <= CoAP_SPARK.Max_URI_Length
+        URI_String'Length <= CoAP_SPARK.Max_URI_Length,
+      Global =>
+         (Input  => CoAP_SPARK.Log.Active_Level,
+          In_Out => (Ada.Text_IO.File_System, CoAP_SPARK.Random.Generator))
+
    is
       URI        : constant CoAP_SPARK.URI.URI :=
         CoAP_SPARK.URI.Create (URI_String);

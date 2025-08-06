@@ -6,7 +6,8 @@ package CoAP_SPARK.Messages.Encoding is
      (Options_And_Payload : Content;
       Status              : out CoAP_SPARK.Status_Type;
       Encoded_Data        : out RFLX.RFLX_Types.Bytes;
-      Encoded_Length      : out RFLX.CoAP.Length_16);
+      Encoded_Length      : out RFLX.CoAP.Length_16)
+   with Global => null;
 
    procedure Decode_Options_And_Payload
      (Data            : RFLX.RFLX_Types.Bytes;
