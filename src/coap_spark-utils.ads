@@ -32,7 +32,8 @@ is
 
       -- Wrapper around 'Value attribute, which cannot be proved by SPARK.
       function Value (Number : String) return Numeric_Type
-      with Pre => Is_Valid_As_Number (Number);
+      with Pre => Is_Valid_As_Number (Number),
+           Global => null;
 
       function Value (Number : String) return Numeric_Type
       is (Numeric_Type'Value (Number))
@@ -64,6 +65,8 @@ is
 
    -- Wrapper around 'Value attribute, which cannot be proved by SPARK.
    function Value (Method : String) return RFLX.CoAP.Method_Code
-      with Pre => Is_Valid_As_Method (Method);
+   with
+      Pre => Is_Valid_As_Method (Method),
+      Global => null;
 
 end CoAP_SPARK.Utils;

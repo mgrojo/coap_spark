@@ -14,8 +14,6 @@ is
       Pre =>
         FSM.Initialized (Ctx)
         and then CoAP_SPARK.Channel.Is_Valid (Skt),
-      Post => FSM.Initialized (Ctx),
-      Global =>
-         null;
+      Post => FSM.Initialized (Ctx);
 
 end CoAP_SPARK.Client_Session;

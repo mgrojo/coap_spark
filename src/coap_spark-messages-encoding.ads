@@ -11,6 +11,7 @@ package CoAP_SPARK.Messages.Encoding is
    procedure Decode_Options_And_Payload
      (Data            : RFLX.RFLX_Types.Bytes;
       Status          : out CoAP_SPARK.Status_Type;
-      Decoded_Content : out Content);
+      Decoded_Content : out Content)
+   with Global => null;
 
 end CoAP_SPARK.Messages.Encoding;

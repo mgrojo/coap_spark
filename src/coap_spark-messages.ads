@@ -59,7 +59,7 @@ is
    -- includes the code in standard format.
    function Image (Item : Response_Kind; Long : Boolean := True) return String
    with
-     Post => Image'Result'First = 1;
+      Post => Image'Result'First = 1;
 
    function Is_Empty (Item : Content) return Boolean
    is (CoAP_SPARK.Options.Lists.Is_Empty (Item.Options)
@@ -71,9 +71,10 @@ is
      (Text : String;
       Item : out Content)
    with
-     Pre => Text'Length <= CoAP_SPARK.Max_Payload_Length,
-     Post => not Is_Empty (Item) and then
-      Item.Payload'Length = Text'Length;
+      Pre => Text'Length <= CoAP_SPARK.Max_Payload_Length,
+      Post => not Is_Empty (Item) and then
+         Item.Payload'Length = Text'Length,
+      Global => null;
 
    procedure Finalize (Item : in out Content)
    with
