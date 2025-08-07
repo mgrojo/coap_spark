@@ -14,7 +14,7 @@ with RFLX.CoAP_Server.Main_Loop.FSM;
 
 -- The following package is used, instead of Ada.Command_Line, for the reasons
 -- explained in the package itself (related to the use of SPARK).
-with Ada.Command_Line;
+with SPARK_Terminal;
 
 with Server_Handling;
 
@@ -37,11 +37,11 @@ procedure CoAP_Server is
       Put ("Usage: coap_server [-p PORT] [-A <Address>] "); -- TODO add Address
       Put_Line ("[-k <PSK>] [-u <Identity>] [-v <verbosity>] ");
       
-      Ada.Command_Line.Set_Exit_Status
-        (Code =>
+      SPARK_Terminal.Set_Exit_Status
+        (Status =>
            (if Is_Failure
-            then Ada.Command_Line.Failure
-            else Ada.Command_Line.Success));
+            then SPARK_Terminal.Exit_Status_Failure
+            else SPARK_Terminal.Exit_Status_Success));
    end Usage;
 
    procedure Run_Session
@@ -96,17 +96,17 @@ procedure CoAP_Server is
    Is_Secure          : Boolean := False;
 begin
 
-   if Ada.Command_Line.Argument_Count = 1
-     and then (Ada.Command_Line.Argument (1) = "-h"
-               or else Ada.Command_Line.Argument (1) = "--help")
+   if SPARK_Terminal.Argument_Count = 1
+     and then (SPARK_Terminal.Argument (1) = "-h"
+               or else SPARK_Terminal.Argument (1) = "--help")
    then
       Usage (Is_Failure => False);
       return;
    end if;
 
-   if Ada.Command_Line.Argument_Count = 1
-     and then (Ada.Command_Line.Argument (1) = "-V"
-               or else Ada.Command_Line.Argument (1) = "--version")
+   if SPARK_Terminal.Argument_Count = 1
+     and then (SPARK_Terminal.Argument (1) = "-V"
+               or else SPARK_Terminal.Argument (1) = "--version")
    then
       CoAP_SPARK.Log.Put (Coap_Server_Config.Crate_Name, CoAP_SPARK.Log.Info);
       CoAP_SPARK.Log.Put (" v", CoAP_SPARK.Log.Info);
@@ -117,36 +117,36 @@ begin
 
    -- Any other single command line argument is an error, since all remaining
    --  ones are an option and a value.
-   if Ada.Command_Line.Argument_Count = 1 then
+   if SPARK_Terminal.Argument_Count = 1 then
       Usage (Is_Failure => True);
       return;
    end if;
 
-   while Argument_Index < Ada.Command_Line.Argument_Count loop
+   while Argument_Index < SPARK_Terminal.Argument_Count loop
 
-      if Ada.Command_Line.Argument (Argument_Index) = "-p" then
+      if SPARK_Terminal.Argument (Argument_Index) = "-p" then
          Argument_Index := @ + 1;
          if CoAP_SPARK.Utils.Valid_Unsigned_16_Values.Is_Valid_As_Number
-              (Ada.Command_Line.Argument (Argument_Index))
+              (SPARK_Terminal.Argument (Argument_Index))
          then
             Port :=
               CoAP_SPARK.Channel.Port_Type
                 (CoAP_SPARK.Utils.Valid_Unsigned_16_Values.Value
-                   (Ada.Command_Line.Argument (Argument_Index)));
+                   (SPARK_Terminal.Argument (Argument_Index)));
          else
             CoAP_SPARK.Log.Put_Line ("Invalid specified port", CoAP_SPARK.Log.Error);
             Valid_Command_Line := False;
          end if;
 
-      elsif Ada.Command_Line.Argument (Argument_Index) = "-v" then
+      elsif SPARK_Terminal.Argument (Argument_Index) = "-v" then
          Argument_Index := @ + 1;
          if CoAP_SPARK.Utils.Valid_Natural_Values.Is_Valid_As_Number
-              (Ada.Command_Line.Argument (Argument_Index))
+              (SPARK_Terminal.Argument (Argument_Index))
          then
             declare
                Verbosity_Number : constant Natural :=
                  CoAP_SPARK.Utils.Value
-                   (Ada.Command_Line.Argument (Argument_Index));
+                   (SPARK_Terminal.Argument (Argument_Index));
             begin
                if Verbosity_Number
                  > CoAP_SPARK.Log.Level_Type'Pos
@@ -169,16 +169,16 @@ begin
             Valid_Command_Line := False;
          end if;
 
-      elsif Ada.Command_Line.Argument (Argument_Index) = "-k"
-        or else Ada.Command_Line.Argument (Argument_Index) = "-u"
+      elsif SPARK_Terminal.Argument (Argument_Index) = "-k"
+        or else SPARK_Terminal.Argument (Argument_Index) = "-u"
       then
          Argument_Index := @ + 1;
          Is_Secure := True;
 
-         if Argument_Index = Ada.Command_Line.Argument_Count then
+         if Argument_Index = SPARK_Terminal.Argument_Count then
             CoAP_SPARK.Log.Put ("Missing argument for ", CoAP_SPARK.Log.Error);
             CoAP_SPARK.Log.Put_Line
-              (Ada.Command_Line.Argument (Argument_Index - 1),
+              (SPARK_Terminal.Argument (Argument_Index - 1),
                CoAP_SPARK.Log.Error);
             Valid_Command_Line := False;
          end if;
@@ -186,14 +186,14 @@ begin
       else
          CoAP_SPARK.Log.Put ("Invalid option: ", CoAP_SPARK.Log.Error);
          CoAP_SPARK.Log.Put_Line
-           (Ada.Command_Line.Argument (Argument_Index), CoAP_SPARK.Log.Error);
+           (SPARK_Terminal.Argument (Argument_Index), CoAP_SPARK.Log.Error);
          Valid_Command_Line := False;
       end if;
 
       exit when not Valid_Command_Line or else
-         Argument_Index = Ada.Command_Line.Argument_Count;
+         Argument_Index = SPARK_Terminal.Argument_Count;
 
-      pragma Loop_Invariant (Argument_Index < Ada.Command_Line.Argument_Count);
+      pragma Loop_Invariant (Argument_Index < SPARK_Terminal.Argument_Count);
       Argument_Index := @ + 1;
    end loop;
 
