@@ -53,7 +53,9 @@ is
          Last   =>
            RFLX_Types.To_Last_Bit_Index (RFLX_Types.Length (Request.Length)));
 
-      if RFLX.CoAP.CoAP_Message.Valid_Message (Context) then
+      RFLX.CoAP.CoAP_Message.Verify_Message (Context);
+
+      if RFLX.CoAP.CoAP_Message.Well_Formed_Message (Context) then
 
          CoAP_SPARK.Messages.Encoding.Decode_Options_And_Payload
            (Data            => Request.Message_Data,
