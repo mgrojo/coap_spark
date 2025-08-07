@@ -10,6 +10,7 @@ is
 
    -- Declare the discriminant Is_Secure to True if you want to use DTLS.
    type Socket_Type (Is_Secure : Boolean) is limited private;
+   type Address_Type is private;
 
    type Port_Type is mod 2 ** 16;
 
@@ -49,6 +50,13 @@ is
       Global =>
          null;
 
+   procedure Send_To (Socket : in out Socket_Type;
+                      Buffer : RFLX.RFLX_Builtin_Types.Bytes;
+                      To     : Address_Type) with
+      Pre => Is_Valid (Socket) and then Buffer'First = 1 and then not Socket.Is_Secure,
+      Global =>
+         null;
+
    use type RFLX.RFLX_Builtin_Types.Length;
 
    procedure Receive (Socket : in out Socket_Type;
@@ -56,6 +64,18 @@ is
                       Length :    out RFLX.RFLX_Builtin_Types.Length) with
       Relaxed_Initialization => (Buffer),
       Pre => Is_Valid (Socket) and then Buffer'First = 1,
+      Post =>
+         Length <= Buffer'Length and then
+         Buffer (Buffer'First .. RFLX.RFLX_Builtin_Types.Index'Base (Length))'Initialized,
+      Global =>
+         null;
+
+   procedure Receive (Socket : in out Socket_Type;
+                      Buffer :    out RFLX.RFLX_Builtin_Types.Bytes;
+                      Length :    out RFLX.RFLX_Builtin_Types.Length;
+                      From   :    out Address_Type) with
+      Relaxed_Initialization => (Buffer),
+      Pre => Is_Valid (Socket) and then Buffer'First = 1 and then not Socket.Is_Secure,
       Post =>
          Length <= Buffer'Length and then
          Buffer (Buffer'First .. RFLX.RFLX_Builtin_Types.Index'Base (Length))'Initialized,
@@ -81,6 +101,8 @@ private
             null;
       end case;
    end record;
+
+   type Address_Type is new SPARK_Sockets.Sock_Addr_Type;
 
    use type WolfSSL.Subprogram_Result;
 

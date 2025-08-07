@@ -190,7 +190,8 @@ begin
          Valid_Command_Line := False;
       end if;
 
-      exit when not Valid_Command_Line;
+      exit when not Valid_Command_Line or else
+         Argument_Index = Ada.Command_Line.Argument_Count;
 
       pragma Loop_Invariant (Argument_Index < Ada.Command_Line.Argument_Count);
       Argument_Index := @ + 1;

@@ -63,13 +63,12 @@ is
      (Buffer : Ada.Streams.Stream_Element_Array)
       return RFLX.RFLX_Builtin_Types.Bytes
    with
-     Pre =>
+     Pre  =>
        Buffer'First = 1
        and then Buffer'Last
                 <= Ada.Streams.Stream_Element_Offset
                      (RFLX.RFLX_Builtin_Types.Index'Last),
-      Post =>
-        To_RFLX_Bytes'Result'Length = Buffer'Length
+     Post => To_RFLX_Bytes'Result'Length = Buffer'Length
    is
       Result : RFLX.RFLX_Builtin_Types.Bytes (1 .. Buffer'Length);
    begin
@@ -224,19 +223,40 @@ is
    end Connect;
 
    procedure Send_Socket
-     (Socket : Socket_Type;
-      Item   : Ada.Streams.Stream_Element_Array)
-      with Pre => Is_Valid (Socket);
+     (Socket : Socket_Type; Item : Ada.Streams.Stream_Element_Array)
+   with Pre => Is_Valid (Socket);
 
    procedure Send_Socket
-     (Socket : Socket_Type;
-      Item   : Ada.Streams.Stream_Element_Array)
+     (Socket : Socket_Type; Item : Ada.Streams.Stream_Element_Array)
    with SPARK_Mode => Off
    is
       Unused_Last : Ada.Streams.Stream_Element_Offset;
    begin
       GNAT.Sockets.Send_Socket
-        (Socket => Socket.Attached_Socket.Socket, Item => Item, Last => Unused_Last);
+        (Socket => Socket.Attached_Socket.Socket,
+         Item   => Item,
+         Last   => Unused_Last);
+   end Send_Socket;
+
+   procedure Send_Socket
+     (Socket : Socket_Type;
+      Item   : Ada.Streams.Stream_Element_Array;
+      To     : Address_Type)
+   with Pre => Is_Valid (Socket);
+
+   procedure Send_Socket
+     (Socket : Socket_Type;
+      Item   : Ada.Streams.Stream_Element_Array;
+      To     : Address_Type)
+   with SPARK_Mode => Off
+   is
+      Unused_Last : Ada.Streams.Stream_Element_Offset;
+   begin
+      GNAT.Sockets.Send_Socket
+        (Socket => Socket.Attached_Socket.Socket,
+         Item   => Item,
+         Last   => Unused_Last,
+         To     => GNAT.Sockets.Sock_Addr_Type (To));
    end Send_Socket;
 
    procedure Send
@@ -271,6 +291,17 @@ is
       end if;
    end Send;
 
+   procedure Send_To
+     (Socket : in out Socket_Type;
+      Buffer : RFLX.RFLX_Builtin_Types.Bytes;
+      To     : Address_Type)
+   is
+      Data : constant Ada.Streams.Stream_Element_Array :=
+        To_Ada_Stream (Buffer);
+   begin
+      Send_Socket (Socket => Socket, Item => Data, To => To);
+   end Send_To;
+
    procedure Receive_Socket
      (Socket : Socket_Type;
       Item   : out Ada.Streams.Stream_Element_Array;
@@ -289,7 +320,36 @@ is
    is
    begin
       GNAT.Sockets.Receive_Socket
-        (Socket => Socket.Attached_Socket.Socket, Item => Item, Last => Last);
+        (Socket => Socket.Attached_Socket.Socket,
+         Item   => Item,
+         Last   => Last);
+   end Receive_Socket;
+
+   procedure Receive_Socket
+     (Socket : Socket_Type;
+      Item   : out Ada.Streams.Stream_Element_Array;
+      Last   : out Ada.Streams.Stream_Element_Offset;
+      From   : out Address_Type)
+   with
+     Relaxed_Initialization => Item,
+     Pre                    => Is_Valid (Socket),
+     Post                   =>
+       Last in Item'First - 1 .. Item'Last
+       and then Item (Item'First .. Last)'Initialized;
+
+   procedure Receive_Socket
+     (Socket : Socket_Type;
+      Item   : out Ada.Streams.Stream_Element_Array;
+      Last   : out Ada.Streams.Stream_Element_Offset;
+      From   : out Address_Type)
+   with SPARK_Mode => Off
+   is
+   begin
+      GNAT.Sockets.Receive_Socket
+        (Socket => Socket.Attached_Socket.Socket,
+         Item   => Item,
+         Last   => Last,
+         From   => GNAT.Sockets.Sock_Addr_Type (From));
    end Receive_Socket;
 
    procedure Receive
@@ -333,9 +393,28 @@ is
       end if;
    end Receive;
 
-   procedure Finalize
-     (Socket : in out Socket_Type)
+   procedure Receive
+     (Socket : in out Socket_Type;
+      Buffer : out RFLX.RFLX_Builtin_Types.Bytes;
+      Length : out RFLX.RFLX_Builtin_Types.Length;
+      From   : out Address_Type)
    is
+      Data : Ada.Streams.Stream_Element_Array (1 .. Buffer'Length)
+         with Relaxed_Initialization;
+      Last : Ada.Streams.Stream_Element_Offset;
+   begin
+
+      Receive_Socket
+        (Socket => Socket, Item => Data, Last => Last, From => From);
+
+      pragma Assert (Data'Length = Buffer'Length);
+      Buffer (Buffer'First .. RFLX.RFLX_Builtin_Types.Index'Base (Last)) :=
+        To_RFLX_Bytes (Data (Data'First .. Last));
+      Length := RFLX.RFLX_Builtin_Types.Length (Last);
+
+   end Receive;
+
+   procedure Finalize (Socket : in out Socket_Type) is
    begin
       if Has_Attached_Socket (Socket) then
          SPARK_Sockets.Close_Socket (Socket => Socket.Attached_Socket);

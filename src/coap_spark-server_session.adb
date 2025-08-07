@@ -13,7 +13,8 @@ is
    use type Types.Index;
 
    procedure Read (Ctx : FSM.Context;
-                   Skt : in out CoAP_SPARK.Channel.Socket_Type) with
+                   Skt : in out CoAP_SPARK.Channel.Socket_Type;
+                   To : CoAP_SPARK.Channel.Address_Type) with
       Pre =>
          FSM.Initialized (Ctx)
          and then FSM.Has_Data (Ctx, FSM.C_Transport)
@@ -39,13 +40,15 @@ is
          (Ctx,
           FSM.C_Transport,
           Buffer (Buffer'First .. Buffer'First - 2 + Types.Index (Size + 1)));
-      Channel.Send
+      Channel.Send_To
          (Skt,
-          Buffer (Buffer'First .. Buffer'First - 2 + Types.Index (Size + 1)));
+          Buffer (Buffer'First .. Buffer'First - 2 + Types.Index (Size + 1)),
+          To);
    end Read;
 
-   procedure Write (Ctx : in out FSM.Context;
-                    Skt : in out CoAP_SPARK.Channel.Socket_Type) with
+   procedure Write (Ctx  : in out FSM.Context;
+                    Skt  : in out CoAP_SPARK.Channel.Socket_Type;
+                    From : out CoAP_SPARK.Channel.Address_Type) with
       Pre =>
          FSM.Initialized (Ctx)
          and then FSM.Needs_Data (Ctx, FSM.C_Transport)
@@ -58,7 +61,7 @@ is
          with Relaxed_Initialization;
       Length : RFLX.RFLX_Builtin_Types.Length;
    begin
-      Channel.Receive (Skt, Buffer, Length);
+      Channel.Receive (Skt, Buffer, Length, From);
       if
          Length > 0
          and then Length <= FSM.Write_Buffer_Size (Ctx, FSM.C_Transport)
@@ -74,6 +77,7 @@ is
       (Ctx : in out FSM.Context;
        Skt : in out CoAP_SPARK.Channel.Socket_Type)
    is
+      Client_Address : CoAP_SPARK.Channel.Address_Type;
    begin
 
       while FSM.Active (Ctx) loop
@@ -83,11 +87,11 @@ is
             pragma Loop_Invariant (FSM.Initialized (Ctx));
             exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
             if FSM.Has_Data (Ctx, C) then
-               Read (Ctx, Skt);
+               Read (Ctx, Skt, Client_Address);
             end if;
             exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
             if FSM.Needs_Data (Ctx, C) then
-               Write (Ctx, Skt);
+               Write (Ctx, Skt, Client_Address);
             end if;
          end loop;
          exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
