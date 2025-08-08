@@ -27,13 +27,16 @@ is
       use type RFLX.CoAP.Code_Class;
 
       Buffer  : RFLX_Types.Bytes_Ptr :=
-        new RFLX_Types.Bytes'(Request.Message_Data);
+        new RFLX_Types.Bytes'(Request.Message_Data (Request.Message_Data'First ..
+                                                      RFLX_Types.Index (Request.Length)));
       Context : RFLX.CoAP.CoAP_Message.Context;
 
       Request_Content  : CoAP_SPARK.Messages.Content;
       Response_Codes   : CoAP_SPARK.Messages.Response_Kind;
       Response_Content : CoAP_SPARK.Messages.Content;
 
+      Last : constant RFLX_Types.Bit_Length :=
+           RFLX_Types.To_Last_Bit_Index (RFLX_Types.Length (Request.Length));
    begin
 
       RFLX_Result :=
@@ -46,13 +49,13 @@ is
           Options_And_Payload_Length => 0);
 
       RFLX.CoAP.CoAP_Message.Initialize
-        (Ctx    => Context,
-         Buffer => Buffer,
-         First  =>
+        (Ctx          => Context,
+         Buffer       => Buffer,
+         First        =>
            RFLX_Types.To_First_Bit_Index
              (RFLX_Types.Index (Request.Message_Data'First)),
-         Last   =>
-           RFLX_Types.To_Last_Bit_Index (RFLX_Types.Length (Request.Length)));
+         Last         => Last,
+         Written_Last => Last);
 
       RFLX.CoAP.CoAP_Message.Verify_Message (Context);
 
