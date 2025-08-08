@@ -28,7 +28,7 @@ is
 
       Buffer  : RFLX_Types.Bytes_Ptr :=
         new RFLX_Types.Bytes'(Request.Message_Data (Request.Message_Data'First ..
-                                                      RFLX_Types.Index (Request.Length)));
+                                                      RFLX_Types.Index'Base (Request.Length)));
       Context : RFLX.CoAP.CoAP_Message.Context;
 
       Request_Content  : CoAP_SPARK.Messages.Content;
@@ -37,6 +37,7 @@ is
 
       Last : constant RFLX_Types.Bit_Length :=
            RFLX_Types.To_Last_Bit_Index (RFLX_Types.Length (Request.Length));
+
    begin
 
       RFLX_Result :=
@@ -47,6 +48,14 @@ is
           Padding              => 0,
           Options_And_Payload_Options_And_Payload => [others => 0],
           Options_And_Payload_Length => 0);
+
+      if Buffer'Length = 0 then
+         -- Not really expected, because the message has already been validated
+         -- in the main loop state machine.
+         State.Current_Status := CoAP_SPARK.Unexpected_Case;
+         RFLX.RFLX_Types.Free (Buffer);
+         return;
+      end if;
 
       RFLX.CoAP.CoAP_Message.Initialize
         (Ctx          => Context,
@@ -66,66 +75,83 @@ is
          State.Current_Status := CoAP_SPARK.Invalid_Request;
 
       else
-         CoAP_SPARK.Messages.Encoding.Decode_Options_And_Payload
-           (Data            => Request.Message_Data,
-            Status          => State.Current_Status,
-            Decoded_Content => Request_Content);
+         Handle_Request :
+         declare
+            Opt_Payload_Length : constant RFLX_Types.Length :=
+              RFLX_Types.To_Length
+                (RFLX.CoAP.CoAP_Message.Field_Size
+                   (Context, RFLX.CoAP.CoAP_Message.F_Options_And_Payload));
+            Opt_Payload_Buffer : RFLX_Types.Bytes
+                (1 .. RFLX.RFLX_Types.Index'Base (Opt_Payload_Length));
+         begin
+            RFLX.CoAP.CoAP_Message.Get_Options_And_Payload
+              (Context, Opt_Payload_Buffer);
 
-         if State.Current_Status = CoAP_SPARK.OK
-           and then State.Request_Handler not in null
-         then
+            CoAP_SPARK.Messages.Encoding.Decode_Options_And_Payload
+              (Data            => Opt_Payload_Buffer,
+               Status          => State.Current_Status,
+               Decoded_Content => Request_Content);
 
-            CoAP_SPARK.Log.Put_Line ("REQUEST: ");
-            CoAP_SPARK.Messages.Print_Content
-              (Item              => Request_Content,
-               Log_Level_Payload => CoAP_SPARK.Log.Debug);
+            if State.Current_Status = CoAP_SPARK.OK
+              and then State.Request_Handler not in null
+            then
 
-            -- Call the request handler with the decoded content
-            State.Request_Handler
-              (Method           => RFLX.CoAP.CoAP_Message.Get_Method (Context),
-               Request_Content  => Request_Content,
-               Response_Codes   => Response_Codes,
-               Response_Content => Response_Content);
+               CoAP_SPARK.Log.Put_Line ("REQUEST: ");
+               CoAP_SPARK.Messages.Print_Content
+                 (Item              => Request_Content,
+                  Log_Level_Payload => CoAP_SPARK.Log.Debug);
 
-            CoAP_SPARK.Log.Put_Line ("RESPONSE: ");
-            CoAP_SPARK.Messages.Print_Content
-              (Item              => Response_Content,
-               Log_Level_Payload => CoAP_SPARK.Log.Debug);
-            CoAP_SPARK.Messages.Print_Response_Kind (Item => Response_Codes);
+               -- Call the request handler with the decoded content
+               State.Request_Handler
+                 (Method           =>
+                    RFLX.CoAP.CoAP_Message.Get_Method (Context),
+                  Request_Content  => Request_Content,
+                  Response_Codes   => Response_Codes,
+                  Response_Content => Response_Content);
 
-            CoAP_SPARK.Messages.Encoding.Encode_Options_And_Payload
-              (Options_And_Payload => Response_Content,
-               Status              => State.Current_Status,
-               Encoded_Data        =>
-                 RFLX_Result.Options_And_Payload_Options_And_Payload,
-               Encoded_Length      =>
-                 RFLX.CoAP.Length_16 (RFLX_Result.Options_And_Payload_Length));
+               CoAP_SPARK.Log.Put_Line ("RESPONSE: ");
+               CoAP_SPARK.Messages.Print_Content
+                 (Item              => Response_Content,
+                  Log_Level_Payload => CoAP_SPARK.Log.Debug);
+               CoAP_SPARK.Messages.Print_Response_Kind
+                 (Item => Response_Codes);
 
-            RFLX_Result.Success_Code := RFLX.CoAP.Success_Response'Last;
-            RFLX_Result.Client_Error_Code :=
-              RFLX.CoAP.Client_Error_Response'Last;
-            RFLX_Result.Server_Error_Code :=
-              RFLX.CoAP.Server_Error_Response'Last;
-            RFLX_Result.Message_Class := Response_Codes.Code_Class;
+               CoAP_SPARK.Messages.Encoding.Encode_Options_And_Payload
+                 (Options_And_Payload => Response_Content,
+                  Status              => State.Current_Status,
+                  Encoded_Data        =>
+                    RFLX_Result.Options_And_Payload_Options_And_Payload,
+                  Encoded_Length      =>
+                    RFLX.CoAP.Length_16
+                      (RFLX_Result.Options_And_Payload_Length));
 
-            case CoAP_SPARK.Messages.Response_Code (Response_Codes.Code_Class)
-            is
-               when RFLX.CoAP.Success =>
+               RFLX_Result.Success_Code := RFLX.CoAP.Success_Response'Last;
+               RFLX_Result.Client_Error_Code :=
+                 RFLX.CoAP.Client_Error_Response'Last;
+               RFLX_Result.Server_Error_Code :=
+                 RFLX.CoAP.Server_Error_Response'Last;
+               RFLX_Result.Message_Class := Response_Codes.Code_Class;
 
-                  RFLX_Result.Success_Code := Response_Codes.Success_Code;
+               case CoAP_SPARK.Messages.Response_Code
+                      (Response_Codes.Code_Class)
+               is
+                  when RFLX.CoAP.Success =>
 
-               when RFLX.CoAP.Client_Error =>
+                     RFLX_Result.Success_Code := Response_Codes.Success_Code;
 
-                  RFLX_Result.Client_Error_Code :=
-                    Response_Codes.Client_Error_Code;
+                  when RFLX.CoAP.Client_Error =>
 
-               when RFLX.CoAP.Server_Error =>
+                     RFLX_Result.Client_Error_Code :=
+                       Response_Codes.Client_Error_Code;
 
-                  RFLX_Result.Server_Error_Code :=
-                    Response_Codes.Server_Error_Code;
+                  when RFLX.CoAP.Server_Error =>
 
-            end case;
-         end if;
+                     RFLX_Result.Server_Error_Code :=
+                       Response_Codes.Server_Error_Code;
+
+               end case;
+            end if;
+         end Handle_Request;
       end if;
 
       RFLX.CoAP.CoAP_Message.Take_Buffer
