@@ -8,8 +8,9 @@ with RFLX.CoAP.Option_Type;
 with RFLX.RFLX_Arithmetic;
 with RFLX.RFLX_Builtin_Types;
 
-package body CoAP_SPARK.Messages.Encoding is
-
+package body CoAP_SPARK.Messages.Encoding
+   with SPARK_Mode
+is
    use type Ada.Containers.Count_Type;
    use type RFLX.CoAP.Option_Extended16_Type;
    use type RFLX.CoAP.Option_Numbers;
@@ -197,6 +198,7 @@ package body CoAP_SPARK.Messages.Encoding is
         Options_And_Payload.Options;
    begin
 
+      Status := OK;
       Encoded_Length := 0;
       Encoded_Data := [others => 0];
 
