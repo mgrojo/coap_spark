@@ -29,9 +29,9 @@ is
        (if Socket.Is_Secure
         then
           (not Server and then PSK_Client_Callback not in null)
-          xor (Server and then PSK_Server_Callback not in null)
+           xor (Server and then PSK_Server_Callback not in null)
         else
-          (PSK_Client_Callback in null and then PSK_Server_Callback in null)),
+          (PSK_Client_Callback not in null xor PSK_Server_Callback not in null)),
      Relaxed_Initialization => Socket,
      Global                 => null;
 
