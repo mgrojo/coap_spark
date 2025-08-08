@@ -23,7 +23,7 @@ CoAP-SPARK uses:
 * GNATProve 14.1.1 (dependency managed by Alire)
 * bbt 0.0.6 for testing (installable via Alire)
 
-## How to build
+## How to set-up
 
 Clone the repository recursing on submodules:
 ```
@@ -40,14 +40,17 @@ Generate source code from the CoAP model using RecordFlux with:
 make generate
 ```
 
+## How to build
+
 Install [Alire](https://alire.ada.dev/) and build the library running:
 ```
 alr build
 ```
 
-For building the client program:
+For building the client and server programs:
 ```
 cd client ; alr build
+cd ../server ; alr build
 ```
 
 ## How to test
@@ -95,7 +98,7 @@ and before running `gnatprove`, you have to put `{GNAT-2021-HOME}/libexec/spark/
 in the `PATH`, so `gnatprove` can find the `colibri` executable.
 
 ## Status
-CoAP-SPARK is a working and verified implementation of CoAP from the client side.
+CoAP-SPARK is a working and verified implementation of CoAP.
 
 The main objective of CoAP-SPARK is to be the subject of my Master's Thesis, but
 I think it can be used in scenarios where this limitations are not an issue:
@@ -104,10 +107,10 @@ I think it can be used in scenarios where this limitations are not an issue:
   for CoAP, but of the [RFC 7959](https://datatracker.ietf.org/doc/rfc7959/).
 - It only supports NoSec and PreSharedKey security modes.
 
-The server implementation is ongoing, following the example of the client.
-
 Regarding the implemented client is able to
 substitute libcoap's coap-client when called from a project like
 [ikea-smartlight](https://github.com/slokhorst/ikea-smartlight/).
+
+The server implementation is ongoing, following the example of the client.
 
 Bug reports, feedback or suggestions on how to improve the library are very welcome.

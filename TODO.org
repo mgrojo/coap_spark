@@ -24,7 +24,13 @@
 - [X] Implement RFC 7252 "5.4.1. Critical/Elective"
 
 * Server
-- [ ] Consider implementing server state-machine and example
+- [X] Consider implementing server state-machine and example
+  - [ ] Implement server logic for CRUD
+  - [ ] Add tests for the server
+
+* Upgrades
+  - [ ] Upgrade to GNATProve 15 and GNAT 15
+  - [ ] Upgrade bbt
 
 * Provers
 - [x] (discarded) Compile and install colibri from
