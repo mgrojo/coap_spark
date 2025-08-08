@@ -256,7 +256,7 @@ is
         (Socket => Socket.Attached_Socket.Socket,
          Item   => Item,
          Last   => Unused_Last,
-         To     => GNAT.Sockets.Sock_Addr_Type (To));
+         To     => GNAT.Sockets.Sock_Addr_Type (To.Sock_Addr));
    end Send_Socket;
 
    procedure Send
@@ -349,7 +349,7 @@ is
         (Socket => Socket.Attached_Socket.Socket,
          Item   => Item,
          Last   => Last,
-         From   => GNAT.Sockets.Sock_Addr_Type (From));
+         From   => GNAT.Sockets.Sock_Addr_Type (From.Sock_Addr));
    end Receive_Socket;
 
    procedure Receive

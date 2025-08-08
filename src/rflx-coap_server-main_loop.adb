@@ -24,6 +24,7 @@ is
       RFLX_Result : out RFLX.CoAP_Server.Application_Response.Structure)
    is
       use type CoAP_SPARK.Status_Type;
+      use type RFLX.CoAP.Code_Class;
 
       Buffer  : RFLX_Types.Bytes_Ptr :=
         new RFLX_Types.Bytes'(Request.Message_Data);
@@ -55,8 +56,13 @@ is
 
       RFLX.CoAP.CoAP_Message.Verify_Message (Context);
 
-      if RFLX.CoAP.CoAP_Message.Well_Formed_Message (Context) then
+      if not RFLX.CoAP.CoAP_Message.Well_Formed_Message (Context) then
+         State.Current_Status := CoAP_SPARK.Malformed_Message;
 
+      elsif RFLX.CoAP.CoAP_Message.Get_Class (Context) /= RFLX.CoAP.Request then
+         State.Current_Status := CoAP_SPARK.Invalid_Request;
+
+      else
          CoAP_SPARK.Messages.Encoding.Decode_Options_And_Payload
            (Data            => Request.Message_Data,
             Status          => State.Current_Status,
@@ -125,6 +131,12 @@ is
       pragma Assert (not RFLX.CoAP.CoAP_Message.Has_Buffer (Context));
 
       RFLX.RFLX_Types.Free (Buffer);
+
+      CoAP_SPARK.Messages.Finalize (Request_Content);
+      pragma Assert (CoAP_SPARK.Messages.Is_Empty (Request_Content));
+      CoAP_SPARK.Messages.Finalize (Response_Content);
+      pragma Assert (CoAP_SPARK.Messages.Is_Empty (Response_Content));
+
    end Get_Response;
 
    procedure Get_Error_Options_And_Payload

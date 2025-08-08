@@ -102,7 +102,10 @@ private
       end case;
    end record;
 
-   type Address_Type is new SPARK_Sockets.Sock_Addr_Type;
+   type Address_Type is
+   record
+      Sock_Addr : SPARK_Sockets.Sock_Addr_Type;
+   end record;
 
    use type WolfSSL.Subprogram_Result;
 
