@@ -1,7 +1,6 @@
 with Ada.Streams;
 with Ada.Unchecked_Conversion;
 
-with GNAT.Sockets;
 
 with Interfaces.C;
 

@@ -1,8 +1,9 @@
+
+
+private with GNAT.Sockets;
 private with SPARK_Sockets;
-
-with WolfSSL;
-
 with RFLX.RFLX_Builtin_Types;
+with WolfSSL;
 
 package CoAP_SPARK.Channel with
    SPARK_Mode
@@ -10,9 +11,12 @@ is
 
    -- Declare the discriminant Is_Secure to True if you want to use DTLS.
    type Socket_Type (Is_Secure : Boolean) is limited private;
+
    type Address_Type is private;
 
    type Port_Type is mod 2 ** 16;
+
+   function Is_Valid (Address : Address_Type) return Boolean;
 
    procedure Initialize
      (Socket              : out Socket_Type;
@@ -53,7 +57,10 @@ is
    procedure Send_To (Socket : in out Socket_Type;
                       Buffer : RFLX.RFLX_Builtin_Types.Bytes;
                       To     : Address_Type) with
-      Pre => Is_Valid (Socket) and then Buffer'First = 1 and then not Socket.Is_Secure,
+      Pre => Is_Valid (Socket) and then
+         Buffer'First = 1 and then
+         not Socket.Is_Secure and then
+         Is_Valid (To),
       Global =>
          null;
 
@@ -78,7 +85,8 @@ is
       Pre => Is_Valid (Socket) and then Buffer'First = 1 and then not Socket.Is_Secure,
       Post =>
          Length <= Buffer'Length and then
-         Buffer (Buffer'First .. RFLX.RFLX_Builtin_Types.Index'Base (Length))'Initialized,
+         Buffer (Buffer'First .. RFLX.RFLX_Builtin_Types.Index'Base (Length))'Initialized and then
+         Is_Valid (From),
       Global =>
          null;
 
@@ -104,8 +112,12 @@ private
 
    type Address_Type is
    record
-      Sock_Addr : SPARK_Sockets.Sock_Addr_Type;
+      Sock_Addr : SPARK_Sockets.Sock_Addr_Type :=
+         (Family => GNAT.Sockets.Family_Unspec);
    end record;
+
+   function Is_Valid (Address : Address_Type) return Boolean is
+      (GNAT.Sockets."/=" (Address.Sock_Addr.Family, GNAT.Sockets.Family_Unspec));
 
    use type WolfSSL.Subprogram_Result;
 

@@ -80,18 +80,25 @@ is
       Client_Address : CoAP_SPARK.Channel.Address_Type;
    begin
 
+      if Skt.Is_Secure then
+         -- Not implemented yet.
+         CoAP_SPARK.Log.Put_Line ("Secure server not implemented yet.", CoAP_SPARK.Log.Error);
+         Ctx.E.Current_Status := CoAP_SPARK.Unexpected_Case;
+         return;
+      end if;
+
       while FSM.Active (Ctx) loop
          pragma Loop_Invariant (FSM.Initialized (Ctx));
          pragma Loop_Invariant (CoAP_SPARK.Channel.Is_Valid (Skt));
          for C in FSM.Channel'Range loop
             pragma Loop_Invariant (FSM.Initialized (Ctx));
             exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
-            if FSM.Has_Data (Ctx, C) then
-               Read (Ctx, Skt, Client_Address);
+            if CoAP_SPARK.Channel.Is_Valid (Client_Address) and then FSM.Has_Data (Ctx, C) then
+               Read (Ctx, Skt, To => Client_Address);
             end if;
             exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
             if FSM.Needs_Data (Ctx, C) then
-               Write (Ctx, Skt, Client_Address);
+               Write (Ctx, Skt, From => Client_Address);
             end if;
          end loop;
          exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
@@ -100,8 +107,7 @@ is
 
       if not CoAP_SPARK.Channel.Is_Valid (Skt) then
          CoAP_SPARK.Log.Put_Line ("Communication problems.", CoAP_SPARK.Log.Error);
-         Ctx.E.Current_Status :=
-           CoAP_SPARK.Communication_Problems;
+         Ctx.E.Current_Status := CoAP_SPARK.Communication_Problems;
       end if;
 
    end Run_Session_Loop;
