@@ -21,7 +21,8 @@ CoAP-SPARK uses:
   (included as Git submodule)
 * GNAT 14.2.1 (toolchain managed by Alire)
 * GNATProve 14.1.1 (dependency managed by Alire)
-* bbt 0.0.6 for testing (installable via Alire)
+* Aunit for unit-testing the library (dependency managed by Alire)
+* bbt for testing (installable via Alire)
 
 ## How to set-up
 
