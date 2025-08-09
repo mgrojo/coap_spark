@@ -1,6 +1,7 @@
 with Ada.Containers;
 
 with CoAP_SPARK.Options.List_Sorting;
+with CoAP_SPARK.Options.Lists;
 
 with RFLX.CoAP;
 with RFLX.CoAP.Option_Sequence;
@@ -16,7 +17,6 @@ is
    use type RFLX.CoAP.Option_Numbers;
    use type RFLX.RFLX_Arithmetic.Base_Integer;
    use type RFLX.RFLX_Builtin_Types.Bit_Length;
-   use type RFLX.RFLX_Builtin_Types.Index;
    use type RFLX.RFLX_Builtin_Types.Length;
 
    subtype Base_Delta_Type is RFLX.CoAP.Option_Extended16_Type range 0 .. 12;
@@ -481,6 +481,10 @@ is
    begin
 
       Status := OK;
+      Decoded_Content :=
+        (Options => CoAP_SPARK.Options.Lists.Empty_Vector,
+         Format  => 0,
+         Payload => null);
 
       if Data'Length = 0 then
 
@@ -503,7 +507,6 @@ is
 
             RFLX.CoAP.Option_Sequence.Initialize
               (Ctx => Option_Sequence_Cxt, Buffer => Buffer);
-            CoAP_SPARK.Messages.Finalize (Decoded_Content);
 
             Read_Options :
             while RFLX.CoAP.Option_Sequence.Has_Element (Option_Sequence_Cxt)
