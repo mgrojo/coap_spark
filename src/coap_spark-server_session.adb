@@ -13,8 +13,7 @@ is
    use type Types.Index;
 
    procedure Read (Ctx : FSM.Context;
-                   Skt : in out CoAP_SPARK.Channel.Socket_Type;
-                   To : CoAP_SPARK.Channel.Address_Type) with
+                   Skt : in out CoAP_SPARK.Channel.Socket_Type) with
       Pre =>
          FSM.Initialized (Ctx)
          and then FSM.Has_Data (Ctx, FSM.C_Transport)
@@ -40,15 +39,13 @@ is
          (Ctx,
           FSM.C_Transport,
           Buffer (Buffer'First .. Buffer'First - 2 + Types.Index (Size + 1)));
-      Channel.Send_To
+      Channel.Send
          (Skt,
-          Buffer (Buffer'First .. Buffer'First - 2 + Types.Index (Size + 1)),
-          To);
+          Buffer (Buffer'First .. Buffer'First - 2 + Types.Index (Size + 1)));
    end Read;
 
    procedure Write (Ctx  : in out FSM.Context;
-                    Skt  : in out CoAP_SPARK.Channel.Socket_Type;
-                    From : out CoAP_SPARK.Channel.Address_Type) with
+                    Skt  : in out CoAP_SPARK.Channel.Socket_Type) with
       Pre =>
          FSM.Initialized (Ctx)
          and then FSM.Needs_Data (Ctx, FSM.C_Transport)
@@ -61,7 +58,7 @@ is
          with Relaxed_Initialization;
       Length : RFLX.RFLX_Builtin_Types.Length;
    begin
-      Channel.Receive (Skt, Buffer, Length, From);
+      Channel.Receive (Skt, Buffer, Length);
       if
          Length > 0
          and then Length <= FSM.Write_Buffer_Size (Ctx, FSM.C_Transport)
@@ -77,29 +74,28 @@ is
       (Ctx : in out FSM.Context;
        Skt : in out CoAP_SPARK.Channel.Socket_Type)
    is
-      Client_Address : CoAP_SPARK.Channel.Address_Type;
+      use type FSM.State;
    begin
-
-      if Skt.Is_Secure then
-         -- Not implemented yet.
-         CoAP_SPARK.Log.Put_Line ("Secure server not implemented yet.", CoAP_SPARK.Log.Error);
-         Ctx.E.Current_Status := CoAP_SPARK.Unexpected_Case;
-         return;
-      end if;
 
       while FSM.Active (Ctx) loop
          pragma Loop_Invariant (FSM.Initialized (Ctx));
          pragma Loop_Invariant (CoAP_SPARK.Channel.Is_Valid (Skt));
+
+         CoAP_SPARK.Log.Put_Line (FSM.Next_State (Ctx)'Image, CoAP_SPARK.Log.Info);
+         if FSM.Next_State (Ctx) = FSM.S_Receive_Request then
+            CoAP_SPARK.Channel.Accept_Connection (Skt);
+         end if;
+
          for C in FSM.Channel'Range loop
             pragma Loop_Invariant (FSM.Initialized (Ctx));
-            exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
-            if CoAP_SPARK.Channel.Is_Valid (Client_Address) and then FSM.Has_Data (Ctx, C) then
-               Read (Ctx, Skt, To => Client_Address);
-            end if;
-            exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
             if FSM.Needs_Data (Ctx, C) then
-               Write (Ctx, Skt, From => Client_Address);
+               Write (Ctx, Skt);
             end if;
+            exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
+            if FSM.Has_Data (Ctx, C) then
+               Read (Ctx, Skt);
+            end if;
+            exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
          end loop;
          exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
          FSM.Run (Ctx);

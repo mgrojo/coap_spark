@@ -35,6 +35,13 @@ is
      Relaxed_Initialization => Socket,
      Global                 => null;
 
+   procedure Accept_Connection
+     (Socket : in out Socket_Type)
+   with
+      Pre => Is_Valid (Socket),
+      Global =>
+         null;
+
    function Is_Valid (Socket : Socket_Type) return Boolean with
       Global =>
          null;
@@ -59,7 +66,6 @@ is
                       To     : Address_Type) with
       Pre => Is_Valid (Socket) and then
          Buffer'First = 1 and then
-         not Socket.Is_Secure and then
          Is_Valid (To),
       Global =>
          null;
@@ -82,7 +88,7 @@ is
                       Length :    out RFLX.RFLX_Builtin_Types.Length;
                       From   :    out Address_Type) with
       Relaxed_Initialization => (Buffer),
-      Pre => Is_Valid (Socket) and then Buffer'First = 1 and then not Socket.Is_Secure,
+      Pre => Is_Valid (Socket) and then Buffer'First = 1,
       Post =>
          Length <= Buffer'Length and then
          Buffer (Buffer'First .. RFLX.RFLX_Builtin_Types.Index'Base (Length))'Initialized and then
@@ -99,6 +105,7 @@ is
 private
 
    type Socket_Type (Is_Secure : Boolean) is record
+      Is_Server       : Boolean := False;
       Attached_Socket : SPARK_Sockets.Optional_Socket;
       case Is_Secure is
          when True =>
@@ -106,7 +113,7 @@ private
             Ctx    : WolfSSL.Context_Type;
             Result : WolfSSL.Subprogram_Result;
          when False =>
-            null;
+            Client_Address : Address_Type;
       end case;
    end record;
 
