@@ -132,24 +132,38 @@ is
                  RFLX.CoAP.Server_Error_Response'Last;
                RFLX_Result.Message_Class := Response_Codes.Code_Class;
 
-               case CoAP_SPARK.Messages.Response_Code
-                      (Response_Codes.Code_Class)
-               is
-                  when RFLX.CoAP.Success =>
+               if State.Current_Status /= CoAP_SPARK.OK then
 
-                     RFLX_Result.Success_Code := Response_Codes.Success_Code;
+                  CoAP_SPARK.Log.Put
+                    ("Error in options and payload encoding: ",
+                     CoAP_SPARK.Log.Info);
+                  CoAP_SPARK.Log.Put_Line
+                    (State.Current_Status'Image, CoAP_SPARK.Log.Info);
 
-                  when RFLX.CoAP.Client_Error =>
+                  RFLX_Result.Message_Class := RFLX.CoAP.Server_Error;
+                  RFLX_Result.Server_Error_Code :=
+                    RFLX.CoAP.Internal_Server_Error;
+               else
+                  case CoAP_SPARK.Messages.Response_Code
+                         (Response_Codes.Code_Class)
+                  is
+                     when RFLX.CoAP.Success =>
 
-                     RFLX_Result.Client_Error_Code :=
-                       Response_Codes.Client_Error_Code;
+                        RFLX_Result.Success_Code :=
+                          Response_Codes.Success_Code;
 
-                  when RFLX.CoAP.Server_Error =>
+                     when RFLX.CoAP.Client_Error =>
 
-                     RFLX_Result.Server_Error_Code :=
-                       Response_Codes.Server_Error_Code;
+                        RFLX_Result.Client_Error_Code :=
+                          Response_Codes.Client_Error_Code;
 
-               end case;
+                     when RFLX.CoAP.Server_Error =>
+
+                        RFLX_Result.Server_Error_Code :=
+                          Response_Codes.Server_Error_Code;
+
+                  end case;
+               end if;
             end if;
          end Handle_Request;
       end if;

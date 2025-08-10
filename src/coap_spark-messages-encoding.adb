@@ -255,6 +255,10 @@ is
                Encoded_Length := RFLX.CoAP.Length_16 (Last);
 
                Status := OK;
+            elsif Last = 0 then
+               -- No options
+               Encoded_Length := 0;
+               Status := OK;
             else
                Status := Capacity_Error;
             end if;
