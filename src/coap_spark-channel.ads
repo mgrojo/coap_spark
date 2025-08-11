@@ -38,9 +38,15 @@ is
    procedure Accept_Connection
      (Socket : in out Socket_Type)
    with
-      Pre => Is_Valid (Socket),
+   --   Pre => Is_Valid (Socket),
       Global =>
          null;
+
+   procedure Shutdown
+     (Socket : in out Socket_Type)
+   with
+      Pre => Is_Valid (Socket),
+      Global => null;
 
    function Is_Valid (Socket : Socket_Type) return Boolean with
       Global =>

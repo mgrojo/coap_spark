@@ -45,7 +45,7 @@ is
       Identity_Index, Key_Index : Natural := 0;
    begin
 
-      for I in 1 .. SPARK_Terminal.Argument_Count - 2 loop
+      for I in 1 .. SPARK_Terminal.Argument_Count - 1 loop
 
          if SPARK_Terminal.Argument (I) = "-u" then
             Identity_Index := I + 1;

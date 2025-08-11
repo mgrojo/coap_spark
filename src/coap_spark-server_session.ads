@@ -2,6 +2,8 @@ with CoAP_SPARK.Channel;
 
 with RFLX.CoAP_Server.Main_Loop.FSM;
 
+with WolfSSL;
+
 package CoAP_SPARK.Server_Session
    with SPARK_Mode
 is
@@ -10,6 +12,7 @@ is
 
    procedure Run_Session_Loop
      (Ctx : in out FSM.Context;
+      PSK_Server_Callback : WolfSSL.PSK_Server_Callback;
       Skt : in out CoAP_SPARK.Channel.Socket_Type)
    with
      Pre =>

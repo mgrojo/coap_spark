@@ -25,6 +25,7 @@ procedure CoAP_Server is
    package Main_Loop_Environment renames RFLX.CoAP_Server.Main_Loop_Environment;
 
    use type CoAP_SPARK.Status_Type;
+   use type CoAP_SPARK.Channel.Port_Type;
 
    procedure Usage (Is_Failure : Boolean := True) is
       procedure Put (Text : String;
@@ -53,14 +54,14 @@ procedure CoAP_Server is
       Skt : CoAP_SPARK.Channel.Socket_Type (Is_Secure);
    begin
 
-      Secure_Server.Initialize
-        (Socket => Skt,
-         Port   => Port);
-      if not CoAP_SPARK.Channel.Is_Valid (Skt) then
-         CoAP_SPARK.Log.Put_Line
-           ("Communication problems.", CoAP_SPARK.Log.Error);
-         return;
-      end if;
+      --  Secure_Server.Initialize
+      --    (Socket => Skt,
+      --     Port   => Port);
+      --  if not CoAP_SPARK.Channel.Is_Valid (Skt) then
+      --     CoAP_SPARK.Log.Put_Line
+      --       ("Communication problems.", CoAP_SPARK.Log.Error);
+      --     return;
+      --  end if;
 
       Main_Loop_Environment.Initialize
         (Request_Handler => Server_Handling.Handle_Request'Access,
@@ -77,7 +78,7 @@ procedure CoAP_Server is
 
       FSM.Initialize (Ctx);
 
-      CoAP_SPARK.Server_Session.Run_Session_Loop (Ctx, Skt);
+      CoAP_SPARK.Server_Session.Run_Session_Loop (Ctx, Secure_Server.PSK_Server_Callback'Access, Skt);
 
       CoAP_SPARK.Channel.Finalize (Skt);
       pragma Assert (not CoAP_SPARK.Channel.Is_Valid (Skt));
@@ -89,7 +90,7 @@ procedure CoAP_Server is
       --  pragma Assert (Main_Loop_Environment.Is_Finalized (Ctx.E));
    end Run_Session;
 
-   Port : CoAP_SPARK.Channel.Port_Type := CoAP_SPARK.Default_Port;
+   Port : CoAP_SPARK.Channel.Port_Type := 0;
    Argument_Index : Natural := 1;
 
    Valid_Command_Line : Boolean := True;
@@ -175,7 +176,7 @@ begin
          Argument_Index := @ + 1;
          Is_Secure := True;
 
-         if Argument_Index = SPARK_Terminal.Argument_Count then
+         if Argument_Index > SPARK_Terminal.Argument_Count then
             CoAP_SPARK.Log.Put ("Missing argument for ", CoAP_SPARK.Log.Error);
             CoAP_SPARK.Log.Put_Line
               (SPARK_Terminal.Argument (Argument_Index - 1),
@@ -191,7 +192,7 @@ begin
       end if;
 
       exit when not Valid_Command_Line or else
-         Argument_Index = SPARK_Terminal.Argument_Count;
+         Argument_Index >= SPARK_Terminal.Argument_Count;
 
       pragma Loop_Invariant (Argument_Index < SPARK_Terminal.Argument_Count);
       Argument_Index := @ + 1;
@@ -200,6 +201,13 @@ begin
    if not Valid_Command_Line then
       Usage;
       return;
+   end if;
+
+   if Port = 0 then
+      Port :=
+        (if Is_Secure
+         then CoAP_SPARK.Secure_Port
+         else CoAP_SPARK.Default_Port);
    end if;
 
    Run_Session

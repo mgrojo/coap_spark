@@ -13,7 +13,7 @@
             "program": "${workspaceFolder}/bin/coap_server",
             "stopAtEntry": false,
             "externalConsole": false,
-            "args": ["-p", "5683"],
+            "args": ["-k", "COAP_SPARK_KEY_5684", "-u", "coap_spark"],
             "MIMode": "gdb",
             "preLaunchTask": "ada: Build main - src/coap_server.adb",
             "setupCommands": [

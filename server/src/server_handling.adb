@@ -17,14 +17,18 @@ is
             Response_Codes :=
               (Code_Class   => RFLX.CoAP.Success,
                Success_Code => RFLX.CoAP.Continue);
-            Response_Content := Request_Content;
+            
+            CoAP_SPARK.Messages.Initialize_With_Text_Payload
+              (Text => "GET request handled", Item => Response_Content);
 
          when RFLX.CoAP.Post =>
             -- Handle POST request
             Response_Codes :=
               (Code_Class   => RFLX.CoAP.Success,
                Success_Code => RFLX.CoAP.Created);
-            Response_Content := Request_Content;
+
+            CoAP_SPARK.Messages.Initialize_With_Text_Payload
+              (Text => "POST request handled", Item => Response_Content);
 
          when others =>
             -- Handle other methods

@@ -1,3 +1,5 @@
+with Interfaces.C;
+
 with CoAP_SPARK.Log;
 
 with RFLX.RFLX_Types;
@@ -72,9 +74,13 @@ is
 
    procedure Run_Session_Loop
       (Ctx : in out FSM.Context;
+       PSK_Server_Callback : WolfSSL.PSK_Server_Callback;
        Skt : in out CoAP_SPARK.Channel.Socket_Type)
    is
       use type FSM.State;
+      function C_wolfSSL_Debugging_ON return Interfaces.C.int;
+      pragma Import (C, C_wolfSSL_Debugging_ON, "wolfSSL_Debugging_ON");
+      Result : Interfaces.C.int;
    begin
 
       while FSM.Active (Ctx) loop
@@ -82,13 +88,20 @@ is
          pragma Loop_Invariant (CoAP_SPARK.Channel.Is_Valid (Skt));
 
          CoAP_SPARK.Log.Put_Line (FSM.Next_State (Ctx)'Image, CoAP_SPARK.Log.Info);
-         if FSM.Next_State (Ctx) = FSM.S_Receive_Request then
-            CoAP_SPARK.Channel.Accept_Connection (Skt);
-         end if;
 
          for C in FSM.Channel'Range loop
             pragma Loop_Invariant (FSM.Initialized (Ctx));
             if FSM.Needs_Data (Ctx, C) then
+               if FSM.Next_State (Ctx) = FSM.S_Receive_Request then
+                  CoAP_SPARK.Channel.Initialize (Socket => Skt,
+                                                 Port => Secure_Port,
+                                                 Server => True,
+                                                 PSK_Server_Callback => PSK_Server_Callback);
+                  Result := C_wolfSSL_Debugging_ON;
+                  CoAP_SPARK.Log.Put_Line (Result'Image, CoAP_SPARK.Log.Info);
+
+                  CoAP_SPARK.Channel.Accept_Connection (Socket => Skt);
+               end if;
                Write (Ctx, Skt);
             end if;
             exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
@@ -99,6 +112,9 @@ is
          end loop;
          exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
          FSM.Run (Ctx);
+         if FSM.Next_State (Ctx) = FSM.S_Receive_Request then
+            CoAP_SPARK.Channel.Finalize (Skt);
+         end if;
       end loop;
 
       if not CoAP_SPARK.Channel.Is_Valid (Skt) then
