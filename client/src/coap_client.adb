@@ -32,7 +32,7 @@ procedure CoAP_Client is
    package Types renames RFLX.RFLX_Types;
    package Channel renames CoAP_SPARK.Channel;
 
-   use type RFLX.CoAP_Client.Session_Environment.Status_Type;
+   use type CoAP_SPARK.Status_Type;
    use type Types.Index;
    use type Types.Bytes_Ptr;
 
@@ -131,7 +131,7 @@ procedure CoAP_Client is
          Payload       => Payload,
          Session_State => Ctx.E);
 
-      if Ctx.E.Current_Status /= Session_Environment.OK then
+      if Ctx.E.Current_Status /= CoAP_SPARK.OK then
          CoAP_SPARK.Log.Put_Line
            (Ctx.E.Current_Status'Image, CoAP_SPARK.Log.Error);
          RFLX.RFLX_Types.Free (Payload);
@@ -169,7 +169,7 @@ procedure CoAP_Client is
       pragma Assert (not CoAP_SPARK.Channel.Is_Valid (Skt));
 
       CoAP_SPARK.Log.New_Line;
-      if Ctx.E.Current_Status in RFLX.CoAP_Client.Session_Environment.OK then
+      if Ctx.E.Current_Status in CoAP_SPARK.OK then
          CoAP_SPARK.Log.Put_Line ("RESPONSE: ");
 
          case Ctx.E.Response_Codes.Code_Class is
