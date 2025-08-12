@@ -12,7 +12,7 @@ is
    begin
 
       RFLX_Result := State.Method;
-      State.Current_Status := RFLX.CoAP_Client.Session_Environment.OK;
+      State.Current_Status := CoAP_SPARK.OK;
 
    end Get_Method;
 
@@ -71,14 +71,23 @@ is
      (State       : in out RFLX.CoAP_Client.Session_Environment.State;
       RFLX_Result : out RFLX.CoAP_Client.Options_And_Payload_Data.Structure)
    is
+      use type RFLX.RFLX_Types.Length;
+      Encoded_Length : RFLX.RFLX_Types.Length;
    begin
 
       CoAP_SPARK.Messages.Encoding.Encode_Options_And_Payload
         (Options_And_Payload => State.Request_Content,
-         Status              => CoAP_SPARK.Status_Type (State.Current_Status),
+         Status              => State.Current_Status,
          Encoded_Data        => RFLX_Result.Options_And_Payload,
-         Encoded_Length      => RFLX_Result.Length);
+         Encoded_Length      => Encoded_Length);
 
+      if Encoded_Length > RFLX.RFLX_Types.Length (RFLX.CoAP.Length_16'Last) then
+         State.Current_Status := CoAP_SPARK.Capacity_Error;
+         RFLX_Result.Length := 0;
+      else
+         RFLX_Result.Length :=
+            RFLX.CoAP.Length_16 (Encoded_Length);
+      end if;
    end Get_Options_And_Payload;
 
 
@@ -87,7 +96,7 @@ is
       Data        : RFLX_Types.Bytes;
       RFLX_Result : out Boolean)
    is
-      use type CoAP_Client.Session_Environment.Status_Type;
+      use type CoAP_SPARK.Status_Type;
    begin
 
       if not CoAP_SPARK.Messages.Is_Empty (State.Response_Content) then
@@ -97,11 +106,11 @@ is
 
       CoAP_SPARK.Messages.Encoding.Decode_Options_And_Payload
         (Data            => Data,
-         Status          => CoAP_SPARK.Status_Type (State.Current_Status),
+         Status          => State.Current_Status,
          Decoded_Content => State.Response_Content);
 
       RFLX_Result :=
-        State.Current_Status = RFLX.CoAP_Client.Session_Environment.OK;
+        State.Current_Status = CoAP_SPARK.OK;
 
    end Put_Options_And_Payload;
 

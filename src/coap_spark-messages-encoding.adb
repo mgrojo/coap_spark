@@ -183,10 +183,8 @@ is
      (Options_And_Payload : Content;
       Status              : out CoAP_SPARK.Status_Type;
       Encoded_Data        : out RFLX.RFLX_Types.Bytes;
-      Encoded_Length      : out RFLX.CoAP.Length_16)
+      Encoded_Length      : out RFLX.RFLX_Types.Length)
    is
-      use type RFLX.CoAP.Length_16;
-
       Option_Sequence_Cxt    : RFLX.CoAP.Option_Sequence.Context;
       Option_Sequence_Buffer : RFLX.RFLX_Types.Bytes_Ptr :=
         new RFLX.RFLX_Types.Bytes'
@@ -252,7 +250,7 @@ is
                RFLX.CoAP.Option_Sequence.Copy
                  (Ctx    => Option_Sequence_Cxt,
                   Buffer => Encoded_Data (1 .. Last));
-               Encoded_Length := RFLX.CoAP.Length_16 (Last);
+               Encoded_Length := RFLX.RFLX_Types.Length (Last);
 
                Status := OK;
             elsif Last = 0 then

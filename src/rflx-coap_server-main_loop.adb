@@ -13,6 +13,7 @@ with CoAP_SPARK.Log;
 
 with RFLX.CoAP;
 with RFLX.CoAP.CoAP_Message;
+with RFLX.RFLX_Types;
 
 package body RFLX.CoAP_Server.Main_Loop
   with SPARK_Mode
@@ -77,12 +78,14 @@ is
       else
          Handle_Request :
          declare
+            use type RFLX.RFLX_Types.Length;
             Opt_Payload_Length : constant RFLX_Types.Length :=
               RFLX_Types.To_Length
                 (RFLX.CoAP.CoAP_Message.Field_Size
                    (Context, RFLX.CoAP.CoAP_Message.F_Options_And_Payload));
             Opt_Payload_Buffer : RFLX_Types.Bytes
                 (1 .. RFLX.RFLX_Types.Index'Base (Opt_Payload_Length));
+            Encoded_Length : RFLX.RFLX_Types.Length;
          begin
             RFLX.CoAP.CoAP_Message.Get_Options_And_Payload
               (Context, Opt_Payload_Buffer);
@@ -121,9 +124,15 @@ is
                   Status              => State.Current_Status,
                   Encoded_Data        =>
                     RFLX_Result.Options_And_Payload_Options_And_Payload,
-                  Encoded_Length      =>
-                    RFLX.CoAP.Length_16
-                      (RFLX_Result.Options_And_Payload_Length));
+                  Encoded_Length      => Encoded_Length);
+
+               if Encoded_Length > RFLX.RFLX_Types.Length (RFLX.CoAP.Length_16'Last) then
+                  State.Current_Status := CoAP_SPARK.Capacity_Error;
+                  RFLX_Result.Options_And_Payload_Length := 0;
+               else
+                  RFLX_Result.Options_And_Payload_Length :=
+                    RFLX.CoAP.Length_16 (Encoded_Length);
+               end if;
 
                RFLX_Result.Success_Code := RFLX.CoAP.Success_Response'Last;
                RFLX_Result.Client_Error_Code :=
@@ -187,6 +196,7 @@ is
       RFLX_Result : out RFLX.CoAP_Server.Options_And_Payload_Data.Structure)
    is
       use type CoAP_SPARK.Status_Type;
+      use type RFLX.RFLX_Types.Length;
 
       Status_Image : constant String :=
         CoAP_SPARK.Status_Type'Image (State.Current_Status);
@@ -195,7 +205,7 @@ is
       Context : RFLX.CoAP.CoAP_Message.Context;
 
       Response_Content : CoAP_SPARK.Messages.Content;
-
+      Encoded_Length : RFLX.RFLX_Types.Length;
    begin
       RFLX.CoAP.CoAP_Message.Initialize
         (Ctx    => Context,
@@ -220,8 +230,15 @@ is
         (Options_And_Payload => Response_Content,
          Status              => State.Current_Status,
          Encoded_Data        => RFLX_Result.Options_And_Payload,
-         Encoded_Length      => RFLX.CoAP.Length_16
-            (RFLX_Result.Length));
+         Encoded_Length      => Encoded_Length);
+
+      if Encoded_Length > RFLX.RFLX_Types.Length (RFLX.CoAP.Length_16'Last) then
+         State.Current_Status := CoAP_SPARK.Capacity_Error;
+         RFLX_Result.Length := 0;
+      else
+         RFLX_Result.Length :=
+            RFLX.CoAP.Length_16 (Encoded_Length);
+      end if;
 
       CoAP_SPARK.Messages.Finalize (Response_Content);
       pragma Assert (CoAP_SPARK.Messages.Is_Empty (Response_Content));

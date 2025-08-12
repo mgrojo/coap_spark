@@ -1,6 +1,5 @@
 with CoAP_SPARK.Log;
 
-with RFLX.CoAP_Client.Session_Environment;
 with RFLX.RFLX_Types;
 with RFLX.RFLX_Builtin_Types;
 
@@ -8,11 +7,9 @@ package body CoAP_SPARK.Client_Session
    with SPARK_Mode
 is
 
-   package Session_Environment renames RFLX.CoAP_Client.Session_Environment;
    package Types renames RFLX.RFLX_Types;
    package Channel renames CoAP_SPARK.Channel;
 
-   use type Session_Environment.Status_Type;
    use type Types.Index;
 
    procedure Read (Ctx : FSM.Context;
@@ -99,8 +96,7 @@ is
 
       if not CoAP_SPARK.Channel.Is_Valid (Skt) then
          CoAP_SPARK.Log.Put_Line ("Communication problems.", CoAP_SPARK.Log.Error);
-         Ctx.E.Current_Status :=
-           Session_Environment.Communication_Problems;
+         Ctx.E.Current_Status := CoAP_SPARK.Communication_Problems;
       end if;
 
    end Run_Session_Loop;

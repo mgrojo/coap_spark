@@ -10,11 +10,9 @@ package RFLX.CoAP_Client.Session_Environment with
    SPARK_Mode
 is
 
-   type Status_Type is new CoAP_SPARK.Status_Type;
-
    type State is record
       Method : RFLX.CoAP.Method_Code := RFLX.CoAP.Get;
-      Current_Status : Status_Type := OK;
+      Current_Status : CoAP_SPARK.Status_Type := CoAP_SPARK.OK;
       Is_First_Message : Boolean := True;
       Current_Message_ID : RFLX.CoAP.Message_ID_Type := 0;
       Request_Content : CoAP_SPARK.Messages.Content;
