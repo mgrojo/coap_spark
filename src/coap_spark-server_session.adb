@@ -74,7 +74,6 @@ is
 
    procedure Run_Session_Loop
       (Ctx : in out FSM.Context;
-       PSK_Server_Callback : WolfSSL.PSK_Server_Callback;
        Skt : in out CoAP_SPARK.Channel.Socket_Type)
    is
       use type FSM.State;
@@ -82,12 +81,7 @@ is
       pragma Import (C, C_wolfSSL_Debugging_ON, "wolfSSL_Debugging_ON");
       Result : Interfaces.C.int;
    begin
-      CoAP_SPARK.Channel.Initialize
-        (Socket              => Skt,
-         Port                =>
-           (if Skt.Is_Secure then Secure_Port else Default_Port),
-         Server              => True,
-         PSK_Server_Callback => PSK_Server_Callback);
+
       Result := C_wolfSSL_Debugging_ON;
 
       while FSM.Active (Ctx) loop
@@ -108,13 +102,13 @@ is
                end if;
                Write (Ctx, Skt);
             end if;
-            exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
+            exit when not CoAP_SPARK.Channel.Is_Ready (Skt);
             if FSM.Has_Data (Ctx, C) then
                Read (Ctx, Skt);
             end if;
             exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
          end loop;
-         exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
+         exit when not CoAP_SPARK.Channel.Is_Ready (Skt);
          FSM.Run (Ctx);
          if FSM.Next_State (Ctx) = FSM.S_Receive_Request then
             CoAP_SPARK.Channel.Shutdown (Skt);

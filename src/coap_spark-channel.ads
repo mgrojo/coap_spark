@@ -32,49 +32,40 @@ is
            xor (Server and then PSK_Server_Callback not in null)
         else
           (PSK_Client_Callback not in null xor PSK_Server_Callback not in null)),
-     Relaxed_Initialization => Socket,
-     Global                 => null;
+     Relaxed_Initialization => Socket;
 
+   -- Accept client connections on a server socket.
    procedure Accept_Connection
      (Socket : in out Socket_Type)
    with
-   --   Pre => Is_Valid (Socket),
-      Global =>
-         null;
+      Pre => Is_Valid (Socket);
 
    procedure Shutdown
      (Socket : in out Socket_Type)
    with
-      Pre => Is_Valid (Socket),
-      Global => null;
+      Pre => Is_Valid (Socket);
 
+   -- When the socket is valid, it means that it has been correctly initialized.
    function Is_Valid (Socket : Socket_Type) return Boolean with
       Global =>
          null;
 
+   -- Is ready to send or receive data. Is ready to connect, when it is a client socket.
+   function Is_Ready (Socket : Socket_Type) return Boolean with
+      Global =>
+         null;
+
+   -- Connect to a server.
    procedure Connect (Socket : in out Socket_Type;
                       Server : String;
                       Port : Port_Type := Default_Port) with
-      Pre => Is_Valid (Socket),
-      Global =>
-      null;
+      Pre => Is_Ready (Socket);
 
    use type RFLX.RFLX_Builtin_Types.Index;
 
    procedure Send (Socket : in out Socket_Type;
                    Buffer :        RFLX.RFLX_Builtin_Types.Bytes) with
-      Pre => Is_Valid (Socket) and then Buffer'First = 1,
-      Global =>
-         null;
-
-   procedure Send_To (Socket : in out Socket_Type;
-                      Buffer : RFLX.RFLX_Builtin_Types.Bytes;
-                      To     : Address_Type) with
-      Pre => Is_Valid (Socket) and then
-         Buffer'First = 1 and then
-         Is_Valid (To),
-      Global =>
-         null;
+      Pre => Is_Ready (Socket) and then Buffer'First = 1;
 
    use type RFLX.RFLX_Builtin_Types.Length;
 
@@ -82,25 +73,10 @@ is
                       Buffer :    out RFLX.RFLX_Builtin_Types.Bytes;
                       Length :    out RFLX.RFLX_Builtin_Types.Length) with
       Relaxed_Initialization => (Buffer),
-      Pre => Is_Valid (Socket) and then Buffer'First = 1,
+      Pre => Is_Ready (Socket) and then Buffer'First = 1,
       Post =>
          Length <= Buffer'Length and then
-         Buffer (Buffer'First .. RFLX.RFLX_Builtin_Types.Index'Base (Length))'Initialized,
-      Global =>
-         null;
-
-   procedure Receive (Socket : in out Socket_Type;
-                      Buffer :    out RFLX.RFLX_Builtin_Types.Bytes;
-                      Length :    out RFLX.RFLX_Builtin_Types.Length;
-                      From   :    out Address_Type) with
-      Relaxed_Initialization => (Buffer),
-      Pre => Is_Valid (Socket) and then Buffer'First = 1,
-      Post =>
-         Length <= Buffer'Length and then
-         Buffer (Buffer'First .. RFLX.RFLX_Builtin_Types.Index'Base (Length))'Initialized and then
-         Is_Valid (From),
-      Global =>
-         null;
+         Buffer (Buffer'First .. RFLX.RFLX_Builtin_Types.Index'Base (Length))'Initialized;
 
    function Has_Attached_Socket (Socket : Socket_Type) return Boolean;
 
@@ -141,7 +117,10 @@ private
       (Has_Attached_Socket (Socket)
        and then
        (if Socket.Is_Secure then Socket.Result = WolfSSL.Success and then
-          -- WolfSSL.Is_Valid (Socket.Ssl) and then
           WolfSSL.Is_Valid (Socket.Ctx)));
+
+   function Is_Ready (Socket : Socket_Type) return Boolean
+   is (Is_Valid (Socket)
+       and then (if Socket.Is_Secure then WolfSSL.Is_Valid (Socket.Ssl)));
 
 end CoAP_SPARK.Channel;

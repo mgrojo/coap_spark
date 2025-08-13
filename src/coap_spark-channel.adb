@@ -129,7 +129,7 @@ is
            Option => Option);
 
       if Result /= SPARK_Sockets.Success then
-         Finalize (Socket);
+         SPARK_Sockets.Close_Socket (Socket => Socket.Attached_Socket);
          return;
       end if;
 
@@ -143,7 +143,7 @@ is
                  Port   => SPARK_Sockets.Port_Type (Port)));
 
          if Result /= SPARK_Sockets.Success then
-            Finalize (Socket);
+            SPARK_Sockets.Close_Socket (Socket => Socket.Attached_Socket);
             return;
          end if;
 
@@ -156,7 +156,7 @@ is
          Socket.Result := WolfSSL.Initialize;
 
          if Socket.Result /= WolfSSL.Success then
-            Finalize (Socket);
+            SPARK_Sockets.Close_Socket (Socket => Socket.Attached_Socket);
             return;
          end if;
 
@@ -330,17 +330,6 @@ is
       end if;
    end Send;
 
-   procedure Send_To
-     (Socket : in out Socket_Type;
-      Buffer : RFLX.RFLX_Builtin_Types.Bytes;
-      To     : Address_Type)
-   is
-      Data : constant Ada.Streams.Stream_Element_Array :=
-        To_Ada_Stream (Buffer);
-   begin
-      Send_Socket (Socket => Socket, Item => Data, To => To);
-   end Send_To;
-
    procedure Receive_Socket
      (Socket : Socket_Type;
       Item   : out Ada.Streams.Stream_Element_Array;
@@ -437,27 +426,6 @@ is
             Length := RFLX.RFLX_Builtin_Types.Length (Last);
          end;
       end if;
-   end Receive;
-
-   procedure Receive
-     (Socket : in out Socket_Type;
-      Buffer : out RFLX.RFLX_Builtin_Types.Bytes;
-      Length : out RFLX.RFLX_Builtin_Types.Length;
-      From   : out Address_Type)
-   is
-      Data : Ada.Streams.Stream_Element_Array (1 .. Buffer'Length)
-         with Relaxed_Initialization;
-      Last : Ada.Streams.Stream_Element_Offset;
-   begin
-
-      Receive_Socket
-        (Socket => Socket, Item => Data, Last => Last, From => From);
-
-      pragma Assert (Data'Length = Buffer'Length);
-      Buffer (Buffer'First .. RFLX.RFLX_Builtin_Types.Index'Base (Last)) :=
-        To_RFLX_Bytes (Data (Data'First .. Last));
-      Length := RFLX.RFLX_Builtin_Types.Length (Last);
-
    end Receive;
 
    procedure Accept_Connection (Socket : in out Socket_Type) is
