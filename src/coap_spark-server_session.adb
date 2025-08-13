@@ -82,22 +82,26 @@ is
       pragma Import (C, C_wolfSSL_Debugging_ON, "wolfSSL_Debugging_ON");
       Result : Interfaces.C.int;
    begin
+      CoAP_SPARK.Channel.Initialize
+        (Socket              => Skt,
+         Port                =>
+           (if Skt.Is_Secure then Secure_Port else Default_Port),
+         Server              => True,
+         PSK_Server_Callback => PSK_Server_Callback);
+      Result := C_wolfSSL_Debugging_ON;
 
       while FSM.Active (Ctx) loop
          pragma Loop_Invariant (FSM.Initialized (Ctx));
          pragma Loop_Invariant (CoAP_SPARK.Channel.Is_Valid (Skt));
 
-         CoAP_SPARK.Log.Put_Line (FSM.Next_State (Ctx)'Image, CoAP_SPARK.Log.Info);
+         CoAP_SPARK.Log.Put_Line
+           (FSM.Next_State (Ctx)'Image, CoAP_SPARK.Log.Info);
 
          for C in FSM.Channel'Range loop
             pragma Loop_Invariant (FSM.Initialized (Ctx));
             if FSM.Needs_Data (Ctx, C) then
                if FSM.Next_State (Ctx) = FSM.S_Receive_Request then
-                  CoAP_SPARK.Channel.Initialize (Socket => Skt,
-                                                 Port => Secure_Port,
-                                                 Server => True,
-                                                 PSK_Server_Callback => PSK_Server_Callback);
-                  Result := C_wolfSSL_Debugging_ON;
+
                   CoAP_SPARK.Log.Put_Line (Result'Image, CoAP_SPARK.Log.Info);
 
                   CoAP_SPARK.Channel.Accept_Connection (Socket => Skt);
@@ -113,12 +117,13 @@ is
          exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
          FSM.Run (Ctx);
          if FSM.Next_State (Ctx) = FSM.S_Receive_Request then
-            CoAP_SPARK.Channel.Finalize (Skt);
+            CoAP_SPARK.Channel.Shutdown (Skt);
          end if;
       end loop;
 
       if not CoAP_SPARK.Channel.Is_Valid (Skt) then
-         CoAP_SPARK.Log.Put_Line ("Communication problems.", CoAP_SPARK.Log.Error);
+         CoAP_SPARK.Log.Put_Line
+           ("Communication problems.", CoAP_SPARK.Log.Error);
          Ctx.E.Current_Status := CoAP_SPARK.Communication_Problems;
       end if;
 

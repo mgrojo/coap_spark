@@ -141,7 +141,7 @@ private
       (Has_Attached_Socket (Socket)
        and then
        (if Socket.Is_Secure then Socket.Result = WolfSSL.Success and then
-          WolfSSL.Is_Valid (Socket.Ssl) and then
+          -- WolfSSL.Is_Valid (Socket.Ssl) and then
           WolfSSL.Is_Valid (Socket.Ctx)));
 
 end CoAP_SPARK.Channel;

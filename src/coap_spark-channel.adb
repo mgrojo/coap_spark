@@ -172,22 +172,22 @@ is
 
             if Server then
                WolfSSL.Set_Context_PSK_Server_Callback
-                  (Context => Socket.Ctx, Callback => PSK_Server_Callback);
-            end if;
+                 (Context => Socket.Ctx, Callback => PSK_Server_Callback);
+            else
 
-            WolfSSL.Create_WolfSSL (Context => Socket.Ctx, Ssl => Socket.Ssl);
+               WolfSSL.Create_WolfSSL
+                 (Context => Socket.Ctx, Ssl => Socket.Ssl);
 
-            if WolfSSL.Is_Valid (Socket.Ssl) then
+               if WolfSSL.Is_Valid (Socket.Ssl) then
 
-               Socket.Result :=
-                 WolfSSL.Attach
-                   (Ssl    => Socket.Ssl,
-                    Socket =>
-                      SPARK_Sockets.To_C (Socket.Attached_Socket.Socket));
+                  Socket.Result :=
+                    WolfSSL.Attach
+                      (Ssl    => Socket.Ssl,
+                       Socket =>
+                         SPARK_Sockets.To_C (Socket.Attached_Socket.Socket));
 
-               if not Server then
                   WolfSSL.Set_PSK_Client_Callback
-                    (Ssl => Socket.Ssl, Callback => PSK_Client_Callback);
+                       (Ssl => Socket.Ssl, Callback => PSK_Client_Callback);
                end if;
             end if;
          end if;
@@ -464,24 +464,18 @@ is
    begin
       if Socket.Is_Secure then
 
-         --  if not WolfSSL.Is_Valid (Socket.Ssl) then
+            WolfSSL.Create_WolfSSL (Context => Socket.Ctx, Ssl => Socket.Ssl);
 
-         --     WolfSSL.Create_WolfSSL (Context => Socket.Ctx, Ssl => Socket.Ssl);
+            if not WolfSSL.Is_Valid (Socket.Ssl) then
+               Finalize (Socket);
+               return;
+            end if;
 
-         --     if not WolfSSL.Is_Valid (Socket.Ssl) then
-         --        return;
-         --     end if;
-         --     --  Attach WolfSSL to the socket.
-         --     Socket.Result :=
-         --       WolfSSL.Attach
-         --         (Ssl    => Socket.Ssl,
-         --          Socket => SPARK_Sockets.To_C (Socket.Attached_Socket.Socket));
-
-         --     if Socket.Result /= WolfSSL.Success then
-         --        Finalize (Socket);
-         --        return;
-         --     end if;
-         --  end if;
+            Socket.Result :=
+               WolfSSL.Attach
+                  (Ssl    => Socket.Ssl,
+                  Socket =>
+                     SPARK_Sockets.To_C (Socket.Attached_Socket.Socket));
 
          Socket.Result := WolfSSL.Accept_Connection (Socket.Ssl);
          if Socket.Result /= WolfSSL.Success then
@@ -500,51 +494,36 @@ is
             Finalize (Socket);
             return;
          end if;
-         --  declare
-         --     Client_Address : Address_Type;
-         --     Empty_Item     : Ada.Streams.Stream_Element_Array (1 .. 0) :=
-         --       [others => 0];
-         --     Last           : Ada.Streams.Stream_Element_Offset;
-         --  begin
-         --     Receive_Socket
-         --       (Socket => Socket,
-         --        Item   => Empty_Item,
-         --        Last   => Last,
-         --        From   => Client_Address);
-
-         --     Socket.Result :=
-         --       WolfSSL.DTLS_Set_Peer
-         --         (Ssl => Socket.Ssl, Address => Client_Address.Sock_Addr);
-
-         --     if Socket.Result /= SPARK_Sockets.Success then
-         --        return;
-         --     end if;
-         --  end;
       end if;
    end Accept_Connection;
 
    procedure Shutdown (Socket : in out Socket_Type) is
    begin
 
-      Socket.Result := WolfSSL.Shutdown (Socket.Ssl);
-      -- TODO factorize
-      if Socket.Result /= WolfSSL.Success then
-         declare
-            Error_Message : constant WolfSSL.Error_Message :=
-              WolfSSL.Error
-                (WolfSSL.Get_Error
-                   (Ssl => Socket.Ssl, Result => Socket.Result));
-         begin
-            CoAP_SPARK.Log.Put ("Error shutting-down: ", CoAP_SPARK.Log.Error);
-            CoAP_SPARK.Log.Put_Line
-              (Error_Message.Text (1 .. Error_Message.Last),
-               CoAP_SPARK.Log.Error);
-         end;
-         Finalize (Socket);
-         return;
-      end if;
+      if Socket.Is_Secure and then WolfSSL.Is_Valid (Socket.Ssl) then
+         Socket.Result := WolfSSL.Shutdown (Socket.Ssl);
 
-      WolfSSL.Free (Ssl => Socket.Ssl);
+         -- This can be different to WolfSSL.Success (SSL_SHUTDOWN_NOT_DONE) but
+         -- we still want to free the SSL session, so only check for real failures.
+         if Socket.Result = WolfSSL.Failure then
+            declare
+               Error_Message : constant WolfSSL.Error_Message :=
+                 WolfSSL.Error
+                   (WolfSSL.Get_Error
+                      (Ssl => Socket.Ssl, Result => Socket.Result));
+            begin
+               CoAP_SPARK.Log.Put
+                 ("Error shutting-down: ", CoAP_SPARK.Log.Error);
+               CoAP_SPARK.Log.Put_Line
+                 (Error_Message.Text (1 .. Error_Message.Last),
+                  CoAP_SPARK.Log.Error);
+            end;
+            Finalize (Socket);
+            return;
+         end if;
+
+         WolfSSL.Free (Ssl => Socket.Ssl);
+      end if;
    end Shutdown;
 
    procedure Finalize (Socket : in out Socket_Type) is
