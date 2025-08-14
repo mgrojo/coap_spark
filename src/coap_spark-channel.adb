@@ -354,19 +354,19 @@ is
    end Receive_Socket;
 
    procedure Receive_Socket
-     (Socket : Socket_Type;
+     (Socket : SPARK_Sockets.Optional_Socket;
       Item   : out Ada.Streams.Stream_Element_Array;
       Last   : out Ada.Streams.Stream_Element_Offset;
       From   : out Address_Type)
    with
      Relaxed_Initialization => Item,
-     Pre                    => Is_Valid (Socket),
+     Pre                    => Socket.Exists,
      Post                   =>
        Last in Item'First - 1 .. Item'Last
        and then Item (Item'First .. Last)'Initialized;
 
    procedure Receive_Socket
-     (Socket : Socket_Type;
+     (Socket : SPARK_Sockets.Optional_Socket;
       Item   : out Ada.Streams.Stream_Element_Array;
       Last   : out Ada.Streams.Stream_Element_Offset;
       From   : out Address_Type)
@@ -374,7 +374,7 @@ is
    is
    begin
       GNAT.Sockets.Receive_Socket
-        (Socket => Socket.Attached_Socket.Socket,
+        (Socket => Socket.Socket,
          Item   => Item,
          Last   => Last,
          From   => GNAT.Sockets.Sock_Addr_Type (From.Sock_Addr));
@@ -412,7 +412,7 @@ is
 
             if Socket.Is_Server then
                Receive_Socket
-                 (Socket => Socket,
+                 (Socket => Socket.Attached_Socket,
                   Item   => Data,
                   Last   => Last,
                   From   => Socket.Client_Address);
@@ -444,6 +444,11 @@ is
                   (Ssl    => Socket.Ssl,
                   Socket =>
                      SPARK_Sockets.To_C (Socket.Attached_Socket.Socket));
+
+         if Socket.Result /= SPARK_Sockets.Success then
+            Finalize (Socket);
+            return;
+         end if;
 
          Socket.Result := WolfSSL.Accept_Connection (Socket.Ssl);
          if Socket.Result /= WolfSSL.Success then

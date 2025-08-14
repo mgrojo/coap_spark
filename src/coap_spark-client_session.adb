@@ -17,7 +17,7 @@ is
       Pre =>
          FSM.Initialized (Ctx)
          and then FSM.Has_Data (Ctx, FSM.C_Transport)
-         and then CoAP_SPARK.Channel.Is_Valid (Skt),
+         and then CoAP_SPARK.Channel.Is_Ready (Skt),
       Post =>
          FSM.Initialized (Ctx)
    is
@@ -49,7 +49,7 @@ is
       Pre =>
          FSM.Initialized (Ctx)
          and then FSM.Needs_Data (Ctx, FSM.C_Transport)
-         and then CoAP_SPARK.Channel.Is_Valid (Skt),
+         and then CoAP_SPARK.Channel.Is_Ready (Skt),
       Post =>
          FSM.Initialized (Ctx)
       is

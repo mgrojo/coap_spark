@@ -71,8 +71,8 @@ procedure CoAP_Client is
       Global =>
          (Input  => CoAP_SPARK.Log.Active_Level,
           In_Out => (Ada.Text_IO.File_System, CoAP_SPARK.Random.Generator))
-
    is
+
       URI        : constant CoAP_SPARK.URI.URI :=
         CoAP_SPARK.URI.Create (URI_String);
       Ctx        : FSM.Context;
@@ -81,6 +81,18 @@ procedure CoAP_Client is
           (Is_Secure =>
              CoAP_SPARK.URI.Scheme (URI) = CoAP_SPARK.Secure_Scheme);
       Valid_URI : Boolean := True;
+
+      procedure Finalize is
+      begin
+         RFLX.RFLX_Types.Free (Payload);
+         if FSM.Initialized (Ctx) then
+            FSM.Finalize (Ctx);
+         end if;
+         pragma Assert (FSM.Uninitialized (Ctx));
+         Session_Environment.Finalize (Ctx.E);
+         pragma Assert (Session_Environment.Is_Finalized (Ctx.E));
+      end Finalize;
+
    begin
 
       if URI_String = "" or else URI_String (URI_String'First) = '-' then
@@ -114,14 +126,6 @@ procedure CoAP_Client is
       CoAP_SPARK.Log.Put ("Query: ");
       CoAP_SPARK.Log.Put_Line (CoAP_SPARK.URI.Query (URI));
 
-      CoAP_Secure.Initialize (Socket => Skt);
-      if not CoAP_SPARK.Channel.Is_Valid (Skt) then
-         CoAP_SPARK.Log.Put_Line
-           ("Communication problems.", CoAP_SPARK.Log.Error);
-         RFLX.RFLX_Types.Free (Payload);
-         return;
-      end if;
-
       Session_Environment.Initialize
         (Method        => Method,
          Server        => CoAP_SPARK.URI.Host (URI),
@@ -134,27 +138,30 @@ procedure CoAP_Client is
       if Ctx.E.Current_Status /= CoAP_SPARK.OK then
          CoAP_SPARK.Log.Put_Line
            (Ctx.E.Current_Status'Image, CoAP_SPARK.Log.Error);
-         RFLX.RFLX_Types.Free (Payload);
-         Session_Environment.Finalize (Ctx.E);
-         pragma Assert (Session_Environment.Is_Finalized (Ctx.E));
+         Finalize;
          return;
       end if;
       pragma Assert (FSM.Uninitialized (Ctx));
 
       FSM.Initialize (Ctx);
+
+      CoAP_Secure.Initialize (Socket => Skt);
+      if not CoAP_SPARK.Channel.Is_Ready (Skt) then
+         CoAP_SPARK.Log.Put_Line
+           ("Could not initialize socket.", CoAP_SPARK.Log.Error);
+         Finalize;
+         return;
+      end if;
+
       Channel.Connect
         (Socket => Skt,
          Server => CoAP_SPARK.URI.Host (URI),
          Port   => CoAP_SPARK.Channel.Port_Type (CoAP_SPARK.URI.Port (URI)));
 
-      if not CoAP_SPARK.Channel.Is_Valid (Skt) then
+      if not CoAP_SPARK.Channel.Is_Ready (Skt) then
          CoAP_SPARK.Log.Put_Line
            ("Connection problems.", CoAP_SPARK.Log.Error);
-         RFLX.RFLX_Types.Free (Payload);
-         FSM.Finalize (Ctx);
-         pragma Assert (FSM.Uninitialized (Ctx));
-         Session_Environment.Finalize (Ctx.E);
-         pragma Assert (Session_Environment.Is_Finalized (Ctx.E));
+         Finalize;
          return;
       end if;
 
@@ -208,11 +215,7 @@ procedure CoAP_Client is
          SPARK_Terminal.Set_Exit_Status (SPARK_Terminal.Exit_Status_Failure);
       end if;
 
-      FSM.Finalize (Ctx);
-      pragma Assert (FSM.Uninitialized (Ctx));
-
-      Session_Environment.Finalize (Ctx.E);
-      pragma Assert (Session_Environment.Is_Finalized (Ctx.E));
+      Finalize;
    end Run_Session;
 
    Method : RFLX.CoAP.Method_Code := RFLX.CoAP.Get;

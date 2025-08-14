@@ -13,7 +13,7 @@ is
    with
       Pre =>
         FSM.Initialized (Ctx)
-        and then CoAP_SPARK.Channel.Is_Valid (Skt),
+        and then CoAP_SPARK.Channel.Is_Ready (Skt),
       Post => FSM.Initialized (Ctx);
 
 end CoAP_SPARK.Client_Session;
