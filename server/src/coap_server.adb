@@ -54,14 +54,14 @@ procedure CoAP_Server is
       Skt : CoAP_SPARK.Channel.Socket_Type (Is_Secure);
    begin
 
-      --  Secure_Server.Initialize
-      --    (Socket => Skt,
-      --     Port   => Port);
-      --  if not CoAP_SPARK.Channel.Is_Valid (Skt) then
-      --     CoAP_SPARK.Log.Put_Line
-      --       ("Communication problems.", CoAP_SPARK.Log.Error);
-      --     return;
-      --  end if;
+      Secure_Server.Initialize
+        (Socket => Skt,
+         Port   => Port);
+      if not CoAP_SPARK.Channel.Is_Valid (Skt) then
+         CoAP_SPARK.Log.Put_Line
+           ("Unable to initialize server socket.", CoAP_SPARK.Log.Error);
+         return;
+      end if;
 
       Main_Loop_Environment.Initialize
         (Request_Handler => Server_Handling.Handle_Request'Access,
@@ -78,7 +78,7 @@ procedure CoAP_Server is
 
       FSM.Initialize (Ctx);
 
-      CoAP_SPARK.Server_Session.Run_Session_Loop (Ctx, Secure_Server.PSK_Server_Callback'Access, Skt);
+      CoAP_SPARK.Server_Session.Run_Session_Loop (Ctx, Skt);
 
       CoAP_SPARK.Channel.Finalize (Skt);
       pragma Assert (not CoAP_SPARK.Channel.Is_Valid (Skt));
