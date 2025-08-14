@@ -78,23 +78,23 @@ is
 
       while FSM.Active (Ctx) loop
          pragma Loop_Invariant (FSM.Initialized (Ctx));
-         pragma Loop_Invariant (CoAP_SPARK.Channel.Is_Valid (Skt));
+         pragma Loop_Invariant (CoAP_SPARK.Channel.Is_Ready (Skt));
          for C in FSM.Channel'Range loop
             pragma Loop_Invariant (FSM.Initialized (Ctx));
-            exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
+            exit when not CoAP_SPARK.Channel.Is_Ready (Skt);
             if FSM.Has_Data (Ctx, C) then
                Read (Ctx, Skt);
             end if;
-            exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
+            exit when not CoAP_SPARK.Channel.Is_Ready (Skt);
             if FSM.Needs_Data (Ctx, C) then
                Write (Ctx, Skt);
             end if;
          end loop;
-         exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
+         exit when not CoAP_SPARK.Channel.Is_Ready (Skt);
          FSM.Run (Ctx);
       end loop;
 
-      if not CoAP_SPARK.Channel.Is_Valid (Skt) then
+      if not CoAP_SPARK.Channel.Is_Ready (Skt) then
          CoAP_SPARK.Log.Put_Line ("Communication problems.", CoAP_SPARK.Log.Error);
          Ctx.E.Current_Status := CoAP_SPARK.Communication_Problems;
       end if;
