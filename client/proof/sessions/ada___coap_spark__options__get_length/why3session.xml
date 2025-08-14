@@ -22,13 +22,25 @@
   <proof prover="0"><result status="highfailure"/></proof>
   <proof prover="1"><result status="valid" steps="9566"/></proof>
   <proof prover="2"><result status="valid" steps="22098"/></proof>
-  <proof prover="3"><result status="highfailure"/></proof>
+  <proof prover="3"><result status="failure" steps="0"/></proof>
   </goal>
   <goal name="def&#39;vc.2" proved="true">
   <proof prover="0"><result status="highfailure"/></proof>
-  <proof prover="1"><result status="valid" steps="7723"/></proof>
+  <proof prover="1"><result status="valid"/></proof>
   <proof prover="2"><result status="valid" steps="3927"/></proof>
-  <proof prover="3"><result status="highfailure"/></proof>
+  <proof prover="3"><result status="failure" steps="0"/></proof>
+  </goal>
+  <goal name="def&#39;vc.3">
+  <proof prover="0"><result status="failure" steps="0"/></proof>
+  <proof prover="1"><result status="highfailure"/></proof>
+  <proof prover="2"><result status="valid" steps="21043"/></proof>
+  <proof prover="3"><result status="failure" steps="0"/></proof>
+  </goal>
+  <goal name="def&#39;vc.4">
+  <proof prover="0"><result status="failure" steps="0"/></proof>
+  <proof prover="1"><result status="failure" steps="0"/></proof>
+  <proof prover="2"><result status="valid" steps="4282"/></proof>
+  <proof prover="3"><result status="failure" steps="0"/></proof>
   </goal>
  </transf>
  </goal>
