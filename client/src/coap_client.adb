@@ -24,8 +24,6 @@ with RFLX.RFLX_Types;
 -- explained in the package itself (related to the use of SPARK).
 with SPARK_Terminal;
 
-with Workarounds;
-
 procedure CoAP_Client is
    package FSM renames RFLX.CoAP_Client.Session.FSM;
    package Session_Environment renames RFLX.CoAP_Client.Session_Environment;
@@ -373,7 +371,4 @@ begin
 
    RFLX.RFLX_Types.Free (Payload);
 
-   -- This has no effect, but it is needed to avoid a linking error with
-   -- SPARKLib in the validation profile.
-   Workarounds.Check_Or_Fail;
 end CoAP_Client;

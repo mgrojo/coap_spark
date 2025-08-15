@@ -9,6 +9,7 @@ is
         Response_Codes   : out CoAP_SPARK.Messages.Response_Kind;
         Response_Content : out CoAP_SPARK.Messages.Content)
    is
+      pragma Unreferenced (Request_Content);
    begin
       -- Handle the request based on the method and content.
       case Method is
