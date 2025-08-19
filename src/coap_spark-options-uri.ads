@@ -20,7 +20,8 @@ is
       Path        : out URI_Part;
       Status      : out CoAP_SPARK.Status_Type)
    with
-     Always_Terminates;
+     Always_Terminates,
+     Global => null;
 
 end CoAP_SPARK.Options.URI;
 

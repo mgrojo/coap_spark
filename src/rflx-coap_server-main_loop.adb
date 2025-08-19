@@ -96,7 +96,7 @@ is
                Decoded_Content => Request_Content);
 
             if State.Current_Status = CoAP_SPARK.OK
-              and then State.Request_Handler not in null
+              and then State.Server not in null
             then
 
                CoAP_SPARK.Log.Put_Line ("REQUEST: ");
@@ -104,9 +104,10 @@ is
                  (Item              => Request_Content,
                   Log_Level_Payload => CoAP_SPARK.Log.Debug);
 
-               -- Call the request handler with the decoded content
-               State.Request_Handler
-                 (Method           =>
+               -- Call the server implementation with the decoded content
+               Main_Loop_Environment.Handle_Request
+                 (Server           => State.Server.all,
+                  Method           =>
                     RFLX.CoAP.CoAP_Message.Get_Method (Context),
                   Request_Content  => Request_Content,
                   Response_Codes   => Response_Codes,

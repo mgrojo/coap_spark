@@ -1,24 +1,22 @@
 with CoAP_SPARK.Options.Lists;
 with CoAP_SPARK.Options.URI;
-with CoAP_SPARK.Resources;
 
 with RFLX.RFLX_Types;
 
 package body Server_Handling
-   with SPARK_Mode, Refined_State => (Resources => Stored_Resources)
+   with SPARK_Mode
 is
 
-   package Resource_Maps renames CoAP_SPARK.Resources.Resource_Maps;
-
-   Stored_Resources : CoAP_SPARK.Resources.Resource_Maps.Map;
-
+   overriding
    procedure Handle_Request
-       (Method           : RFLX.CoAP.Method_Code;
+       (Server           : in out Server_Implementation;
+        Method           : RFLX.CoAP.Method_Code;
         Request_Content  : CoAP_SPARK.Messages.Content;
         Response_Codes   : out CoAP_SPARK.Messages.Response_Kind;
         Response_Content : out CoAP_SPARK.Messages.Content)
    is
       use type CoAP_SPARK.Status_Type;
+      Stored_Resources : Resource_Maps.Map renames Server.Stored_Resources;
    begin
       -- Handle the request based on the method and content.
       case Method is

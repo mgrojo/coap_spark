@@ -52,6 +52,7 @@ procedure CoAP_Server is
 
       Ctx : FSM.Context;
       Skt : CoAP_SPARK.Channel.Socket_Type (Is_Secure);
+      Server : RFLX.CoAP_Server.Main_Loop_Environment.Server_Class_Access;
    begin
 
       Secure_Server.Initialize
@@ -63,15 +64,20 @@ procedure CoAP_Server is
          return;
       end if;
 
+      Server :=
+         new Server_Handling.Server_Implementation'(Stored_Resources =>
+            Server_Handling.Resource_Maps.Empty_Map);
+
       Main_Loop_Environment.Initialize
-        (Request_Handler => Server_Handling.Handle_Request'Access,
-         Session_State   => Ctx.E);
+        (Server        => Server,
+         Session_State => Ctx.E);
+      pragma Assert (Server in null);
 
       if Ctx.E.Current_Status /= CoAP_SPARK.OK then
          CoAP_SPARK.Log.Put_Line
            (Ctx.E.Current_Status'Image, CoAP_SPARK.Log.Error);
-         --  Main_Loop_Environment.Finalize (Ctx.E);
-         --  pragma Assert (Main_Loop_Environment.Is_Finalized (Ctx.E));
+         Main_Loop_Environment.Finalize (Ctx.E);
+         pragma Assert (Main_Loop_Environment.Is_Finalized (Ctx.E));
          return;
       end if;
       pragma Assert (FSM.Uninitialized (Ctx));
@@ -86,8 +92,8 @@ procedure CoAP_Server is
       FSM.Finalize (Ctx);
       pragma Assert (FSM.Uninitialized (Ctx));
 
-      --  Main_Loop_Environment.Finalize (Ctx.E);
-      --  pragma Assert (Main_Loop_Environment.Is_Finalized (Ctx.E));
+      Main_Loop_Environment.Finalize (Ctx.E);
+      pragma Assert (Main_Loop_Environment.Is_Finalized (Ctx.E));
    end Run_Session;
 
    Port : CoAP_SPARK.Channel.Port_Type := 0;
