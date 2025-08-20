@@ -7,7 +7,7 @@ is
       Path        : out URI_Part;
       Status      : out CoAP_SPARK.Status_Type) is
    begin
-      Path := URI_Strings.To_Bounded_String ("");
+      Path := URI_Strings.To_Unbounded_String ("");
 
       for Option of Option_List loop
          if Option.Number = RFLX.CoAP.Uri_Path then
@@ -16,7 +16,7 @@ is
                  "/" & CoAP_SPARK.Options.Value_Image (Option);
             begin
                if URI_Strings.Length (Path) + Option_Value'Length
-                 < URI_Strings.Max_Length
+                 < CoAP_SPARK.Max_URI_Length
                then
                   URI_Strings.Append (Path, Option_Value);
                else

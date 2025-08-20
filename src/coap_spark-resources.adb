@@ -11,8 +11,8 @@ is
    begin
       Result :=
         (Last => Data'Length,
-        Data => Data,
-        Format => Format);
+         Data => Data,
+         Format => Format);
       return Result;
    end To_Resource;
 

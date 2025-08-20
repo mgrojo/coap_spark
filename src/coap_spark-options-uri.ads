@@ -1,4 +1,4 @@
-with Ada.Strings.Bounded.Hash;
+with Ada.Strings.Unbounded;
 
 with CoAP_SPARK.Options.Lists;
 
@@ -6,22 +6,18 @@ package CoAP_SPARK.Options.URI
   with SPARK_Mode
 is
 
-   package URI_Strings is
-      new Ada.Strings.Bounded.Generic_Bounded_Length
-         (Max => CoAP_SPARK.Max_URI_Length);
+   package URI_Strings renames Ada.Strings.Unbounded;
 
-   subtype URI_Part is URI_Strings.Bounded_String;
-
-   function Hash is new Ada.Strings.Bounded.Hash
-      (URI_Strings);
+   subtype URI_Part is URI_Strings.Unbounded_String
+   with
+     Dynamic_Predicate =>
+       (URI_Strings.Length (URI_Part) <= CoAP_SPARK.Max_URI_Length);
 
    procedure Compose_Path_From_Options
      (Option_List : CoAP_SPARK.Options.Lists.Vector;
       Path        : out URI_Part;
       Status      : out CoAP_SPARK.Status_Type)
-   with
-     Always_Terminates,
-     Global => null;
+   with Always_Terminates, Global => null;
 
 end CoAP_SPARK.Options.URI;
 
