@@ -68,9 +68,10 @@ is
            SPARK_Terminal.Argument (Key_Index);
       begin
 
-         if Interfaces.C.Strings.Value
-            (Item   => Identity,
-            Length => Identity_String'Length) /= Identity_String 
+         if Identity_String'Length = 0 or else
+            Interfaces.C.Strings.Value
+              (Item   => Identity,
+               Length => Identity_String'Length) /= Identity_String 
          then
             CoAP_SPARK.Log.Put_Line
               ("Identity not known", CoAP_SPARK.Log.Debug);

@@ -1,3 +1,5 @@
+with Ada.Containers;
+
 with CoAP_SPARK.Options.Lists;
 with CoAP_SPARK.Options.URI;
 
@@ -7,10 +9,6 @@ package body Server_Handling
    with SPARK_Mode
 is
 
-   function "-"
-       (S : CoAP_SPARK.Options.URI.URI_Part) return String
-       renames CoAP_SPARK.Options.URI.URI_Strings.To_String;
-
    overriding
    procedure Handle_Request
        (Server           : in out Server_Implementation;
@@ -19,8 +17,9 @@ is
         Response_Codes   : out CoAP_SPARK.Messages.Response_Kind;
         Response_Content : out CoAP_SPARK.Messages.Content)
    is
+      use type Ada.Containers.Count_Type;
       use type CoAP_SPARK.Status_Type;
-      use type CoAP_SPARK.Options.URI.URI_Part;
+      use type CoAP_SPARK.Messages.Payload_Ptr;
       Stored_Resources : Resource_Maps.Map renames Server.Stored_Resources;
    begin
       -- Handle the request based on the method and content.
@@ -47,11 +46,11 @@ is
                   return;
                end if;
 
-               if Resource_Maps.Contains (Stored_Resources, -Path) then
+               if Resource_Maps.Contains (Stored_Resources, Path) then
                   -- Resource found, retrieve it
                   declare
                      Resource : constant CoAP_SPARK.Resources.Resource_Type :=
-                        Resource_Maps.Element (Stored_Resources, -Path);
+                        Resource_Maps.Element (Stored_Resources, Path);
                   begin
                      
                      Response_Codes :=
@@ -98,7 +97,10 @@ is
                   return;
                end if;
 
-               if not Resource_Maps.Contains (Stored_Resources, -Path) then
+               if not Resource_Maps.Contains (Stored_Resources, Path) and then
+                  Request_Content.Payload /= null and then
+                  Resource_Maps.Length (Stored_Resources) < Ada.Containers.Count_Type'Last
+               then
                   -- Resource found, retrieve it
                   declare
                      Resource : constant CoAP_SPARK.Resources.Resource_Type := CoAP_SPARK.Resources.To_Resource
@@ -111,7 +113,7 @@ is
                         Success_Code => RFLX.CoAP.Created);
 
                      -- Add the resource to the stored resources
-                     Resource_Maps.Insert (Stored_Resources, -Path, Resource);
+                     Resource_Maps.Insert (Stored_Resources, Path, Resource);
 
                      Response_Content := (Options =>
                                             CoAP_SPARK.Options.Lists.Empty_Vector,
@@ -119,15 +121,28 @@ is
                                             Resource.Format,
                                           Payload => new RFLX.RFLX_Types.Bytes' (Resource.Data));
                   end;
-               else
-                  -- Resource already exists
+               elsif Resource_Maps.Length (Stored_Resources) >= Ada.Containers.Count_Type'Last
+               then
+                  -- Resource limit reached
+                  Response_Codes :=
+                    (Code_Class        => RFLX.CoAP.Server_Error,
+                     Server_Error_Code => RFLX.CoAP.Internal_Server_Error);
+
+                  CoAP_SPARK.Messages.Initialize_With_Text_Payload
+                    (Text => "Resource storage limit reached",
+                     Item => Response_Content);
+               else                  
+                  -- Resource already exists or payload is not provided
                   Response_Codes :=
                     (Code_Class        => RFLX.CoAP.Client_Error,
                      Client_Error_Code => RFLX.CoAP.Bad_Request);
 
                   CoAP_SPARK.Messages.Initialize_With_Text_Payload
-                     (Text => "Resource already exists",
-                      Item => Response_Content);
+                    (Text =>
+                       (if Request_Content.Payload = null
+                        then "Payload for resource not provided"
+                        else "Resource already exists"),
+                     Item => Response_Content);
                end if;
             end;  
 

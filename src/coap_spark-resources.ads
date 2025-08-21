@@ -1,4 +1,5 @@
 with CoAP_SPARK.Content_Formats;
+with CoAP_SPARK.Options.URI;
 
 with RFLX.RFLX_Types;
 
@@ -16,9 +17,11 @@ is
       Format : CoAP_SPARK.Content_Formats.Content_Type := 0;
    end record;
 
+   use type CoAP_SPARK.Options.URI.URI_Part;
+
    package Resource_Maps is new
      SPARK.Containers.Formal.Unbounded_Ordered_Maps
-       (Key_Type     => String,
+       (Key_Type     => CoAP_SPARK.Options.URI.URI_Part,
         Element_Type => Resource_Type);
 
    use type RFLX.RFLX_Types.Index;
