@@ -19,7 +19,7 @@ is
       Pre =>
          FSM.Initialized (Ctx)
          and then FSM.Has_Data (Ctx, FSM.C_Transport)
-         and then CoAP_SPARK.Channel.Is_Valid (Skt),
+         and then CoAP_SPARK.Channel.Is_Ready (Skt),
       Post =>
          FSM.Initialized (Ctx)
    is
@@ -51,7 +51,7 @@ is
       Pre =>
          FSM.Initialized (Ctx)
          and then FSM.Needs_Data (Ctx, FSM.C_Transport)
-         and then CoAP_SPARK.Channel.Is_Valid (Skt),
+         and then CoAP_SPARK.Channel.Is_Ready (Skt),
       Post =>
          FSM.Initialized (Ctx)
       is
@@ -77,7 +77,8 @@ is
        Skt : in out CoAP_SPARK.Channel.Socket_Type)
    is
       use type FSM.State;
-      function C_wolfSSL_Debugging_ON return Interfaces.C.int;
+      function C_wolfSSL_Debugging_ON return Interfaces.C.int
+      with Global => null;
       pragma Import (C, C_wolfSSL_Debugging_ON, "wolfSSL_Debugging_ON");
       Result : Interfaces.C.int;
    begin
@@ -93,6 +94,7 @@ is
 
          for C in FSM.Channel'Range loop
             pragma Loop_Invariant (FSM.Initialized (Ctx));
+            pragma Loop_Invariant (CoAP_SPARK.Channel.Is_Valid (Skt));
             if FSM.Needs_Data (Ctx, C) then
                if FSM.Next_State (Ctx) = FSM.S_Receive_Request then
 
@@ -100,19 +102,20 @@ is
 
                   CoAP_SPARK.Channel.Accept_Connection (Socket => Skt);
                end if;
+               exit when not CoAP_SPARK.Channel.Is_Ready (Skt);
                Write (Ctx, Skt);
             end if;
             exit when not CoAP_SPARK.Channel.Is_Ready (Skt);
             if FSM.Has_Data (Ctx, C) then
                Read (Ctx, Skt);
             end if;
-            exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
          end loop;
          exit when not CoAP_SPARK.Channel.Is_Ready (Skt);
          FSM.Run (Ctx);
          if FSM.Next_State (Ctx) = FSM.S_Receive_Request then
             CoAP_SPARK.Channel.Shutdown (Skt);
          end if;
+         exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
       end loop;
 
       if not CoAP_SPARK.Channel.Is_Valid (Skt) then
