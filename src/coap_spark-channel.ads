@@ -116,7 +116,7 @@ private
    function Is_Valid (Socket : Socket_Type) return Boolean is
       (Has_Attached_Socket (Socket)
        and then
-       (if Socket.Is_Secure then Socket.Result = WolfSSL.Success and then
+       (if Socket.Is_Secure then Socket.Result /= WolfSSL.Failure and then
           WolfSSL.Is_Valid (Socket.Ctx)));
 
    function Is_Ready (Socket : Socket_Type) return Boolean
