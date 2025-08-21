@@ -493,6 +493,8 @@ is
             end;
             Finalize (Socket);
             return;
+         else
+            Socket.Result := WolfSSL.Success;
          end if;
 
          WolfSSL.Free (Ssl => Socket.Ssl);
