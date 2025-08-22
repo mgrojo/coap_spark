@@ -31,4 +31,10 @@ is
    with Pre => Data'Length <= CoAP_SPARK.Max_Payload_Length,
         Post => To_Resource'Result.Last = Data'Length;
 
+   function To_Text_Resource
+     (Text : String)
+      return Resource_Type
+   with Pre => Text'Length <= CoAP_SPARK.Max_Payload_Length,
+        Post => To_Text_Resource'Result.Last = Text'Length;
+
 end CoAP_SPARK.Resources;

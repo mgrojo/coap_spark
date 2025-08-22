@@ -7,6 +7,7 @@ with Secure_Server;
 with CoAP_SPARK.Channel;
 with CoAP_SPARK.Server_Session;
 with CoAP_SPARK.Log;
+with CoAP_SPARK.Resources;
 with CoAP_SPARK.Utils;
 
 with RFLX.CoAP_Server.Main_Loop_Environment;
@@ -65,8 +66,11 @@ procedure CoAP_Server is
       end if;
 
       Server :=
-         new Server_Handling.Server_Implementation'(Stored_Resources =>
-            Server_Handling.Resource_Maps.Empty_Map);
+        new Server_Handling.Server_Implementation'
+          (Stored_Resources =>
+             ["" =>
+                CoAP_SPARK.Resources.To_Text_Resource
+                  ("This is a test server made with CoAP-SPARK")]);
 
       Main_Loop_Environment.Initialize
         (Server        => Server,

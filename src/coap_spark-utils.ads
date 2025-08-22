@@ -69,4 +69,8 @@ is
       Pre => Is_Valid_As_Method (Method),
       Global => null;
 
+   function Text_As_Bytes (Text : String) return RFLX.RFLX_Types.Bytes
+   with
+     Post => Text_As_Bytes'Result'Length = Text'Length;
+
 end CoAP_SPARK.Utils;
