@@ -130,7 +130,7 @@ is
                   -- Resource limit reached
                   Response_Codes :=
                     (Code_Class        => RFLX.CoAP.Server_Error,
-                     Server_Error_Code => RFLX.CoAP.Internal_Server_Error);
+                     Server_Error_Code => RFLX.CoAP.Not_Acceptable);
 
                   CoAP_SPARK.Messages.Initialize_With_Text_Payload
                     (Text => "Resource storage limit reached",
