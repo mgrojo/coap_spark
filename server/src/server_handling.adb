@@ -9,6 +9,10 @@ package body Server_Handling
    with SPARK_Mode
 is
 
+   function "-"
+       (S : CoAP_SPARK.Options.URI.URI_Part) return String
+       renames CoAP_SPARK.Options.URI.URI_Strings.To_String;
+
    overriding
    procedure Handle_Request
        (Server           : in out Server_Implementation;
@@ -46,11 +50,11 @@ is
                   return;
                end if;
 
-               if Resource_Maps.Contains (Stored_Resources, Path) then
+               if Resource_Maps.Contains (Stored_Resources, -Path) then
                   -- Resource found, retrieve it
                   declare
                      Resource : constant CoAP_SPARK.Resources.Resource_Type :=
-                        Resource_Maps.Element (Stored_Resources, Path);
+                        Resource_Maps.Element (Stored_Resources, -Path);
                   begin
                      
                      Response_Codes :=
@@ -97,7 +101,7 @@ is
                   return;
                end if;
 
-               if not Resource_Maps.Contains (Stored_Resources, Path) and then
+               if not Resource_Maps.Contains (Stored_Resources, -Path) and then
                   Request_Content.Payload /= null and then
                   Resource_Maps.Length (Stored_Resources) < Ada.Containers.Count_Type'Last
                then
@@ -113,7 +117,7 @@ is
                         Success_Code => RFLX.CoAP.Created);
 
                      -- Add the resource to the stored resources
-                     Resource_Maps.Insert (Stored_Resources, Path, Resource);
+                     Resource_Maps.Insert (Stored_Resources, -Path, Resource);
 
                      Response_Content := (Options =>
                                             CoAP_SPARK.Options.Lists.Empty_Vector,
@@ -121,7 +125,7 @@ is
                                             Resource.Format,
                                           Payload => new RFLX.RFLX_Types.Bytes' (Resource.Data));
                   end;
-               elsif Resource_Maps.Length (Stored_Resources) >= Ada.Containers.Count_Type'Last
+               elsif Resource_Maps.Length (Stored_Resources) = Ada.Containers.Count_Type'Last
                then
                   -- Resource limit reached
                   Response_Codes :=
