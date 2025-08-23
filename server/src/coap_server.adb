@@ -62,6 +62,8 @@ procedure CoAP_Server is
       if not CoAP_SPARK.Channel.Is_Valid (Skt) then
          CoAP_SPARK.Log.Put_Line
            ("Unable to initialize server socket.", CoAP_SPARK.Log.Error);
+         SPARK_Terminal.Set_Exit_Status
+            (Status => SPARK_Terminal.Exit_Status_Failure);
          return;
       end if;
 
@@ -129,6 +131,9 @@ begin
    -- Any other single command line argument is an error, since all remaining
    --  ones are an option and a value.
    if SPARK_Terminal.Argument_Count = 1 then
+         CoAP_SPARK.Log.Put ("Invalid option: ", CoAP_SPARK.Log.Error);
+         CoAP_SPARK.Log.Put_Line
+           (SPARK_Terminal.Argument (SPARK_Terminal.Argument_Count), CoAP_SPARK.Log.Error);
       Usage (Is_Failure => True);
       return;
    end if;
@@ -206,6 +211,15 @@ begin
 
       pragma Loop_Invariant (Argument_Index < SPARK_Terminal.Argument_Count);
       Argument_Index := @ + 1;
+
+      -- If there is an odd number of arguments, then the last one is invalid
+      if Argument_Index = SPARK_Terminal.Argument_Count then
+            CoAP_SPARK.Log.Put ("Unexpected option: ", CoAP_SPARK.Log.Error);
+            CoAP_SPARK.Log.Put_Line
+            (SPARK_Terminal.Argument (SPARK_Terminal.Argument_Count), CoAP_SPARK.Log.Error);
+         Valid_Command_Line := False;
+      end if;
+
    end loop;
 
    if not Valid_Command_Line then
