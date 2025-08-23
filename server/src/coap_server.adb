@@ -19,7 +19,7 @@ with SPARK_Terminal;
 
 with Server_Handling;
 
--- with Workarounds;
+with Workarounds;
 
 procedure CoAP_Server is
    package FSM renames RFLX.CoAP_Server.Main_Loop.FSM;
@@ -240,5 +240,5 @@ begin
 
    -- This has no effect, but it is needed to avoid a linking error with
    -- SPARKLib in the validation profile.
---    Workarounds.Check_Or_Fail;
+   Workarounds.Check_Or_Fail;
 end CoAP_Server;
