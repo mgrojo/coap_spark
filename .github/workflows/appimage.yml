@@ -18,6 +18,10 @@ jobs:
   release:
     name: Continuous
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [client, server]
     steps:
        - name: Checkout
          uses: actions/checkout@v2
@@ -27,13 +31,7 @@ jobs:
          uses: mgrojo/alr2appimage-action@main
          with:
            alireVersion: 2.1.0
-           crateDir: client
+           crateDir: ${{ matrix.target }}
            alr2appimageArgs: "--terminal --use-version"
+           tagName: "${{ github.ref_name }}-continuous-${{ matrix.target }}"
            deleteExistent: true
-       - name: alr2appimage-action
-         uses: mgrojo/alr2appimage-action@main
-         with:
-           alireVersion: 2.1.0
-           crateDir: server
-           alr2appimageArgs: "--terminal --use-version"
-           deleteExistent: false
