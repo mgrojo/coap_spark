@@ -90,10 +90,10 @@ jobs:
 
         # Run gcov on the library, the tests and the test programs. This will produce *.gcov files.
       - run: |
-          alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-          alr -C tests  exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-          alr -C client exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-          alr -C server exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+          alr exec -- gcov -o obj/$PROFILE src/*.adb
+          alr -C tests  exec -- gcov -o obj/$PROFILE src/*.adb
+          alr -C client exec -- gcov -o obj/$PROFILE src/*.adb
+          alr -C server exec -- gcov -o obj/$PROFILE src/*.adb
         shell: bash
 
         # Upload results to codecov.io
