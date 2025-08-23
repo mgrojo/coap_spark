@@ -43,7 +43,10 @@ jobs:
         shell: bash
         
         # Build the test programs using the validation build profile to enforce static analysis and coding style.
-      - run: for dir in client server; do alr -C $dir --non-interactive build --profiles="*=$PROFILE" -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs; done
+      - run: |
+          cd client && alr --non-interactive build --profiles="*=$PROFILE" -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
+          cd -
+          cd server && alr --non-interactive build --profiles="*=$PROFILE" -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
         shell: bash
 
         # Install binary crates needed for testing
