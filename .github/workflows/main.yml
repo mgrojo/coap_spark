@@ -72,14 +72,14 @@ jobs:
         # On Windows and macOS we can only run the plain CoAP tests.
       - if: runner.os == 'Windows' || runner.os == 'macOS'
         run: |
-          export PATH=$HOME/.alire/bin:$PATH
-          make -C client/tests coap_results.md
+          PATH=$HOME/.alire/bin:$PATH make -C client/tests coap_results.md
         shell: bash
 
         # Run server tests
       - name: Server tests
         run: |
             PATH=$HOME/.alire/bin:$PATH make -C server/tests
+        shell: bash
 
       - name: CoAP test results
         run: cat client/tests/coap_results.md server/tests/coap*_results.md >> $GITHUB_STEP_SUMMARY
