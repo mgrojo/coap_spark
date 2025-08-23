@@ -71,7 +71,9 @@ jobs:
 
         # On Windows and macOS we can only run the plain CoAP tests.
       - if: runner.os == 'Windows' || runner.os == 'macOS'
-        run: PATH=$HOME/.alire/bin:$PATH make -C client/tests coap_results.md
+        run: |
+          export PATH=$HOME/.alire/bin:$PATH
+          make -C client/tests coap_results.md
         shell: bash
 
         # Run server tests
