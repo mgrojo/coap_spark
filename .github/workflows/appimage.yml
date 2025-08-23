@@ -30,3 +30,10 @@ jobs:
            crateDir: client
            alr2appimageArgs: "--terminal --use-version"
            deleteExistent: true
+       - name: alr2appimage-action
+         uses: mgrojo/alr2appimage-action@main
+         with:
+           alireVersion: 2.1.0
+           crateDir: server
+           alr2appimageArgs: "--terminal --use-version"
+           deleteExistent: false
