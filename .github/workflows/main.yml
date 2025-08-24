@@ -39,15 +39,18 @@ jobs:
           version: 2.1.0 # Remove this option to use the default (latest stable release)
 
         # Build the project using the validation build profile to enforce static analysis and coding style.
-      - run: alr --non-interactive build --$PROFILE -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
+      - name: Build library
+        run: alr --non-interactive build --$PROFILE -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
         shell: bash
         
         # Build the test programs using the validation build profile to enforce static analysis and coding style.
-      - run: for dir in client server; do alr -C $dir --non-interactive build --profiles="*=$PROFILE" -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs; done
+      - name: Build test programs
+        run: for dir in client server; do alr -C $dir --non-interactive build --profiles="*=$PROFILE" -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs; done
         shell: bash
 
         # Install binary crates needed for testing
-      - run: alr --non-interactive install bbt~0.2.0
+      - name: Install binary crates
+        run: alr --non-interactive install bbt~0.2.0
         shell: bash
 
         # Run the instrumented testsuite. This will produce *.gcno and *.gcda files for the coverage analysis.
@@ -61,6 +64,7 @@ jobs:
 
         # On Linux we can run all the testsuite, after installing coap-server-openssl from libcoap3-bin package.
       - if: runner.os == 'Linux'
+        name: Client tests (CoAP and secure CoAP)
         run: |
             sudo apt install libcoap3-bin 
             PATH=$HOME/.alire/bin:$PATH make -C client/tests
@@ -68,6 +72,7 @@ jobs:
 
         # On Windows and macOS we can only run the plain CoAP tests.
       - if: runner.os == 'Windows' || runner.os == 'macOS'
+        name: Client tests (CoAP only)
         run: PATH=$HOME/.alire/bin:$PATH make -C client/tests coap_results.md
         shell: bash
 
@@ -75,6 +80,7 @@ jobs:
       - name: Server tests
         run: |
             PATH=$HOME/.alire/bin:$PATH make -C server/tests
+        shell: bash
 
       - name: CoAP test results
         run: cat client/tests/coap_results.md server/tests/coap*_results.md >> $GITHUB_STEP_SUMMARY
@@ -86,11 +92,20 @@ jobs:
         shell: bash
 
         # Run gcov on the library, the tests and the test programs. This will produce *.gcov files.
-      - run: |
+        # The library source files are splitted in parts, otherwise gcov fails with
+        # an unexpected error.
+      - name: Run gcov
+        run: |
+          alr exec -- gcov -o obj/$PROFILE src/rflx*.ad[sb]
+          alr exec -- gcov -o obj/$PROFILE src/coap_spark*.ad[sb] src/workarounds.ad[sb]
+          cd tests
           alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-          alr -C tests  exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-          alr -C client exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-          alr -C server exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+          cd -
+          cd client
+          alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+          cd -
+          cd server
+          alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
         shell: bash
 
         # Upload results to codecov.io
