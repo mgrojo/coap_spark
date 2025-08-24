@@ -20,8 +20,11 @@ all: $(RESULTS)
 .PHONY: all
 
 coap_results.md : coap_server_tests.md $(PROGRAM)
-	bbt --verbose $< > $@
-	grep -F 'Summary : **Success**' $@
+	$(PROGRAM) -v 4 & \
+    SERVER_PID=$$!; \
+    trap 'kill $$SERVER_PID >/dev/null 2>&1 || true' EXIT; \
+    bbt --keep-going --verbose $< > $@; \
+    grep -F 'Summary : **Success**' $@
 
 coaps_results.md: coaps_server_tests.md $(PROGRAM)
 	$(PROGRAM) -v 4 -k COAP_SPARK_KEY_5684 -u coap_spark & \
