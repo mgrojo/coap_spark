@@ -42,7 +42,7 @@ Use this command to run the tests: `bbt coap_server_tests.md`
   - Then I get an error
   - And output contains `Invalid option: -z`
 
-### Scenario: priviliged port
-  - When I run `../bin/coap_server -p 10`
+### Scenario: Invalid port
+  - When I run `../bin/coap_server -p 100000`
   - Then I get an error
-  - And output contains `Unable to initialize server socket.`
+  - And output contains `Invalid specified port`

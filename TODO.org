@@ -5,6 +5,8 @@
 - [X] Enable coverage reports after testing on GitHub action.
 - [ ] Convert Max_Number_Of_Options into a compile time option.
 - [ ] Increase coverage adding tests or removing dead code.
+- [ ] Fix Is_Valid_As_Number for numbers with correct width but out of the type range    
+      There is still a problem when the width is correct but it is still out of the range.
 
 * Client
 - [ ] Implement timeout with -B option in client

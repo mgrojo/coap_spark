@@ -44,9 +44,9 @@
    - [X] scenario   [invalid argument](coap_server_tests.md) pass  
 
    ### Scenario: [priviliged port](coap_server_tests.md): 
-   - OK : When I run `../bin/coap_server -p 10`  
+   - OK : When I run `../bin/coap_server -p 100000`  
    - OK : Then I get an error  
-   - OK : And output contains `Unable to initialize server socket.`  
+   - OK : And output contains `Invalid specified port`  
    - [X] scenario   [priviliged port](coap_server_tests.md) pass  
 
 

@@ -27,7 +27,7 @@ is
    is
 
       function Is_Valid_As_Number (Number : String) return Boolean
-      is (Number'Length <= Numeric_Type'Width
+      is (Number'Length < Numeric_Type'Width
           and then (for all C of Number => C in '0' .. '9'));
 
       -- Wrapper around 'Value attribute, which cannot be proved by SPARK.
