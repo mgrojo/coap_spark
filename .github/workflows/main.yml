@@ -77,18 +77,20 @@ jobs:
         shell: bash
 
         # Run server tests
-      - name: Server tests
+      - if: runner.os == 'Windows' || runner.os == 'Linux'
+        name: Server tests
         run: |
             PATH=$HOME/.alire/bin:$PATH make -C server/tests
         shell: bash
 
-      - name: CoAP test results
-        run: cat client/tests/coap_results.md server/tests/coap*_results.md >> $GITHUB_STEP_SUMMARY
+      - if: runner.os == 'macOS'
+        name: Server tests (CoAP only on macOS)
+        run: |
+            PATH=$HOME/.alire/bin:$PATH make -C server/tests coap_results.md
         shell: bash
 
-      - if: runner.os == 'Linux'
-        name: Secure CoAP (coaps) test results
-        run: cat client/tests/coaps_results.md >> $GITHUB_STEP_SUMMARY
+      - name: CoAP test results
+        run: cat client/tests/coap*_results.md server/tests/coap*_results.md >> $GITHUB_STEP_SUMMARY
         shell: bash
 
         # Run gcov on the library, the tests and the test programs. This will produce *.gcov files.
