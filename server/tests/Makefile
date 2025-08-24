@@ -1,8 +1,14 @@
 SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
 
+ifeq ($(OS),Windows)
+    EXT := .exe
+else
+    EXT :=
+endif
+
 RM = rm -f
-PROGRAM = ../bin/coap_server
+PROGRAM = ../bin/coap_server$(EXT)
 CLIENT_HOME = ../../client/bin
 PATH := $(CLIENT_HOME):$(PATH)
 export PATH
