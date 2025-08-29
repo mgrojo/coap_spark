@@ -27,15 +27,17 @@
 
 * Server
 - [X] Consider implementing server state-machine and example
-  - [ ] Implement secure communications for the server
+  - [X] Implement secure communications for the server
+      - [ ] Make it interoperable with coap-client-openssl or coap-client-gnutls
+      - [ ] Fix CoAPS test on macOS
   - [X] Implement server logic for CRUD
-  - [ ] Add tests for the server
-  - [ ] Make the validation profile work for the server
-        either with the Workarounds package or making SPARKLib 15 to work.
-  - [ ] Add server in workflows
+  - [X] Add tests for the server
+  - [X] Make the validation profile work for the server
+        either with the Workarounds package (chosen option) or making SPARKLib 15 to work.
+  - [X] Add server in workflows
 
 * Upgrades
-  - [x] (discarded) Upgrade to GNATProve 15 and GNAT 15
+  - [x] (discarded: colibri not working) Upgrade to GNATProve 15 and GNAT 15
   - [X] Upgrade bbt
 
 * Provers

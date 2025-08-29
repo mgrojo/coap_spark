@@ -3,6 +3,8 @@ with Ada.Containers;
 with CoAP_SPARK.Options.Lists;
 with CoAP_SPARK.Options.URI;
 
+with Coverage;
+
 with RFLX.RFLX_Types;
 
 package body Server_Handling
@@ -147,6 +149,13 @@ is
                CoAP_SPARK.Messages.Initialize_With_Text_Payload
                  (Text => "Resource not found", Item => Response_Content);
             end if;
+
+         when RFLX.CoAP.Fetch =>
+
+            -- Dump coverage data when Fetch method is called. This allows
+            -- to collect coverage data during testing, because if the process
+            -- is killed, no coverage report is generated.
+            Coverage.Dump;
 
          when others =>
             -- Handle other methods

@@ -40,12 +40,12 @@ jobs:
 
         # Build the project using the validation build profile to enforce static analysis and coding style.
       - name: Build library
-        run: alr --non-interactive build --$PROFILE -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
+        run: alr --non-interactive build --$PROFILE -- -XCOVERAGE=gcov
         shell: bash
         
         # Build the test programs using the validation build profile to enforce static analysis and coding style.
       - name: Build test programs
-        run: for dir in client server; do alr -C $dir --non-interactive build --profiles="*=$PROFILE" -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs; done
+        run: for dir in client server; do alr -C $dir --non-interactive build --profiles="*=$PROFILE" -- -XCOVERAGE=gcov; done
         shell: bash
 
         # Install binary crates needed for testing
@@ -57,7 +57,7 @@ jobs:
       - name: Library Aunit tests
         run: |
             cd tests
-            alr --non-interactive build --profiles="*=$PROFILE" -- -cargs -fprofile-arcs -ftest-coverage -largs -lgcov --coverage -fprofile-arcs
+            alr --non-interactive build --profiles="*=$PROFILE" -- -XCOVERAGE=gcov
             echo "## Aunit test results" >> $GITHUB_STEP_SUMMARY
             NO_COLOR=1 bin/tests >> $GITHUB_STEP_SUMMARY
         shell: bash
