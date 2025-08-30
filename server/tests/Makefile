@@ -20,13 +20,18 @@ all: $(RESULTS)
 	@echo "All tests run."
 .PHONY: all
 
+# Run the server in the background, run the tests, check the results, dump the
+# coverage report, let the report to be dumped while sleeping and finally kill
+# the server.
 coap_results.md : coap_server_tests.md $(PROGRAM)
 	$(PROGRAM) -v 4 & \
     SERVER_PID=$$!; \
-    trap 'kill $$SERVER_PID >/dev/null 2>&1 || true' EXIT; \
+    trap 'sleep 2; kill $$SERVER_PID >/dev/null 2>&1 || true' EXIT; \
     bbt --keep-going --verbose $< > $@; \
-    grep -F 'Summary : **Success**' $@
+    grep -F 'Summary : **Success**' $@; \
+    coap_client -m fetch coap://localhost/
 
+# Secure tests
 coaps_results.md: coaps_server_tests.md $(PROGRAM)
 	$(PROGRAM) -v 4 $(SECURE_ARGS) & \
     SERVER_PID=$$!; \
