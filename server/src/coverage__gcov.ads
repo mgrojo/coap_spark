@@ -5,7 +5,8 @@ is
    -- Dumps the current coverage data to the gcov report files.
    -- This version requires linking with the gcov library.
    procedure Dump
-   with Global => Report,
+   with Always_Terminates,
+      Global => Report,
       Import,
       Convention => C,
       External_Name => "__gcov_dump";
