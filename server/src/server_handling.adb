@@ -155,7 +155,20 @@ is
             -- Dump coverage data when Fetch method is called. This allows
             -- to collect coverage data during testing, because if the process
             -- is killed, no coverage report is generated.
+            -- Gnatprove thinks Dump has no effect, because we cannot define
+            -- the Global aspect as the two implementations of Coverage
+            -- have no way to define an abstract state (a null procedure and
+            -- a C function). So we disable the warning.
+            pragma Warnings (Off, "subprogram ""Dump"" has no effect");
             Coverage.Dump;
+            pragma Warnings (On, "subprogram ""Dump"" has no effect");
+
+            Response_Codes :=
+              (Code_Class   => RFLX.CoAP.Success,
+               Success_Code => RFLX.CoAP.Content);
+
+            CoAP_SPARK.Messages.Initialize_With_Text_Payload
+               (Text => "Coverage report dumped", Item => Response_Content);
 
          when others =>
             -- Handle other methods
