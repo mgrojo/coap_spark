@@ -9,16 +9,17 @@ project CoAP_Server is
    for Object_Dir use "obj/" & CoAP_Server_Config.Build_Profile;
    for Create_Missing_Dirs use "True";
    for Exec_Dir use "bin";
-   for Main use ("coap_server.adb");
+
+   type Coverage_Kind is ("gcov", "none");
+   Coverage : Coverage_Kind := External ("COVERAGE", "none");
 
    package Naming is
       for Spec ("Coverage") use
-         "coverage__" & CoAP_SPARK.Coverage & ".ads";
+         "coverage__" & Coverage & ".ads";
    end Naming;
 
    package Compiler is
-      for Default_Switches ("Ada") use Coap_Server_Config.Ada_Compiler_Switches &
-         CoAP_SPARK.Coverage_Compiler_Switches;
+      for Default_Switches ("Ada") use Coap_Server_Config.Ada_Compiler_Switches;
    end Compiler;
 
    package Binder is
@@ -40,8 +41,7 @@ project CoAP_Server is
          Linker_Options := Linker_Options & ("-Wl,--gc-sections");
       end case;
 
-      for Default_Switches ("Ada") use CoAP_SPARK.Coverage_Linker_Options &
-         Linker_Options;
+      for Default_Switches ("Ada") use Linker_Options;
 
    end Linker;
 

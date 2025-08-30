@@ -12,8 +12,7 @@ project CoAP_Client is
    for Main use ("coap_client.adb");
 
    package Compiler is
-      for Default_Switches ("Ada") use CoAP_Client_Config.Ada_Compiler_Switches &
-         CoAP_SPARK.Coverage_Compiler_Switches;
+      for Default_Switches ("Ada") use CoAP_Client_Config.Ada_Compiler_Switches;
    end Compiler;
 
    package Binder is
@@ -35,8 +34,7 @@ project CoAP_Client is
          Linker_Options := Linker_Options & ("-Wl,--gc-sections");
       end case;
 
-      for Default_Switches ("Ada") use CoAP_SPARK.Coverage_Linker_Options &
-         Linker_Options;
+      for Default_Switches ("Ada") use Linker_Options;
 
    end Linker;
 

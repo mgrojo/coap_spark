@@ -19,38 +19,13 @@ project Coap_Spark is
      external ("COAP_SPARK_LIBRARY_TYPE", external ("LIBRARY_TYPE", "static"));
    for Library_Kind use Library_Type;
 
-
-   type Coverage_Kind is ("gcov", "none");
-   Coverage : Coverage_Kind := External ("COVERAGE", "none");
-
-   Coverage_Compiler_Switches := ();
-
    package Compiler is
-      case Coverage is
-      when "gcov" =>
-         Coverage_Compiler_Switches := CoAP_SPARK_Config.Ada_Compiler_Switches &
-            ("-fprofile-arcs", "-ftest-coverage");
-      when "none" =>
-         null;
-      end case;
-         
-      for Default_Switches ("Ada") use Coap_Spark_Config.Ada_Compiler_Switches &
-         Coverage_Compiler_Switches;
+      for Default_Switches ("Ada") use Coap_Spark_Config.Ada_Compiler_Switches;
    end Compiler;
 
    package Binder is
       for Switches ("Ada") use ("-Es"); --  Symbolic traceback
    end Binder;
-
-   Linker_Options := ();
-   Coverage_Linker_Options := ();
-
-   case Coverage is
-   when "gcov" =>
-      Coverage_Linker_Options := ("-lgcov", "--coverage", "-fprofile-arcs", "-ftest-coverage");
-   when "none" =>
-      null;
-   end case;
 
    package Install is
       for Artifacts (".") use ("share");

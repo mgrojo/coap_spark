@@ -10,8 +10,7 @@ project Tests is
    for Main use ("tests.adb");
 
    package Compiler is
-      for Default_Switches ("Ada") use Tests_Config.Ada_Compiler_Switches &
-         CoAP_SPARK.Coverage_Compiler_Switches;
+      for Default_Switches ("Ada") use Tests_Config.Ada_Compiler_Switches;
    end Compiler;
 
    package Binder is
@@ -22,7 +21,4 @@ project Tests is
       for Artifacts (".") use ("share");
    end Install;
 
-   package Linker is
-      for Default_Switches ("Ada") use CoAP_SPARK.Coverage_Linker_Options;
-   end Linker;
 end Tests;

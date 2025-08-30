@@ -40,12 +40,16 @@ jobs:
 
         # Build the project using the validation build profile to enforce static analysis and coding style.
       - name: Build library
-        run: alr --non-interactive build --$PROFILE -- -XCOVERAGE=gcov
+        run: alr --non-interactive build --$PROFILE -- -XCOVERAGE=gcov -cargs --coverage -largs --coverage
         shell: bash
         
         # Build the test programs using the validation build profile to enforce static analysis and coding style.
-      - name: Build test programs
-        run: for dir in client server; do alr -C $dir --non-interactive build --profiles="*=$PROFILE" -- -XCOVERAGE=gcov; done
+      - name: Build test client
+        run: alr -C client --non-interactive build --profiles="*=$PROFILE" -- -XCOVERAGE=gcov -cargs --coverage -largs --coverage
+        shell: bash
+
+      - name: Build test server
+        run: alr -C server --non-interactive build --profiles="*=$PROFILE" -- -XCOVERAGE=gcov -cargs --coverage -largs --coverage
         shell: bash
 
         # Install binary crates needed for testing
@@ -57,7 +61,7 @@ jobs:
       - name: Library Aunit tests
         run: |
             cd tests
-            alr --non-interactive build --profiles="*=$PROFILE" -- -XCOVERAGE=gcov
+            alr --non-interactive build --profiles="*=$PROFILE" -- -XCOVERAGE=gcov -cargs --coverage -largs --coverage
             echo "## Aunit test results" >> $GITHUB_STEP_SUMMARY
             NO_COLOR=1 bin/tests >> $GITHUB_STEP_SUMMARY
         shell: bash
@@ -96,6 +100,7 @@ jobs:
         # Run gcov on the library, the tests and the test programs. This will produce *.gcov files.
         # The library source files are splitted in parts, otherwise gcov fails with
         # an unexpected error.
+        # In the server, ignore files with __ in the name, as they don't generate coverage data.
       - name: Run gcov
         run: |
           alr exec -- gcov -o obj/$PROFILE src/rflx*.ad[sb]
@@ -107,7 +112,7 @@ jobs:
           alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
           cd -
           cd server
-          alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+          alr exec -- gcov -o obj/$PROFILE $(ls src/*.ad[sb] | grep -v __)
         shell: bash
 
         # Upload results to codecov.io
