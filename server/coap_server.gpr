@@ -5,7 +5,6 @@ project CoAP_Server is
 
    for Main use ("coap_server.adb");
 
-   for Source_Dirs use ("src/", "config/");
    for Object_Dir use "obj/" & CoAP_Server_Config.Build_Profile;
    for Create_Missing_Dirs use "True";
    for Exec_Dir use "bin";
@@ -13,10 +12,12 @@ project CoAP_Server is
    type Coverage_Kind is ("gcov", "none");
    Coverage : Coverage_Kind := External ("COVERAGE", "none");
 
-   package Naming is
-      for Spec ("Coverage") use
-         "coverage__" & Coverage & ".ads";
-   end Naming;
+   case Coverage is
+   when "gcov" =>
+      for Source_Dirs use ("src/" & Coverage, "src/", "config/");
+   when others =>
+      for Source_Dirs use ("src/", "config/");
+   end case;
 
    package Compiler is
       for Default_Switches ("Ada") use Coap_Server_Config.Ada_Compiler_Switches;
