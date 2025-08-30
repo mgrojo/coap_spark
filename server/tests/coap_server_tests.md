@@ -48,6 +48,11 @@ Use this command to run the tests: `bbt coap_server_tests.md`
   - Then I get an error
   - And output contains `Invalid specified port`
 
+### Scenario: specified port and invalid option
+  - When I run `../bin/coap_server -p 1234 -? 0`
+  - Then I get an error
+  - And output contains `Invalid option: -?`
+
 # Black box tests for CoAP Server
 These are the test scenarios for `coap_server` to be run using the `bbt` tool.
 
@@ -119,6 +124,11 @@ Payload: This is a test server made with CoAP-SPARK
   - Then I get no error
   - And output contains `New resource`
 
+### Scenario: post method with already created path
+  - When I run `coap_client -m post -e "New resource" coap://localhost/test`
+  - Then I get no error
+  - And output contains `Resource already exists`
+
 ### Scenario: explicit get method with IP and path
   - When I run `coap_client -m get coap://127.0.0.1/`
   - Then I get no error
@@ -177,6 +187,14 @@ very long resource name
 ### Scenario: delete method with path
   - When I run `coap_client -m delete coap://localhost/test`
   - Then I get no error
+
+### Scenario: delete method with already deleted path
+  - When I run `coap_client -m delete coap://localhost/test`
+  - Then I get no error
+  - And the output is
+```
+4.04 Resource not found
+```
 
 ### Scenario: explicit get method with path of just deleted resource
   - When I run `coap_client -m get coap://localhost/test`

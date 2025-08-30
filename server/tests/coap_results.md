@@ -49,6 +49,12 @@
    - OK : And output contains `Invalid specified port`  
    - [X] scenario   [Invalid port](coap_server_tests.md) pass  
 
+   ### Scenario: [specified port and invalid option](coap_server_tests.md): 
+   - OK : When I run `../bin/coap_server -p 1234 -? 0`  
+   - OK : Then I get an error  
+   - OK : And output contains `Invalid option: -?`  
+   - [X] scenario   [specified port and invalid option](coap_server_tests.md) pass  
+
   ## Feature: CoAP secure communication with server  
    ### Scenario: [get method with test path and high verbosity I](coap_server_tests.md): 
    - OK : When I run `coap_client -v 4 coap://localhost/`  
@@ -84,6 +90,12 @@
    - OK : Then I get no error  
    - OK : And output contains `New resource`  
    - [X] scenario   [explicit get method with path](coap_server_tests.md) pass  
+
+   ### Scenario: [post method with already created path](coap_server_tests.md): 
+   - OK : When I run `coap_client -m post -e "New resource" coap://localhost/test`  
+   - OK : Then I get no error  
+   - OK : And output contains `Resource already exists`  
+   - [X] scenario   [post method with already created path](coap_server_tests.md) pass  
 
    ### Scenario: [explicit get method with IP and path](coap_server_tests.md): 
    - OK : When I run `coap_client -m get coap://127.0.0.1/`  
@@ -142,6 +154,12 @@
    - OK : Then I get no error  
    - [X] scenario   [delete method with path](coap_server_tests.md) pass  
 
+   ### Scenario: [delete method with already deleted path](coap_server_tests.md): 
+   - OK : When I run `coap_client -m delete coap://localhost/test`  
+   - OK : Then I get no error  
+   - OK : And the output is  
+   - [X] scenario   [delete method with already deleted path](coap_server_tests.md) pass  
+
    ### Scenario: [explicit get method with path of just deleted resource](coap_server_tests.md): 
    - OK : When I run `coap_client -m get coap://localhost/test`  
    - OK : Then I get no error  
@@ -149,12 +167,12 @@
    - [X] scenario   [explicit get method with path of just deleted resource](coap_server_tests.md) pass  
 
 
-## Summary : **Success**, 25 scenarios OK
+## Summary : **Success**, 28 scenarios OK
 
 | Status     | Count |
 |------------|-------|
 | Failed     | 0     |
-| Successful | 25    |
+| Successful | 28    |
 | Empty      | 0     |
 | Not Run    | 0     |
 
