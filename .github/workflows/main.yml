@@ -100,19 +100,16 @@ jobs:
         # Run gcov on the library, the tests and the test programs. This will produce *.gcov files.
         # The library source files are splitted in parts, otherwise gcov fails with
         # an unexpected error.
-        # In the server, ignore files with __ in the name, as they don't generate coverage data.
       - name: Run gcov
         run: |
           alr exec -- gcov -o obj/$PROFILE src/rflx*.ad[sb]
           alr exec -- gcov -o obj/$PROFILE src/coap_spark*.ad[sb] src/workarounds.ad[sb]
-          cd tests
-          alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-          cd -
-          cd client
-          alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
-          cd -
-          cd server
-          alr exec -- gcov -o obj/$PROFILE $(ls src/*.ad[sb] | grep -v __)
+          for dir in tests client server
+          do
+            cd $dir
+            alr exec -- gcov -o obj/$PROFILE src/*.ad[sb]
+            cd -
+          done
         shell: bash
 
         # Upload results to codecov.io
