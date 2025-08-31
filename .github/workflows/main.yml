@@ -24,6 +24,8 @@ jobs:
       OS: ${{ matrix.os == 'windows-latest' && 'Windows' || 'Linux_Or_Mac' }}
       # On Windows, the validation profile fails due to "(style) incorrect line terminator [-gnatyd]"
       PROFILE: ${{ matrix.os == 'windows-latest' && 'development' || 'validation' }}
+      # Switches to enable code coverage with gcov
+      COVERAGE_SWITCHES: "-XCOVERAGE=gcov -cargs -O0 --coverage -largs --coverage"
 
     runs-on: ${{ matrix.os }} # Run the continuous integration workflow on each OS listed in the matrix.
     
@@ -40,16 +42,16 @@ jobs:
 
         # Build the project using the validation build profile to enforce static analysis and coding style.
       - name: Build library
-        run: alr --non-interactive build --$PROFILE -- -XCOVERAGE=gcov -cargs --coverage -largs --coverage
+        run: alr --non-interactive build --$PROFILE -- $COVERAGE_SWITCHES
         shell: bash
         
         # Build the test programs using the validation build profile to enforce static analysis and coding style.
       - name: Build test client
-        run: alr -C client --non-interactive build --profiles="*=$PROFILE" -- -XCOVERAGE=gcov -cargs --coverage -largs --coverage
+        run: alr -C client --non-interactive build --profiles="*=$PROFILE" -- $COVERAGE_SWITCHES
         shell: bash
 
       - name: Build test server
-        run: alr -C server --non-interactive build --profiles="*=$PROFILE" -- -XCOVERAGE=gcov -cargs --coverage -largs --coverage
+        run: alr -C server --non-interactive build --profiles="*=$PROFILE" -- $COVERAGE_SWITCHES
         shell: bash
 
         # Install binary crates needed for testing
@@ -61,7 +63,7 @@ jobs:
       - name: Library Aunit tests
         run: |
             cd tests
-            alr --non-interactive build --profiles="*=$PROFILE" -- -XCOVERAGE=gcov -cargs --coverage -largs --coverage
+            alr --non-interactive build --profiles="*=$PROFILE" -- $COVERAGE_SWITCHES
             echo "## Aunit test results" >> $GITHUB_STEP_SUMMARY
             NO_COLOR=1 bin/tests >> $GITHUB_STEP_SUMMARY
         shell: bash
