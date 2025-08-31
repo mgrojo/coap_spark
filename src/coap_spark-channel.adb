@@ -428,22 +428,34 @@ is
       end if;
    end Receive;
 
+   procedure Report_Error (Socket : Socket_Type; Message : String)
+   with Pre => Socket.Is_Secure
+   is
+      Error_Message : constant WolfSSL.Error_Message :=
+        WolfSSL.Error
+          (WolfSSL.Get_Error (Ssl => Socket.Ssl, Result => Socket.Result));
+   begin
+      CoAP_SPARK.Log.Put (Message, CoAP_SPARK.Log.Error);
+      CoAP_SPARK.Log.Put_Line
+        (Error_Message.Text (1 .. Error_Message.Last), CoAP_SPARK.Log.Error);
+   end Report_Error;
+
    procedure Accept_Connection (Socket : in out Socket_Type) is
    begin
       if Socket.Is_Secure then
 
-            WolfSSL.Create_WolfSSL (Context => Socket.Ctx, Ssl => Socket.Ssl);
+         WolfSSL.Create_WolfSSL (Context => Socket.Ctx, Ssl => Socket.Ssl);
 
-            if not WolfSSL.Is_Valid (Socket.Ssl) then
-               Finalize (Socket);
-               return;
-            end if;
+         if not WolfSSL.Is_Valid (Socket.Ssl) then
+            Finalize (Socket);
+            return;
+         end if;
 
-            Socket.Result :=
-               WolfSSL.Attach
-                  (Ssl    => Socket.Ssl,
-                  Socket =>
-                     SPARK_Sockets.To_C (Socket.Attached_Socket.Socket));
+         Socket.Result :=
+            WolfSSL.Attach
+               (Ssl    => Socket.Ssl,
+               Socket =>
+                  SPARK_Sockets.To_C (Socket.Attached_Socket.Socket));
 
          if Socket.Result /= SPARK_Sockets.Success then
             Finalize (Socket);
@@ -452,18 +464,8 @@ is
 
          Socket.Result := WolfSSL.Accept_Connection (Socket.Ssl);
          if Socket.Result /= WolfSSL.Success then
-            declare
-               Error_Message : constant WolfSSL.Error_Message :=
-                 WolfSSL.Error
-                   (WolfSSL.Get_Error
-                      (Ssl => Socket.Ssl, Result => Socket.Result));
-            begin
-               CoAP_SPARK.Log.Put
-                 ("Error accepting connection: ", CoAP_SPARK.Log.Error);
-               CoAP_SPARK.Log.Put_Line
-                 (Error_Message.Text (1 .. Error_Message.Last),
-                  CoAP_SPARK.Log.Error);
-            end;
+            Report_Error
+               (Socket, "Error accepting connection: ");
             Finalize (Socket);
             return;
          end if;
@@ -479,18 +481,8 @@ is
          -- This can be different to WolfSSL.Success (SSL_SHUTDOWN_NOT_DONE) but
          -- we still want to free the SSL session, so only check for real failures.
          if Socket.Result = WolfSSL.Failure then
-            declare
-               Error_Message : constant WolfSSL.Error_Message :=
-                 WolfSSL.Error
-                   (WolfSSL.Get_Error
-                      (Ssl => Socket.Ssl, Result => Socket.Result));
-            begin
-               CoAP_SPARK.Log.Put
-                 ("Error shutting-down: ", CoAP_SPARK.Log.Error);
-               CoAP_SPARK.Log.Put_Line
-                 (Error_Message.Text (1 .. Error_Message.Last),
-                  CoAP_SPARK.Log.Error);
-            end;
+            Report_Error
+               (Socket, "Error shutting-down: ");
             Finalize (Socket);
             return;
          else

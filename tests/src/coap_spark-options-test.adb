@@ -13,6 +13,7 @@ package body CoAP_SPARK.Options.Test is
    overriding
    procedure Run_Test (T : in out Test) is
       pragma Unreferenced (T);
+      use type Interfaces.Unsigned_32;
       Regular_Option, Final_Option, Copied_Option : Option;
       Value                                       :
         constant RFLX.RFLX_Builtin_Types.Bytes := [0, 1, 2, 3, 4];
@@ -67,6 +68,21 @@ package body CoAP_SPARK.Options.Test is
 
       CoAP_SPARK.Options.Free (Regular_Option);
       CoAP_SPARK.Options.Free (Copied_Option);
+
+      CoAP_SPARK.Options.New_UInt_Option
+        (Number      => RFLX.CoAP.OCF_Content_Format_Version,
+         Value       => Interfaces.Unsigned_32'Last,
+         Order_Index => 1,
+         Result      => Regular_Option);
+
+      Assert
+        (CoAP_SPARK.Options.To_UInt
+           (CoAP_SPARK.Options.Get_Value
+              (CoAP_SPARK.Options.To_Indefinite (Regular_Option)))
+         = Interfaces.Unsigned_32'Last,
+         Message => "Invalid retrieved UInt Value");
+
+      CoAP_SPARK.Options.Free (Regular_Option);
 
    end Run_Test;
 

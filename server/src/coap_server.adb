@@ -109,6 +109,10 @@ procedure CoAP_Server is
    Is_Secure          : Boolean := False;
 begin
 
+   -- This has no effect, but it is needed to avoid a linking error with
+   -- SPARKLib in the validation profile.
+   Workarounds.Check_Or_Fail;
+
    if SPARK_Terminal.Argument_Count = 1
      and then (SPARK_Terminal.Argument (1) = "-h"
                or else SPARK_Terminal.Argument (1) = "--help")
@@ -191,13 +195,6 @@ begin
          Argument_Index := @ + 1;
          Is_Secure := True;
 
-         if Argument_Index > SPARK_Terminal.Argument_Count then
-            CoAP_SPARK.Log.Put ("Missing argument for ", CoAP_SPARK.Log.Error);
-            CoAP_SPARK.Log.Put_Line
-              (SPARK_Terminal.Argument (Argument_Index - 1),
-               CoAP_SPARK.Log.Error);
-            Valid_Command_Line := False;
-         end if;
          -- We will handle the PSK and Identity later, in the PSK_Callback
       else
          CoAP_SPARK.Log.Put ("Invalid option: ", CoAP_SPARK.Log.Error);
@@ -238,7 +235,4 @@ begin
      (Port      => Port,
       Is_Secure => Is_Secure);
 
-   -- This has no effect, but it is needed to avoid a linking error with
-   -- SPARKLib in the validation profile.
-   Workarounds.Check_Or_Fail;
 end CoAP_Server;
