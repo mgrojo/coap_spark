@@ -25,7 +25,7 @@ jobs:
       # On Windows, the validation profile fails due to "(style) incorrect line terminator [-gnatyd]"
       PROFILE: ${{ matrix.os == 'windows-latest' && 'development' || 'validation' }}
       # Switches to enable code coverage with gcov
-      COVERAGE_SWITCHES: "-XCOVERAGE=gcov -cargs -O0 --coverage -largs --coverage"
+      COVERAGE_SWITCHES: "-XCOVERAGE=gcov -cargs -O0 -fno-inline --coverage -largs --coverage"
 
     runs-on: ${{ matrix.os }} # Run the continuous integration workflow on each OS listed in the matrix.
     
@@ -115,7 +115,8 @@ jobs:
         shell: bash
 
         # Upload results to codecov.io
-      - uses: codecov/codecov-action@v5
+      - if: runner.os == 'Linux'
+        uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true # optional (default = false)
           name: codecov-umbrella # optional
