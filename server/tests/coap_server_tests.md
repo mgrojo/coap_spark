@@ -68,7 +68,9 @@ coap_server
 `coap_client` has to be visible in the PATH, because each scenario invokes it
 directly.
 
-## Feature: CoAP secure communication with server
+## Feature: CoAP communication with server
+The following tests require that a server is already running in the background.
+That server is not launched by these tests, but externally.
 
 ### Scenario: get method with test path and high verbosity I
 This test has to be broken in two contains checks, because the ETAG
@@ -202,4 +204,12 @@ very long resource name
   - And the output is
 ```
 4.04 Resource not found
+```
+
+### Scenario: nc request to the server
+  - When I run `nc -w 2 -v -u localhost 5683`
+  - Then I get no error
+  - And the output is
+```
+Connection to localhost (127.0.0.1) 5683 port [udp/*] succeeded!
 ```
