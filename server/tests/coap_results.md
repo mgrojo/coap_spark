@@ -55,7 +55,7 @@
    - OK : And output contains `Invalid option: -?`  
    - [X] scenario   [specified port and invalid option](coap_server_tests.md) pass  
 
-  ## Feature: CoAP communication with server  
+  ## Feature: CoAP secure communication with server  
    ### Scenario: [get method with test path and high verbosity I](coap_server_tests.md): 
    - OK : When I run `coap_client -v 4 coap://localhost/`  
    - OK : Then I get no error  
@@ -166,19 +166,13 @@
    - OK : And the output is  
    - [X] scenario   [explicit get method with path of just deleted resource](coap_server_tests.md) pass  
 
-   ### Scenario: [nc request to the server](coap_server_tests.md): 
-   - OK : When I run `nc -w 2 -v -u localhost 5683`  
-   - OK : Then I get no error  
-   - OK : And the output is  
-   - [X] scenario   [nc request to the server](coap_server_tests.md) pass  
 
-
-## Summary : **Success**, 29 scenarios OK
+## Summary : **Success**, 28 scenarios OK
 
 | Status     | Count |
 |------------|-------|
 | Failed     | 0     |
-| Successful | 29    |
+| Successful | 28    |
 | Empty      | 0     |
 | Not Run    | 0     |
 
