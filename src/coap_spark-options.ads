@@ -178,7 +178,6 @@ is
 
    function Get_Length (Opt : Option) return Option_Value_Length;
 
-
    function Get_Number (Opt : Indefinite_Option) return RFLX.CoAP.Option_Numbers;
 
    function Get_Length (Opt : Indefinite_Option) return Option_Value_Length;

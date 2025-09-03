@@ -24,6 +24,9 @@ is
       Is_First_Message   : Boolean := True;
    end record;
 
+   function Is_Finalized (Session_State : State) return Boolean
+     is (Session_State.Server = null);
+
    --  Initialize State.
    --
    --  This procedure must be called before the start of the state machine to
@@ -34,12 +37,9 @@ is
       Session_State : out State)
    with
       Pre  => Server /= null,
-      Post => Server = null,
+      Post => Server = null and then not Is_Finalized (Session_State),
       Global => null,
       Always_Terminates;
-
-   function Is_Finalized (Session_State : State) return Boolean
-     is (Session_State.Server = null);
 
    procedure Finalize (Session_State : in out State)
    with
