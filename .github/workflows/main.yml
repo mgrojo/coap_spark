@@ -72,7 +72,7 @@ jobs:
       - if: runner.os == 'Linux'
         name: Client tests (CoAP and secure CoAP)
         run: |
-            sudo apt install libcoap3-bin netcat
+            sudo apt install libcoap3-bin 
             PATH=$HOME/.alire/bin:$PATH make -C client/tests
         shell: bash
 
