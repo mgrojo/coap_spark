@@ -67,6 +67,12 @@
    - OK : And output contains `Communication problems`  
    - [X] scenario   [communication problems](coap_client_tests.md) pass  
 
+   ### Scenario: [connection problems](coap_client_tests.md): 
+   - OK : When I run `../bin/coap_client coaps://unknown-address/`  
+   - OK : Then I get an error  
+   - OK : And output contains `Connection problems`  
+   - [X] scenario   [connection problems](coap_client_tests.md) pass  
+
   ## Feature: ETSI CoAP plugtest  
    ### Scenario: [get method with test path and high verbosity I](coap_client_tests.md): 
    - OK : When I run `../bin/coap_client -v 4 coap://coap.me/test`  
@@ -321,12 +327,12 @@
    - [X] scenario   [coaps not supported by server](coap_client_tests.md) pass  
 
 
-## Summary : **Success**, 54 scenarios OK
+## Summary : **Success**, 55 scenarios OK
 
 | Status     | Count |
 |------------|-------|
 | Failed     | 0     |
-| Successful | 54    |
+| Successful | 55    |
 | Empty      | 0     |
 | Not Run    | 0     |
 

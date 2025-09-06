@@ -223,6 +223,7 @@ is
       if not Inet_Addr.Exists or else
          (Inet_Addr.Exists and then Inet_Addr.Addr.Family /= SPARK_Sockets.Family_Inet)
       then
+         Finalize (Socket);
          return;
       end if;
 
@@ -235,6 +236,7 @@ is
          Server => Address);
 
       if Result /= SPARK_Sockets.Success then
+         Finalize (Socket);
          return;
       end if;
 

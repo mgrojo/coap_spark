@@ -64,6 +64,11 @@ Use this command to run the tests: `bbt coap_client_tests.md`
   - Then I get an error
   - And output contains `Communication problems`
 
+### Scenario: connection problems
+  - When I run `../bin/coap_client coaps://unknown-address/`
+  - Then I get an error
+  - And output contains `Connection problems`
+
 ## Feature: ETSI CoAP plugtest
 The ETSI CoAP plugtest can be run against the server running on coap://coap.me.
 

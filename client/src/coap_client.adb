@@ -82,7 +82,7 @@ procedure CoAP_Client is
              CoAP_SPARK.URI.Scheme (URI) = CoAP_SPARK.Secure_Scheme);
       Valid_URI : Boolean := True;
 
-      procedure Finalize is
+      procedure Finalize (Is_Failure : Boolean := True) is
       begin
          RFLX.RFLX_Types.Free (Payload);
          if FSM.Initialized (Ctx) then
@@ -91,6 +91,12 @@ procedure CoAP_Client is
          pragma Assert (FSM.Uninitialized (Ctx));
          Session_Environment.Finalize (Ctx.E);
          pragma Assert (Session_Environment.Is_Finalized (Ctx.E));
+
+         SPARK_Terminal.Set_Exit_Status
+         (Status =>
+            (if Is_Failure
+               then SPARK_Terminal.Exit_Status_Failure
+               else SPARK_Terminal.Exit_Status_Success));
       end Finalize;
 
    begin
@@ -215,7 +221,7 @@ procedure CoAP_Client is
          SPARK_Terminal.Set_Exit_Status (SPARK_Terminal.Exit_Status_Failure);
       end if;
 
-      Finalize;
+      Finalize (Is_Failure => Ctx.E.Current_Status /= CoAP_SPARK.OK);
    end Run_Session;
 
    Method : RFLX.CoAP.Method_Code := RFLX.CoAP.Get;
