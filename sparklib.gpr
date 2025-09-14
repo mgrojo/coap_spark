@@ -1,4 +1,4 @@
-project SPARKlib extends "sparklib_external" is
+project SPARKlib extends "sparklib_internal" is
 
    -- Based on the SPARKlib project file from the Alire gnatprove crate, which
    -- has this notice:
@@ -12,10 +12,10 @@ project SPARKlib extends "sparklib_external" is
 
    for Object_Dir use "obj/sparklib";
 
-   for Source_Dirs use SPARKlib_External'Source_Dirs;
+   for Source_Dirs use SPARKlib_Internal'Source_Dirs;
 
    Ada_Compiler_Switches := 
-      Sparklib_External.Compiler'Default_Switches ("Ada") & (
+      Sparklib_Internal.Compiler'Default_Switches ("Ada") & (
          "-ffunction-sections" -- Separate ELF section for each function
          ,"-fdata-sections" -- Separate ELF section for each variable
          );
@@ -24,7 +24,7 @@ project SPARKlib extends "sparklib_external" is
       for Default_Switches ("Ada") use Ada_Compiler_Switches;
    end Compiler;
 
-   for Excluded_Source_Files use SPARKlib_External'Excluded_Source_Files
+   for Excluded_Source_Files use SPARKlib_Internal'Excluded_Source_Files
       & (
       -- Uncomment the files you want to exclude from your project
       -- "spark-big_integers.ads",
