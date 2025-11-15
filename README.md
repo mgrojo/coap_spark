@@ -104,14 +104,15 @@ CoAP-SPARK is a working and verified implementation of CoAP.
 The main objective of CoAP-SPARK is to be the subject of my Master's Thesis, but
 I think it can be used in scenarios where this limitations are not an issue:
 - There are no retransmissions.
-- Block-wise transfers are not implemented. This isn't part of main RFC 7252
-  for CoAP, but of the [RFC 7959](https://datatracker.ietf.org/doc/rfc7959/).
 - It only supports NoSec and PreSharedKey security modes.
+- Block-wise transfers are not implemented. Nevertheless, this isn't part of the
+  main RFC 7252 for CoAP, but of [RFC 7959](https://datatracker.ietf.org/doc/rfc7959/).
 
-Regarding the implemented client is able to
-substitute libcoap's coap-client when called from a project like
+Regarding the implemented client, it is able to
+substitute libcoap's coap-client, for example, when called from a project like
 [ikea-smartlight](https://github.com/slokhorst/ikea-smartlight/).
 
-The server implementation is ongoing, following the example of the client.
+The server implementation is an example of a CoAP server that can answer to CRUD
+requests, storing resources in memory.
 
 Bug reports, feedback or suggestions on how to improve the library are very welcome.
