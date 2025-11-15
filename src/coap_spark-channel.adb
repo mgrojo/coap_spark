@@ -1,7 +1,7 @@
 with Ada.Streams;
 with Ada.Unchecked_Conversion;
 
-with GNAT.Sockets;
+with CoAP_SPARK.Log;
 
 with Interfaces.C;
 
@@ -63,13 +63,12 @@ is
      (Buffer : Ada.Streams.Stream_Element_Array)
       return RFLX.RFLX_Builtin_Types.Bytes
    with
-     Pre =>
+     Pre  =>
        Buffer'First = 1
        and then Buffer'Last
                 <= Ada.Streams.Stream_Element_Offset
                      (RFLX.RFLX_Builtin_Types.Index'Last),
-      Post =>
-        To_RFLX_Bytes'Result'Length = Buffer'Length
+     Post => To_RFLX_Bytes'Result'Length = Buffer'Length
    is
       Result : RFLX.RFLX_Builtin_Types.Bytes (1 .. Buffer'Length);
    begin
@@ -103,57 +102,93 @@ is
    end To_RFLX_Bytes;
 
    procedure Initialize
-     (Socket       : out Socket_Type;
-      Port         : Port_Type := Default_Port;
-      PSK_Callback : WolfSSL.PSK_Client_Callback := null;
-      Server       : Boolean := False)
+     (Socket              : out Socket_Type;
+      Port                : Port_Type := Default_Port;
+      PSK_Client_Callback : WolfSSL.PSK_Client_Callback := null;
+      PSK_Server_Callback : WolfSSL.PSK_Server_Callback := null;
+      Server              : Boolean := False)
    is
       Result : SPARK_Sockets.Subprogram_Result;
+      Option : SPARK_Sockets.Option_Type;
    begin
 
       Socket.Attached_Socket := (Exists => False);
+      Socket.Is_Server := Server;
 
-      SPARK_Sockets.Create_Datagram_Socket
-        (Socket => Socket.Attached_Socket);
+      SPARK_Sockets.Create_Datagram_Socket (Socket => Socket.Attached_Socket);
 
       if not Socket.Attached_Socket.Exists then
          return;
       end if;
 
+      Option := (Name => SPARK_Sockets.Reuse_Address, Enabled => True);
+      Result :=
+        SPARK_Sockets.Set_Socket_Option
+          (Socket => Socket.Attached_Socket.Socket,
+           Level  => SPARK_Sockets.Socket_Level,
+           Option => Option);
+
+      if Result /= SPARK_Sockets.Success then
+         SPARK_Sockets.Close_Socket (Socket => Socket.Attached_Socket);
+         return;
+      end if;
+
       if Server then
-         Result := SPARK_Sockets.Bind_Socket
-           (Socket  => Socket.Attached_Socket.Socket,
-            Address =>
-              (Family => SPARK_Sockets.Family_Inet,
-               Addr   => SPARK_Sockets.Any_Inet_Addr,
-               Port   => SPARK_Sockets.Port_Type (Port)));
+         Result :=
+           SPARK_Sockets.Bind_Socket
+             (Socket  => Socket.Attached_Socket.Socket,
+              Address =>
+                (Family => SPARK_Sockets.Family_Inet,
+                 Addr   => SPARK_Sockets.Any_Inet_Addr,
+                 Port   => SPARK_Sockets.Port_Type (Port)));
 
          if Result /= SPARK_Sockets.Success then
+            SPARK_Sockets.Close_Socket (Socket => Socket.Attached_Socket);
             return;
          end if;
 
       end if;
 
-      if Socket.Is_Secure then
+      if not Socket.Is_Secure then
+         Socket.Client_Address :=
+           (Sock_Addr => (Family => GNAT.Sockets.Family_Unspec));
+      else
          Socket.Result := WolfSSL.Initialize;
 
          if Socket.Result /= WolfSSL.Success then
+            SPARK_Sockets.Close_Socket (Socket => Socket.Attached_Socket);
             return;
          end if;
 
          --  Create and initialize WOLFSSL_CTX.
          WolfSSL.Create_Context
-           (Method => WolfSSL.DTLSv1_2_Client_Method, Context => Socket.Ctx);
+           (Method  =>
+              (if Server
+               then WolfSSL.DTLSv1_2_Server_Method
+               else WolfSSL.DTLSv1_2_Client_Method),
+            Context => Socket.Ctx);
 
          if WolfSSL.Is_Valid (Socket.Ctx) then
 
-            WolfSSL.Create_WolfSSL (Context => Socket.Ctx, Ssl => Socket.Ssl);
+            if Server then
+               WolfSSL.Set_Context_PSK_Server_Callback
+                 (Context => Socket.Ctx, Callback => PSK_Server_Callback);
+            else
 
-            if WolfSSL.Is_Valid (Socket.Ssl) then
-               -- Use PSK for authentication.
-               WolfSSL.Set_PSK_Client_Callback
-                 (Ssl      => Socket.Ssl,
-                  Callback => PSK_Callback);
+               WolfSSL.Create_WolfSSL
+                 (Context => Socket.Ctx, Ssl => Socket.Ssl);
+
+               if WolfSSL.Is_Valid (Socket.Ssl) then
+
+                  Socket.Result :=
+                    WolfSSL.Attach
+                      (Ssl    => Socket.Ssl,
+                       Socket =>
+                         SPARK_Sockets.To_C (Socket.Attached_Socket.Socket));
+
+                  WolfSSL.Set_PSK_Client_Callback
+                       (Ssl => Socket.Ssl, Callback => PSK_Client_Callback);
+               end if;
             end if;
          end if;
       end if;
@@ -188,6 +223,7 @@ is
       if not Inet_Addr.Exists or else
          (Inet_Addr.Exists and then Inet_Addr.Addr.Family /= SPARK_Sockets.Family_Inet)
       then
+         Finalize (Socket);
          return;
       end if;
 
@@ -200,6 +236,7 @@ is
          Server => Address);
 
       if Result /= SPARK_Sockets.Success then
+         Finalize (Socket);
          return;
       end if;
 
@@ -220,19 +257,40 @@ is
    end Connect;
 
    procedure Send_Socket
-     (Socket : Socket_Type;
-      Item   : Ada.Streams.Stream_Element_Array)
-      with Pre => Is_Valid (Socket);
+     (Socket : Socket_Type; Item : Ada.Streams.Stream_Element_Array)
+   with Pre => Is_Valid (Socket);
 
    procedure Send_Socket
-     (Socket : Socket_Type;
-      Item   : Ada.Streams.Stream_Element_Array)
+     (Socket : Socket_Type; Item : Ada.Streams.Stream_Element_Array)
    with SPARK_Mode => Off
    is
       Unused_Last : Ada.Streams.Stream_Element_Offset;
    begin
       GNAT.Sockets.Send_Socket
-        (Socket => Socket.Attached_Socket.Socket, Item => Item, Last => Unused_Last);
+        (Socket => Socket.Attached_Socket.Socket,
+         Item   => Item,
+         Last   => Unused_Last);
+   end Send_Socket;
+
+   procedure Send_Socket
+     (Socket : Socket_Type;
+      Item   : Ada.Streams.Stream_Element_Array;
+      To     : Address_Type)
+   with Pre => Is_Valid (Socket);
+
+   procedure Send_Socket
+     (Socket : Socket_Type;
+      Item   : Ada.Streams.Stream_Element_Array;
+      To     : Address_Type)
+   with SPARK_Mode => Off
+   is
+      Unused_Last : Ada.Streams.Stream_Element_Offset;
+   begin
+      GNAT.Sockets.Send_Socket
+        (Socket => Socket.Attached_Socket.Socket,
+         Item   => Item,
+         Last   => Unused_Last,
+         To     => GNAT.Sockets.Sock_Addr_Type (To.Sock_Addr));
    end Send_Socket;
 
    procedure Send
@@ -260,9 +318,16 @@ is
               constant Ada.Streams.Stream_Element_Array :=
                 To_Ada_Stream (Buffer);
          begin
-            Send_Socket
-              (Socket => Socket,
-               Item   => Data);
+            if Socket.Is_Server then
+               Send_Socket
+                 (Socket => Socket,
+                  Item   => Data,
+                  To     => Socket.Client_Address);
+            else
+               Send_Socket
+                 (Socket => Socket,
+                  Item   => Data);
+            end if;
          end;
       end if;
    end Send;
@@ -285,7 +350,36 @@ is
    is
    begin
       GNAT.Sockets.Receive_Socket
-        (Socket => Socket.Attached_Socket.Socket, Item => Item, Last => Last);
+        (Socket => Socket.Attached_Socket.Socket,
+         Item   => Item,
+         Last   => Last);
+   end Receive_Socket;
+
+   procedure Receive_Socket
+     (Socket : SPARK_Sockets.Optional_Socket;
+      Item   : out Ada.Streams.Stream_Element_Array;
+      Last   : out Ada.Streams.Stream_Element_Offset;
+      From   : out Address_Type)
+   with
+     Relaxed_Initialization => Item,
+     Pre                    => Socket.Exists,
+     Post                   =>
+       Last in Item'First - 1 .. Item'Last
+       and then Item (Item'First .. Last)'Initialized;
+
+   procedure Receive_Socket
+     (Socket : SPARK_Sockets.Optional_Socket;
+      Item   : out Ada.Streams.Stream_Element_Array;
+      Last   : out Ada.Streams.Stream_Element_Offset;
+      From   : out Address_Type)
+   with SPARK_Mode => Off
+   is
+   begin
+      GNAT.Sockets.Receive_Socket
+        (Socket => Socket.Socket,
+         Item   => Item,
+         Last   => Last,
+         From   => GNAT.Sockets.Sock_Addr_Type (From.Sock_Addr));
    end Receive_Socket;
 
    procedure Receive
@@ -303,7 +397,7 @@ is
                Input.Buffer'Length <= Buffer'Length
             then
                Length := RFLX.RFLX_Builtin_Types.Length (Input.Last);
-               Buffer (1 .. RFLX.RFLX_Builtin_Types.Index (Length)) :=
+               Buffer (1 .. RFLX.RFLX_Builtin_Types.Index'Base (Length)) :=
                  To_RFLX_Bytes (Input.Buffer);
             else
                Socket.Result :=
@@ -318,8 +412,15 @@ is
             Last : Ada.Streams.Stream_Element_Offset;
          begin
 
-            Receive_Socket
-              (Socket => Socket, Item => Data, Last => Last);
+            if Socket.Is_Server then
+               Receive_Socket
+                 (Socket => Socket.Attached_Socket,
+                  Item   => Data,
+                  Last   => Last,
+                  From   => Socket.Client_Address);
+            else
+               Receive_Socket (Socket => Socket, Item => Data, Last => Last);
+            end if;
 
             pragma Assert (Data'Length = Buffer'Length);
             Buffer (Buffer'First .. RFLX.RFLX_Builtin_Types.Index'Base (Last)) :=
@@ -329,9 +430,72 @@ is
       end if;
    end Receive;
 
-   procedure Finalize
-     (Socket : in out Socket_Type)
+   procedure Report_Error (Socket : Socket_Type; Message : String)
+   with Pre => Socket.Is_Secure
    is
+      Error_Message : constant WolfSSL.Error_Message :=
+        WolfSSL.Error
+          (WolfSSL.Get_Error (Ssl => Socket.Ssl, Result => Socket.Result));
+   begin
+      CoAP_SPARK.Log.Put (Message, CoAP_SPARK.Log.Error);
+      CoAP_SPARK.Log.Put_Line
+        (Error_Message.Text (1 .. Error_Message.Last), CoAP_SPARK.Log.Error);
+   end Report_Error;
+
+   procedure Accept_Connection (Socket : in out Socket_Type) is
+   begin
+      if Socket.Is_Secure then
+
+         WolfSSL.Create_WolfSSL (Context => Socket.Ctx, Ssl => Socket.Ssl);
+
+         if not WolfSSL.Is_Valid (Socket.Ssl) then
+            Finalize (Socket);
+            return;
+         end if;
+
+         Socket.Result :=
+            WolfSSL.Attach
+               (Ssl    => Socket.Ssl,
+               Socket =>
+                  SPARK_Sockets.To_C (Socket.Attached_Socket.Socket));
+
+         if Socket.Result /= SPARK_Sockets.Success then
+            Finalize (Socket);
+            return;
+         end if;
+
+         Socket.Result := WolfSSL.Accept_Connection (Socket.Ssl);
+         if Socket.Result /= WolfSSL.Success then
+            Report_Error
+               (Socket, "Error accepting connection: ");
+            Finalize (Socket);
+            return;
+         end if;
+      end if;
+   end Accept_Connection;
+
+   procedure Shutdown (Socket : in out Socket_Type) is
+   begin
+
+      if Socket.Is_Secure and then WolfSSL.Is_Valid (Socket.Ssl) then
+         Socket.Result := WolfSSL.Shutdown (Socket.Ssl);
+
+         -- This can be different to WolfSSL.Success (SSL_SHUTDOWN_NOT_DONE) but
+         -- we still want to free the SSL session, so only check for real failures.
+         if Socket.Result = WolfSSL.Failure then
+            Report_Error
+               (Socket, "Error shutting-down: ");
+            Finalize (Socket);
+            return;
+         else
+            Socket.Result := WolfSSL.Success;
+         end if;
+
+         WolfSSL.Free (Ssl => Socket.Ssl);
+      end if;
+   end Shutdown;
+
+   procedure Finalize (Socket : in out Socket_Type) is
    begin
       if Has_Attached_Socket (Socket) then
          SPARK_Sockets.Close_Socket (Socket => Socket.Attached_Socket);

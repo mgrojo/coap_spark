@@ -5,6 +5,8 @@
 - [X] Enable coverage reports after testing on GitHub action.
 - [ ] Convert Max_Number_Of_Options into a compile time option.
 - [ ] Increase coverage adding tests or removing dead code.
+- [ ] Fix Is_Valid_As_Number for numbers with correct width but out of the type range    
+      There is still a problem when the width is correct but it is still out of the range.
 
 * Client
 - [ ] Implement timeout with -B option in client
@@ -24,7 +26,19 @@
 - [X] Implement RFC 7252 "5.4.1. Critical/Elective"
 
 * Server
-- [ ] Consider implementing server state-machine and example
+- [X] Consider implementing server state-machine and example
+  - [X] Implement secure communications for the server
+      - [ ] Make it interoperable with coap-client-openssl or coap-client-gnutls
+      - [ ] Fix CoAPS test on macOS
+  - [X] Implement server logic for CRUD
+  - [X] Add tests for the server
+  - [X] Make the validation profile work for the server
+        either with the Workarounds package (chosen option) or making SPARKLib 15 to work.
+  - [X] Add server in workflows
+
+* Upgrades
+  - [x] (discarded: colibri not working) Upgrade to GNATProve 15 and GNAT 15
+  - [X] Upgrade bbt
 
 * Provers
 - [x] (discarded) Compile and install colibri from

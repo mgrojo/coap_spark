@@ -1,6 +1,7 @@
+with CoAP_SPARK.Content_Formats;
 with CoAP_SPARK.Log;
 with CoAP_SPARK.Options.Lists;
-with Interfaces;
+
 with RFLX.CoAP;
 with RFLX.RFLX_Types;
 
@@ -17,7 +18,7 @@ is
       record
          case Code_Class is
             when RFLX.CoAP.Success =>
-               null;
+               Success_Code : RFLX.CoAP.Success_Response := RFLX.CoAP.Valid;
             when RFLX.CoAP.Client_Error =>
                Client_Error_Code : RFLX.CoAP.Client_Error_Response;
             when RFLX.CoAP.Server_Error =>
@@ -33,8 +34,8 @@ is
 
    type Content is record
       Options : CoAP_SPARK.Options.Lists.Vector;
-      Format : Interfaces.Unsigned_32 := 0;
-      Payload : Payload_Ptr;
+      Format  : CoAP_SPARK.Content_Formats.Content_Type := 0;
+      Payload : Payload_Ptr := null;
    end record;
 
    --  Log the content of a message according to the log levels for options and
@@ -45,16 +46,35 @@ is
       Log_Level_Payload : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Info)
       with Pre => CoAP_SPARK.Log."<=" (General_Log_Level, Log_Level_Payload);
 
+   --  Log the content of response kind according to the log levels for success
+   --  output and errror output.
+   procedure Print_Response_Kind
+     (Item              : Response_Kind;
+      General_Log_Level : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Debug;
+      Log_Level_Errors  : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Info)
+      with Pre => CoAP_SPARK.Log."<=" (General_Log_Level, Log_Level_Errors);
+
    -- Return the image of a response kind. When Long is True, the image includes
    -- the human readable description of the response code, otherwise it only
    -- includes the code in standard format.
    function Image (Item : Response_Kind; Long : Boolean := True) return String
    with
-     Post => Image'Result'First = 1;
+      Post => Image'Result'First = 1;
 
    function Is_Empty (Item : Content) return Boolean
    is (CoAP_SPARK.Options.Lists.Is_Empty (Item.Options)
        and then Item.Payload = null);
+
+   --  Set the payload of Item to Text and set the appropriate content format.
+   --  The payload is freed if it is not null.
+   procedure Initialize_With_Text_Payload
+     (Text : String;
+      Item : out Content)
+   with
+      Pre => Text'Length <= CoAP_SPARK.Max_Payload_Length,
+      Post => not Is_Empty (Item) and then
+         Item.Payload'Length = Text'Length,
+      Global => null;
 
    procedure Finalize (Item : in out Content)
    with

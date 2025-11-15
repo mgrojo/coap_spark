@@ -1,6 +1,5 @@
 with CoAP_SPARK.Log;
 
-with RFLX.CoAP_Client.Session_Environment;
 with RFLX.RFLX_Types;
 with RFLX.RFLX_Builtin_Types;
 
@@ -8,11 +7,9 @@ package body CoAP_SPARK.Client_Session
    with SPARK_Mode
 is
 
-   package Session_Environment renames RFLX.CoAP_Client.Session_Environment;
    package Types renames RFLX.RFLX_Types;
    package Channel renames CoAP_SPARK.Channel;
 
-   use type RFLX.CoAP_Client.Session_Environment.Status_Type;
    use type Types.Index;
 
    procedure Read (Ctx : FSM.Context;
@@ -20,7 +17,7 @@ is
       Pre =>
          FSM.Initialized (Ctx)
          and then FSM.Has_Data (Ctx, FSM.C_Transport)
-         and then CoAP_SPARK.Channel.Is_Valid (Skt),
+         and then CoAP_SPARK.Channel.Is_Ready (Skt),
       Post =>
          FSM.Initialized (Ctx)
    is
@@ -52,7 +49,7 @@ is
       Pre =>
          FSM.Initialized (Ctx)
          and then FSM.Needs_Data (Ctx, FSM.C_Transport)
-         and then CoAP_SPARK.Channel.Is_Valid (Skt),
+         and then CoAP_SPARK.Channel.Is_Ready (Skt),
       Post =>
          FSM.Initialized (Ctx)
       is
@@ -81,26 +78,25 @@ is
 
       while FSM.Active (Ctx) loop
          pragma Loop_Invariant (FSM.Initialized (Ctx));
-         pragma Loop_Invariant (CoAP_SPARK.Channel.Is_Valid (Skt));
+         pragma Loop_Invariant (CoAP_SPARK.Channel.Is_Ready (Skt));
          for C in FSM.Channel'Range loop
             pragma Loop_Invariant (FSM.Initialized (Ctx));
-            exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
+            exit when not CoAP_SPARK.Channel.Is_Ready (Skt);
             if FSM.Has_Data (Ctx, C) then
                Read (Ctx, Skt);
             end if;
-            exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
+            exit when not CoAP_SPARK.Channel.Is_Ready (Skt);
             if FSM.Needs_Data (Ctx, C) then
                Write (Ctx, Skt);
             end if;
          end loop;
-         exit when not CoAP_SPARK.Channel.Is_Valid (Skt);
+         exit when not CoAP_SPARK.Channel.Is_Ready (Skt);
          FSM.Run (Ctx);
       end loop;
 
-      if not CoAP_SPARK.Channel.Is_Valid (Skt) then
+      if not CoAP_SPARK.Channel.Is_Ready (Skt) then
          CoAP_SPARK.Log.Put_Line ("Communication problems.", CoAP_SPARK.Log.Error);
-         Ctx.E.Current_Status :=
-           Session_Environment.Communication_Problems;
+         Ctx.E.Current_Status := CoAP_SPARK.Communication_Problems;
       end if;
 
    end Run_Session_Loop;

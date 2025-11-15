@@ -1,9 +1,12 @@
 
 with AUnit.Simple_Test_Cases; use AUnit.Simple_Test_Cases;
+
 with CoAP_SPARK.Content_Formats.Test;
 with CoAP_SPARK.Options.Test;
 with CoAP_SPARK.URI.Test;
 with CoAP_SPARK.Log.Test;
+
+with RFLX.CoAP_Server.Main_Loop.Test;
 
 package body CoAP_Suite is
 
@@ -16,6 +19,7 @@ package body CoAP_Suite is
       Ret.Add_Test (Test_Case_Access'(new CoAP_SPARK.URI.Test.Test));
       Ret.Add_Test (Test_Case_Access'(new CoAP_SPARK.URI.Test.Compose_Test));
       Ret.Add_Test (Test_Case_Access'(new CoAP_SPARK.Log.Test.Test));
+      Ret.Add_Test (Test_Case_Access'(new RFLX.CoAP_Server.Main_Loop.Test.Test));
       return Ret;
    end Suite;
 

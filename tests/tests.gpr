@@ -1,4 +1,6 @@
 with "config/tests_config.gpr";
+with "coap_spark.gpr";
+
 project Tests is
 
    for Source_Dirs use ("src/", "config/");

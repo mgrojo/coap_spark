@@ -16,4 +16,14 @@ is
    Default_Scheme : constant String := "coap";
 
    Secure_Scheme : constant String := "coaps";
+
+   type Status_Type is
+     (OK,
+      Capacity_Error,
+      Invalid_Request,
+      Malformed_Message,
+      Unknown_Critical_Option,
+      Communication_Problems,
+      Unexpected_Case);
+
 end CoAP_SPARK;

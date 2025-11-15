@@ -1,0 +1,162 @@
+with CoAP;
+
+package CoAP_Server is
+
+   type Options_And_Payload_Data is
+      message
+         Length : CoAP::Length_16;
+         Options_And_Payload : Opaque
+            with Size => Length * 8;
+      end message;
+
+   type Unused_6 is range 0 .. 0 with Size => 6;
+
+   type Definite_Message is
+      message
+         Length : CoAP::Length_16;
+         Message_Data : Opaque
+            with Size => Length * 8;
+      end message;
+
+   for Definite_Message use (Message_Data => CoAP::CoAP_Message);
+
+   type Application_Response is
+      message
+         Message_Class : CoAP::Code_Class;
+         Success_Code : CoAP::Success_Response;
+         Client_Error_Code : CoAP::Client_Error_Response;
+         Server_Error_Code : CoAP::Server_Error_Response;
+         Padding : Unused_6;
+         Options_And_Payload : Options_And_Payload_Data;
+      end message;
+
+   generic
+      Transport : Channel with Readable, Writable;
+      with function Get_Response (Request : Definite_Message) return Application_Response;
+      with function Get_Error_Options_And_Payload return Options_And_Payload_Data;
+   machine Main_Loop is
+      Request : CoAP::CoAP_Message;
+      Response : CoAP::CoAP_Message;
+
+      -- These two variables must be global as a workaround for the issue:
+      -- https://github.com/AdaCore/RecordFlux/issues/1309
+      Definite_Request : Definite_Message;
+      Definite_Response : Application_Response;
+
+   begin
+
+      state Receive_Request is
+      begin
+         Transport'Read (Request);
+      transition
+         goto Treat_Request if Request'Valid
+         goto Failure
+      exception
+         goto Failure
+      end Receive_Request;
+
+      state Treat_Request is
+      begin
+         Definite_Request.Length := Request'Size / 8;
+         Definite_Request.Message_Data := Request'Opaque;
+
+         Definite_Response := Get_Response (Definite_Request);
+
+      transition
+         goto Success_Response if Definite_Response.Message_Class = CoAP::Success
+         goto Client_Error_Response if Definite_Response.Message_Class = CoAP::Client_Error
+         goto Server_Error_Response if Definite_Response.Message_Class = CoAP::Server_Error
+         goto Failure
+      exception
+         goto Failure
+      end Treat_Request;
+
+      state Success_Response is
+      begin
+            Response := CoAP::CoAP_Message'(Ver => CoAP::First_Version,
+                        T => CoAP::Non_Confirmable,
+                        TKL => Request.TKL,
+                        Class => CoAP::Success,
+                        Success_Code => Definite_Response.Success_Code,
+                        Message_ID => Request.Message_ID,
+                        Token => Request.Token,
+                        Options_And_Payload =>
+                           Definite_Response.Options_And_Payload_Options_And_Payload);
+
+      transition
+         goto Send_Response
+            if Response'Valid
+         goto Failure
+      exception
+         goto Failure
+      end Success_Response;
+
+      state Client_Error_Response is
+      begin
+         Response := CoAP::CoAP_Message'(Ver => CoAP::First_Version,
+                        T => CoAP::Non_Confirmable,
+                        TKL => Request.TKL,
+                        Class => CoAP::Client_Error,
+                        Client_Error_Code => Definite_Response.Client_Error_Code,
+                        Message_ID => Request.Message_ID,
+                        Token => Request.Token,
+                        Options_And_Payload =>
+                           Definite_Response.Options_And_Payload_Options_And_Payload);
+
+      transition
+         goto Send_Response
+            if Response'Valid
+         goto Failure
+      exception
+         goto Failure
+      end Client_Error_Response;
+
+      state Server_Error_Response is
+      begin
+         Response := CoAP::CoAP_Message'(Ver => CoAP::First_Version,
+                        T => CoAP::Non_Confirmable,
+                        TKL => Request.TKL,
+                        Class => CoAP::Server_Error,
+                        Server_Error_Code => Definite_Response.Server_Error_Code,
+                        Message_ID => Request.Message_ID,
+                        Token => Request.Token,
+                        Options_And_Payload =>
+                           Definite_Response.Options_And_Payload_Options_And_Payload);
+
+      transition
+         goto Send_Response
+            if Response'Valid
+         goto Failure
+      exception
+         goto Failure
+      end Server_Error_Response;
+
+      state Send_Response is
+      begin
+         Transport'Write (Response);
+      transition
+         goto Receive_Request
+      end Send_Response;
+
+      state Failure is
+         Error_Data : Options_And_Payload_Data;
+      begin
+         Error_Data := Get_Error_Options_And_Payload;
+
+         Response := CoAP::CoAP_Message'(Ver => CoAP::First_Version,
+                     T => CoAP::Non_Confirmable,
+                     TKL => Request.TKL,
+                     Class => CoAP::Server_Error,
+                     Server_Error_Code => CoAP::Internal_Server_Error,
+                     Message_ID => Request.Message_ID,
+                     Token => Request.Token,
+                     Options_And_Payload => Error_Data.Options_And_Payload);
+
+      transition
+         goto Send_Response
+      exception
+         goto Receive_Request
+      end Failure;
+   end Main_Loop;
+
+end CoAP_Server;

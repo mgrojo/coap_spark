@@ -1,25 +1,31 @@
 name: GNATprove
 
-on:                    # Run the workflow for each of the following events:
-  push:                # - A branch is pushed or updated.
-    paths:             # When the sources or dependencies change.
+on:
+  push:
+    paths:
       - '.github/workflows/prove.yml'
       - 'src/**'
       - 'client/src/**'
+      - 'server/src/**'
       - 'alire.toml'
       - 'client/alire.toml'
+      - 'server/alire.toml'
       - 'coap_spark.gpr'
       - 'client/coap_client.gpr'
+      - 'server/coap_server.gpr'
       - 'libs/wolfssl'
   pull_request:        # - A pull-request is opened or updated.
     paths:
       - '.github/workflows/prove.yml'
       - 'src/**'
       - 'client/src/**'
+      - 'server/src/**'
       - 'alire.toml'
       - 'client/alire.toml'
+      - 'server/alire.toml'
       - 'coap_spark.gpr'
       - 'client/coap_client.gpr'
+      - 'server/coap_server.gpr'
       - 'libs/wolfssl'
   workflow_dispatch:   # - A manual run of the workflow is requested from the GitHub web interface.
   release:
@@ -28,6 +34,10 @@ on:                    # Run the workflow for each of the following events:
 jobs:
   gnatprove:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [client, server]
 
     steps:
     - name: Checkout repository
@@ -43,7 +53,8 @@ jobs:
 
     - name: Install GNAT package
       run: |
-        chmod +x install_package.sh && ./install_package.sh ./gnat-2021-20210519-x86_64-linux-bin $HOME/gnat-2021 com.adacore.spark2014_discovery
+        chmod +x install_package.sh
+        ./install_package.sh ./gnat-2021-20210519-x86_64-linux-bin $HOME/gnat-2021 com.adacore.spark2014_discovery
 
     # Install and setup Alire package manager
     - uses: alire-project/setup-alire@v2
@@ -53,16 +64,18 @@ jobs:
     - name: Set up environment for Colibri
       run: echo "$HOME/gnat-2021/libexec/spark/bin" >> $GITHUB_PATH
 
-    # Run GNATprove in the client to perform automatic formal verification of the SPARK code.
-    - name: Run GNATprove
+    - name: Run GNATprove (${{ matrix.target }})
+      working-directory: ${{ matrix.target }}
       run: |
-        cd client
+        set -e
         alr build --stop-after=generation
         alr gnatprove -j0 --level=4
-        # Get a summary for the action from the first (most relevant) lines of gnatprove.out
-        echo '```' >> $GITHUB_STEP_SUMMARY 
-        head -23 obj/development/gnatprove/gnatprove.out >> $GITHUB_STEP_SUMMARY 
-        echo '```' >> $GITHUB_STEP_SUMMARY
+        {
+          echo '```'
+          echo "# GNATprove summary for ${matrix_target:-${{ matrix.target }}}"
+          head -23 obj/development/gnatprove/gnatprove.out || echo "No summary available"
+          echo '```'
+        } >> $GITHUB_STEP_SUMMARY
 
 
 

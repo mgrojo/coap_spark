@@ -1,5 +1,3 @@
-
-with CoAP_SPARK.Content_Formats;
 with CoAP_SPARK.Options.Text_IO;
 with CoAP_SPARK.Utils;
 
@@ -36,6 +34,53 @@ is
       end if;
    end Print_Content;
 
+   procedure Print_Response_Kind
+     (Item              : Response_Kind;
+      General_Log_Level : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Debug;
+      Log_Level_Errors  : CoAP_SPARK.Log.Level_Type := CoAP_SPARK.Log.Info)
+   is
+   begin
+
+      case Item.Code_Class is
+         when RFLX.CoAP.Success =>
+
+            CoAP_SPARK.Log.Put_Line
+              (Item => "Server answered with success:",
+               Level => General_Log_Level);
+            CoAP_SPARK.Log.Put_Line
+              (Item => Image (Item),
+               Level => Log_Level_Errors);
+
+         when RFLX.CoAP.Client_Error =>
+
+            CoAP_SPARK.Log.Put
+              (Item => "Server answered with client error: ",
+               Level => General_Log_Level);
+            CoAP_SPARK.Log.Put_Line
+              (Item => Image (Item),
+               Level => General_Log_Level);
+
+            CoAP_SPARK.Log.Put
+              (Item => Image (Item, Long => False),
+               Level => Log_Level_Errors);
+            CoAP_SPARK.Log.Put (" ", Log_Level_Errors);
+
+         when RFLX.CoAP.Server_Error =>
+
+            CoAP_SPARK.Log.Put
+              (Item => "Server answered with server error: ",
+               Level => General_Log_Level);
+            CoAP_SPARK.Log.Put_Line
+              (Item => Image (Item),
+               Level => General_Log_Level);
+
+            CoAP_SPARK.Log.Put
+              (Item => Image (Item, Long => False),
+               Level => Log_Level_Errors);
+            CoAP_SPARK.Log.Put (" ", Log_Level_Errors);
+      end case;
+   end Print_Response_Kind;
+
    function Image (Item : Response_Kind; Long : Boolean := True) return String is
       Detail_Number : constant Integer :=
         (case Item.Code_Class is
@@ -51,7 +96,7 @@ is
          then
            " ("
            & (case Item.Code_Class is
-                when RFLX.CoAP.Success => RFLX.CoAP.Success'Image,
+                when RFLX.CoAP.Success => Item.Success_Code'Image,
                 when RFLX.CoAP.Client_Error =>
                   RFLX.CoAP.Client_Error_Response'Image
                     (Item.Client_Error_Code),
@@ -68,6 +113,19 @@ is
         & CoAP_SPARK.Utils.Padded_Image (Source => Detail_Number, Count => 2)
         & Detail_Image;
    end Image;
+
+   procedure Initialize_With_Text_Payload
+     (Text : String;
+      Item : out Content)
+   is
+   begin
+      Item.Options := CoAP_SPARK.Options.Lists.Empty_Vector;
+      Item.Format := CoAP_SPARK.Content_Formats.text.plain_charset_utf_8;
+
+      Item.Payload :=
+         new RFLX.RFLX_Types.Bytes'(CoAP_SPARK.Utils.Text_As_Bytes (Text));
+
+   end Initialize_With_Text_Payload;
 
    procedure Finalize (Item : in out Content)
    is

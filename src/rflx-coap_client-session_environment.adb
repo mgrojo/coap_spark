@@ -4,6 +4,8 @@ with Ada.Containers;
 
 with CoAP_SPARK.Options.Lists;
 
+with RFLX.RFLX_Types;
+
 package body RFLX.CoAP_Client.Session_Environment with
   SPARK_Mode
 is
@@ -16,7 +18,7 @@ is
       Separator     : Character;
       Number        : RFLX.CoAP.Option_Numbers;
       Option_List   : in out CoAP_SPARK.Options.Lists.Vector;
-      Status        : in out Status_Type) with
+      Status        : in out CoAP_SPARK.Status_Type) with
        Always_Terminates,
        Pre => CoAP_SPARK.Options.Option_Properties_Table (Number).Repeatable
          and then CoAP_SPARK.Options.Option_Properties_Table (Number).Format =
@@ -56,7 +58,7 @@ is
             or else CoAP_SPARK.Options.Lists.Length (Option_List) =
             CoAP_SPARK.Max_Number_Of_Options
          then
-            Status := Capacity_Error;
+            Status := CoAP_SPARK.Capacity_Error;
             return;
          end if;
 
@@ -73,7 +75,7 @@ is
          exit when Segment_Last >= Source'Last;
 
          if Order_Index = CoAP_SPARK.Options.Option_Index'Last then
-            Status := Capacity_Error;
+            Status := CoAP_SPARK.Capacity_Error;
             return;
          end if;
 
@@ -95,26 +97,28 @@ is
 
    procedure Initialize
      (Method        : RFLX.CoAP.Method_Code;
-      Server        : String;
+      Server        : CoAP_SPARK.Options.Hostname;
       Port          : Interfaces.Unsigned_16;
       Path          : String;
       Query         : String;
-      Format        : Interfaces.Unsigned_32 :=
+      Format        : CoAP_SPARK.Content_Formats.Content_Type :=
         CoAP_SPARK.Content_Formats.text.plain_charset_utf_8;
       Payload       : in out CoAP_SPARK.Messages.Payload_Ptr;
       Session_State : out State)
    is
       use type RFLX.RFLX_Types.Bytes_Ptr;
+      use type CoAP_SPARK.Status_Type;
    begin
       Session_State.Method := Method;
-      Session_State.Current_Status := OK;
+      Session_State.Current_Status := CoAP_SPARK.OK;
       Session_State.Is_First_Message := True;
       Session_State.Current_Message_ID := 0;
-      Session_State.Request_Content.Format := Format;
-      Session_State.Request_Content.Options :=
-        CoAP_SPARK.Options.Lists.Empty_Vector;
-      -- Move payload.
-      Session_State.Request_Content.Payload := Payload;
+      Session_State.Request_Content :=
+        (Options => CoAP_SPARK.Options.Lists.Empty_Vector,
+         Format  => Format,
+         Payload => Payload);
+
+      -- Payload was moved.
       Payload := null;
 
       declare
@@ -151,7 +155,7 @@ is
             Option_List => Session_State.Request_Content.Options,
             Status      => Session_State.Current_Status);
 
-         if Session_State.Current_Status = OK then
+         if Session_State.Current_Status = CoAP_SPARK.OK then
             -- RFC7252: each Uri-Query Option specifies one argument parameterizing the
             -- resource.
             Split_String_In_Repeatable_Options
@@ -161,7 +165,7 @@ is
                Option_List => Session_State.Request_Content.Options,
                Status      => Session_State.Current_Status);
 
-            if Session_State.Current_Status = OK
+            if Session_State.Current_Status = CoAP_SPARK.OK
                and then
                Session_State.Request_Content.Payload /= null
             then
@@ -169,11 +173,12 @@ is
                     (Session_State.Request_Content.Options)
                  = CoAP_SPARK.Max_Number_Of_Options
                then
-                  Session_State.Current_Status := Capacity_Error;
+                  Session_State.Current_Status := CoAP_SPARK.Capacity_Error;
                else
                   CoAP_SPARK.Options.New_UInt_Option
                     (Number => RFLX.CoAP.Content_Format,
-                     Value  => Session_State.Request_Content.Format,
+                     Value  => Interfaces.Unsigned_32
+                        (Session_State.Request_Content.Format),
                      Result => Option);
 
                   CoAP_SPARK.Options.Lists.Append
@@ -187,11 +192,14 @@ is
          end if;
       end;
 
-      Session_State.Response_Content.Format := 0;
-      Session_State.Response_Content.Options :=
-        CoAP_SPARK.Options.Lists.Empty_Vector;
-      Session_State.Response_Content.Payload := null;
-      Session_State.Response_Codes := (Code_Class => RFLX.CoAP.Success);
+      Session_State.Response_Content :=
+        (Options => CoAP_SPARK.Options.Lists.Empty_Vector,
+         Format  => 0,
+         Payload => null);
+
+      Session_State.Response_Codes :=
+        (Code_Class => RFLX.CoAP.Success,
+         Success_Code => RFLX.CoAP.Success_Response'First);
 
    end Initialize;
 

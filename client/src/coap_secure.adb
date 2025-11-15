@@ -106,8 +106,8 @@ is
    is
    begin
       CoAP_SPARK.Channel.Initialize
-        (Socket       => Socket,
-         PSK_Callback => CoAP_Secure.PSK_Client_Callback'Access);
+        (Socket              => Socket,
+         PSK_Client_Callback => CoAP_Secure.PSK_Client_Callback'Access);
    end Initialize;
    
 end CoAP_Secure;

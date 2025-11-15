@@ -1,8 +1,9 @@
+
+
+private with GNAT.Sockets;
 private with SPARK_Sockets;
-
-with WolfSSL;
-
 with RFLX.RFLX_Builtin_Types;
+with WolfSSL;
 
 package CoAP_SPARK.Channel with
    SPARK_Mode
@@ -11,35 +12,60 @@ is
    -- Declare the discriminant Is_Secure to True if you want to use DTLS.
    type Socket_Type (Is_Secure : Boolean) is limited private;
 
+   type Address_Type is private;
+
    type Port_Type is mod 2 ** 16;
 
-   procedure Initialize (Socket : out Socket_Type;
-                         Port   : Port_Type := Default_Port;
-                         PSK_Callback : WolfSSL.PSK_Client_Callback := null;
-                         Server : Boolean := False) with
-      Pre => (if Socket.Is_Secure then PSK_Callback not in null else True),
-      Relaxed_Initialization => Socket,
-      Global =>
-         null;
+   function Is_Valid (Address : Address_Type) return Boolean;
 
+   procedure Initialize
+     (Socket              : out Socket_Type;
+      Port                : Port_Type := Default_Port;
+      PSK_Client_Callback : WolfSSL.PSK_Client_Callback := null;
+      PSK_Server_Callback : WolfSSL.PSK_Server_Callback := null;
+      Server              : Boolean := False)
+   with
+     Pre                    =>
+       (if Socket.Is_Secure
+        then
+          (not Server and then PSK_Client_Callback not in null)
+           xor (Server and then PSK_Server_Callback not in null)
+        else
+          (PSK_Client_Callback not in null xor PSK_Server_Callback not in null)),
+     Relaxed_Initialization => Socket;
+
+   -- Accept client connections on a server socket.
+   procedure Accept_Connection
+     (Socket : in out Socket_Type)
+   with
+      Pre => Is_Valid (Socket);
+
+   procedure Shutdown
+     (Socket : in out Socket_Type)
+   with
+      Pre => Is_Valid (Socket);
+
+   -- When the socket is valid, it means that it has been correctly initialized.
    function Is_Valid (Socket : Socket_Type) return Boolean with
       Global =>
          null;
 
+   -- Is ready to send or receive data. Is ready to connect, when it is a client socket.
+   function Is_Ready (Socket : Socket_Type) return Boolean with
+      Global =>
+         null;
+
+   -- Connect to a server.
    procedure Connect (Socket : in out Socket_Type;
                       Server : String;
                       Port : Port_Type := Default_Port) with
-      Pre => Is_Valid (Socket),
-      Global =>
-      null;
+      Pre => Is_Ready (Socket);
 
    use type RFLX.RFLX_Builtin_Types.Index;
 
    procedure Send (Socket : in out Socket_Type;
                    Buffer :        RFLX.RFLX_Builtin_Types.Bytes) with
-      Pre => Is_Valid (Socket) and then Buffer'First = 1,
-      Global =>
-         null;
+      Pre => Is_Ready (Socket) and then Buffer'First = 1;
 
    use type RFLX.RFLX_Builtin_Types.Length;
 
@@ -47,12 +73,10 @@ is
                       Buffer :    out RFLX.RFLX_Builtin_Types.Bytes;
                       Length :    out RFLX.RFLX_Builtin_Types.Length) with
       Relaxed_Initialization => (Buffer),
-      Pre => Is_Valid (Socket) and then Buffer'First = 1,
+      Pre => Is_Ready (Socket) and then Buffer'First = 1,
       Post =>
          Length <= Buffer'Length and then
-         Buffer (Buffer'First .. RFLX.RFLX_Builtin_Types.Index'Base (Length))'Initialized,
-      Global =>
-         null;
+         Buffer (Buffer'First .. RFLX.RFLX_Builtin_Types.Index'Base (Length))'Initialized;
 
    function Has_Attached_Socket (Socket : Socket_Type) return Boolean;
 
@@ -63,6 +87,7 @@ is
 private
 
    type Socket_Type (Is_Secure : Boolean) is record
+      Is_Server       : Boolean := False;
       Attached_Socket : SPARK_Sockets.Optional_Socket;
       case Is_Secure is
          when True =>
@@ -70,9 +95,18 @@ private
             Ctx    : WolfSSL.Context_Type;
             Result : WolfSSL.Subprogram_Result;
          when False =>
-            null;
+            Client_Address : Address_Type;
       end case;
    end record;
+
+   type Address_Type is
+   record
+      Sock_Addr : SPARK_Sockets.Sock_Addr_Type :=
+         (Family => GNAT.Sockets.Family_Unspec);
+   end record;
+
+   function Is_Valid (Address : Address_Type) return Boolean is
+      (GNAT.Sockets."/=" (Address.Sock_Addr.Family, GNAT.Sockets.Family_Unspec));
 
    use type WolfSSL.Subprogram_Result;
 
@@ -83,7 +117,10 @@ private
       (Has_Attached_Socket (Socket)
        and then
        (if Socket.Is_Secure then Socket.Result = WolfSSL.Success and then
-          WolfSSL.Is_Valid (Socket.Ssl) and then
           WolfSSL.Is_Valid (Socket.Ctx)));
+
+   function Is_Ready (Socket : Socket_Type) return Boolean
+   is (Is_Valid (Socket)
+       and then (if Socket.Is_Secure then WolfSSL.Is_Valid (Socket.Ssl)));
 
 end CoAP_SPARK.Channel;

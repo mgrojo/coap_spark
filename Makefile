@@ -1,6 +1,6 @@
 RFLX_HOME := tools/RecordFlux/
 RFLX := $(RFLX_HOME)/.venv/bin/rflx
-SPECS := specs/coap_client.rflx # $(wildcard specs/*.rflx)
+SPECS := specs/coap_client.rflx specs/coap_server.rflx # $(wildcard specs/*.rflx)
 GNATPROVE := gnatprove
 
 GENERATED := $(patsubst specs/%,generated/%,$(SPECS:.rflx=.ads))
@@ -28,8 +28,8 @@ generate: $(GENERATED)
 generated/%.ads: specs/%.rflx
 	@echo "Generating $@ from $<" 
 	@mkdir -p $(dir $@)
-	@$(RFLX) generate $(RFLX_DEBUG) -d $(dir $@) $<
-	@$(RFLX) graph -d $(dir $@) $<
+	@$(RFLX) generate $(RFLX_DEBUG) -d $(dir $@) specs/*.rflx
+	@$(RFLX) graph -d $(dir $@) specs/*.rflx
 
 test:
 	$(MAKE) -C tests test

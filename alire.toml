@@ -6,14 +6,14 @@ as defined in
 [RFC 7252](https://www.rfc-editor.org/rfc/rfc7252), developed in the SPARK 
 language, the formally verified subset of the Ada programming language.
 
-This version implements the client side of the protocol with some limitations:
+This version implements client and server sides of the protocol with some limitations:
 - It does not support block-wise transfers.
 - It does not support retransmission of messages.
 - It only supports NoSec and PreSharedKey security modes.
 
 See LICENSING for licensing information.
 """
-version = "0.9.0"
+version = "0.10.0-dev"
 
 authors = ["Manuel Gomez"]
 maintainers = ["Manuel Gomez <mgrojo@gmail.com>"]
@@ -63,5 +63,8 @@ wolfssl = { path='libs/wolfssl/wrapper/Ada' }
 
 [configuration.values]
 # This is needed only for compatibility with https://github.com/mgrojo/ikea-smartlight
-# You can set it to false, if you meed to disable it.
+# You can set it to false, if you need to disable it.
 wolfssl.STATIC_PSK = true
+
+[[depends-on]]
+gnat_native = "^14.2"

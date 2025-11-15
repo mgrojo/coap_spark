@@ -178,7 +178,6 @@ is
 
    function Get_Length (Opt : Option) return Option_Value_Length;
 
-
    function Get_Number (Opt : Indefinite_Option) return RFLX.CoAP.Option_Numbers;
 
    function Get_Length (Opt : Indefinite_Option) return Option_Value_Length;
@@ -329,6 +328,10 @@ is
                    Value_Image'Result'Length);
 
    function To_UInt (Value : UInt_Bytes) return Interfaces.Unsigned_32;
+
+   subtype Hostname is String with
+      Dynamic_Predicate =>
+         Hostname'Length <= Option_Properties_Table (RFLX.CoAP.Uri_Host).Maximum_Length;
 
 private
 

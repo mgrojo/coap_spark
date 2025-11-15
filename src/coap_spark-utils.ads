@@ -27,12 +27,13 @@ is
    is
 
       function Is_Valid_As_Number (Number : String) return Boolean
-      is (Number'Length <= Numeric_Type'Width
+      is (Number'Length < Numeric_Type'Width
           and then (for all C of Number => C in '0' .. '9'));
 
       -- Wrapper around 'Value attribute, which cannot be proved by SPARK.
       function Value (Number : String) return Numeric_Type
-      with Pre => Is_Valid_As_Number (Number);
+      with Pre => Is_Valid_As_Number (Number),
+           Global => null;
 
       function Value (Number : String) return Numeric_Type
       is (Numeric_Type'Value (Number))
@@ -64,6 +65,12 @@ is
 
    -- Wrapper around 'Value attribute, which cannot be proved by SPARK.
    function Value (Method : String) return RFLX.CoAP.Method_Code
-      with Pre => Is_Valid_As_Method (Method);
+   with
+      Pre => Is_Valid_As_Method (Method),
+      Global => null;
+
+   function Text_As_Bytes (Text : String) return RFLX.RFLX_Types.Bytes
+   with
+     Post => Text_As_Bytes'Result'Length = Text'Length;
 
 end CoAP_SPARK.Utils;
