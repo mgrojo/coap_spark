@@ -28,7 +28,7 @@
 * Server
 - [X] Consider implementing server state-machine and example
   - [X] Implement secure communications for the server
-      - [ ] Make it interoperable with coap-client-openssl or coap-client-gnutls
+      - [X] Make it interoperable with coap-client-openssl or coap-client-gnutls
       - [ ] Fix CoAPS test on macOS
   - [X] Implement server logic for CRUD
   - [X] Add tests for the server
