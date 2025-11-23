@@ -85,7 +85,7 @@
    - [X] scenario   [explicit get with error 4.04](coaps_client_tests.md) pass  
 
    ### Scenario: [post method error 4.05](coaps_client_tests.md): 
-   - OK : When I run `../bin/coap_client -m post -e "This is a test" -k COAP_SPARK_KEY_5684 -u coap_spark coaps://localhost/test`  
+   - OK : When I run `../bin/coap_client -m post -e "This is a test" -k COAP_SPARK_KEY_5684 -u coap_spark coaps://localhost/`  
    - OK : Then I get no error  
    - OK : And output is  
    - [X] scenario   [post method error 4.05](coaps_client_tests.md) pass  

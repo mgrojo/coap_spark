@@ -125,7 +125,7 @@ very long resource name
 ```
 
 ### Scenario: post method error 4.05
-  - When I run `../bin/coap_client -m post -e "This is a test" -k COAP_SPARK_KEY_5684 -u coap_spark coaps://localhost/test`
+  - When I run `../bin/coap_client -m post -e "This is a test" -k COAP_SPARK_KEY_5684 -u coap_spark coaps://localhost/`
   - Then I get no error
   - And output is
 ```
