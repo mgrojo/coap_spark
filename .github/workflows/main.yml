@@ -83,16 +83,9 @@ jobs:
         shell: bash
 
         # Run server tests
-      - if: runner.os == 'Windows' || runner.os == 'Linux'
-        name: Server tests
+      - name: Server tests
         run: |
             PATH=$HOME/.alire/bin:$PATH make -C server/tests
-        shell: bash
-
-      - if: runner.os == 'macOS'
-        name: Server tests (CoAP only on macOS)
-        run: |
-            PATH=$HOME/.alire/bin:$PATH make -C server/tests coap_results.md
         shell: bash
 
       - name: CoAP test results
