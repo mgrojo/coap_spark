@@ -2,6 +2,7 @@
 [![AppImage](https://github.com/mgrojo/coap_spark/actions/workflows/appimage.yml/badge.svg)](https://github.com/mgrojo/coap_spark/actions/workflows/appimage.yml)
 [![GNATprove](https://github.com/mgrojo/coap_spark/actions/workflows/prove.yml/badge.svg)](https://github.com/mgrojo/coap_spark/actions/workflows/prove.yml)
 [![codecov](https://codecov.io/gh/mgrojo/coap_spark/graph/badge.svg?token=2AEXL06XHU)](https://codecov.io/gh/mgrojo/coap_spark)
+[![Alire](https://img.shields.io/endpoint?url=https://alire.ada.dev/badges/coap_spark.json)](https://alire.ada.dev/crates/coap_spark.html)
 
 # CoAP-SPARK
 CoAP-SPARK is a library implementing the Constrained Application Protocol (CoAP)
@@ -14,15 +15,15 @@ implementation, mainly for academic purposes.
 
 ## Dependencies
 CoAP-SPARK uses:
-* Alire as source package manager (independently installed)
-* RecordFlux as a tool facilitating the implementation of the verifiable
+* [Alire](https://alire.ada.dev) as source package manager (independently installed)
+* [RecordFlux](https://github.com/AdaCore/RecordFlux) as a tool facilitating the implementation of the verifiable
   protocol parser and the state machine of a session (included as Git submodule)
-* WolfSSL as library for implementing the DTLS communications
+* [WolfSSL](https://github.com/wolfSSL/wolfssl) as library for implementing the DTLS communications
   (included as Git submodule)
-* GNAT 14.2.1 (toolchain managed by Alire)
-* GNATProve 14.1.1 (dependency managed by Alire)
-* Aunit for unit-testing the library (dependency managed by Alire)
-* bbt for testing (installable via Alire)
+* [GNAT](https://github.com/alire-project/GNAT-FSF-builds) 14.2.1 (toolchain managed by Alire)
+* [GNATProve](https://github.com/alire-project/GNAT-FSF-builds) 14.1.1 (dependency managed by Alire)
+* [Aunit](https://github.com/AdaCore/aunit) for unit-testing the library (dependency managed by Alire)
+* [bbt](https://github.com/LionelDraghi/bbt) for testing (installable via Alire)
 
 ## How to set-up
 
@@ -50,8 +51,8 @@ alr build
 
 For building the client and server programs:
 ```
-cd client ; alr build
-cd ../server ; alr build
+alr -C client build
+alr -C server build
 ```
 
 ## How to test
@@ -62,7 +63,8 @@ alr install bbt
 
 And then run the tests with:
 ```
-cd client/tests ; make
+make -C client/tests
+make -C server/tests
 ```
 
 See [`client/tests/coap_client_tests.md`](client/tests/coap_client_tests.md)
@@ -75,7 +77,7 @@ cd tests; alr run
 ```
 
 ## How to prove
-The project (library and client) is currently proved up to the silver mode.
+The project (library, client and server) is currently proved up to the silver mode.
 
 The [`proof/`](proof/) directory constains the results of passing GNATProve. You can replay it running:
 ```
@@ -102,7 +104,7 @@ in the `PATH`, so `gnatprove` can find the `colibri` executable.
 CoAP-SPARK is a working and verified implementation of CoAP.
 
 The main objective of CoAP-SPARK is to be the subject of my Master's Thesis, but
-I think it can be used in scenarios where this limitations are not an issue:
+I think it can be used in scenarios where these limitations are not an issue:
 - There are no retransmissions.
 - It only supports NoSec and PreSharedKey security modes.
 - Block-wise transfers are not implemented. Nevertheless, this isn't part of the
