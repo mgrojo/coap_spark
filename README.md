@@ -71,9 +71,9 @@ Thanks to `bbt`, the test specification can also work as documentation of the
 features available in the server and the client. You can see:
 
 * Client tests for [plain CoAP](client/tests/coap_client_tests.md) and 
- [CoAP over DTLS](`client/tests/coaps_client_tests.md`)
-* Server tests for [plain CoAP](`server/tests/coap_server_tests.md`) and
- [CoAP over DTLS](`server/tests/coaps_server_tests.md`)
+ [CoAP over DTLS](client/tests/coaps_client_tests.md)
+* Server tests for [plain CoAP](server/tests/coap_server_tests.md) and
+ [CoAP over DTLS](server/tests/coaps_server_tests.md)
 
 There are also some unit tests for the library. To run them, enter the `tests/`
 directory and run them using Alire:
