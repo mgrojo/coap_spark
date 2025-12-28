@@ -67,11 +67,16 @@ make -C client/tests
 make -C server/tests
 ```
 
-See [`client/tests/coap_client_tests.md`](client/tests/coap_client_tests.md)
-for the specification of these tests.
+Thanks to `bbt`, the test specification can also work as documentation of the
+features available in the server and the client. You can see:
+
+* Client tests for [plain CoAP](client/tests/coap_client_tests.md) and 
+ [CoAP over DTLS](`client/tests/coaps_client_tests.md`)
+* Server tests for [plain CoAP](`server/tests/coap_server_tests.md`) and
+ [CoAP over DTLS](`server/tests/coaps_server_tests.md`)
 
 There are also some unit tests for the library. To run them, enter the `tests/`
-directory and run:
+directory and run them using Alire:
 ```
 cd tests; alr run
 ```
@@ -79,7 +84,7 @@ cd tests; alr run
 ## How to prove
 The project (library, client and server) is currently proved up to the silver mode.
 
-The [`proof/`](proof/) directory constains the results of passing GNATProve. You can replay it running:
+The [`proof/`](proof/) directory contains the results of passing GNATProve. You can replay it running:
 ```
 alr gnatprove --replay
 ```
