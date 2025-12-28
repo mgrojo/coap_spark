@@ -23,7 +23,8 @@ website = "https://github.com/mgrojo/coap_spark"
 tags = ["spark", "coap", "iot", "protocol"]
 
 [[depends-on]]
-gnatprove = "^14.1.1"
+gnat_native = "^15"
+gnatprove = "^15"
 
 [build-switches]
 "*".Style_Checks = [
@@ -65,6 +66,3 @@ wolfssl = { path='libs/wolfssl/wrapper/Ada' }
 # This is needed only for compatibility with https://github.com/mgrojo/ikea-smartlight
 # You can set it to false, if you need to disable it.
 wolfssl.STATIC_PSK = true
-
-[[depends-on]]
-gnat_native = "^14.2"
