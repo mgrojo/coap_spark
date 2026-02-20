@@ -27,7 +27,7 @@ coap_results.md : coap_server_tests.md $(PROGRAM)
 	$(PROGRAM) -v 4 & \
     SERVER_PID=$$!; \
     trap 'sleep 2; kill $$SERVER_PID >/dev/null 2>&1 || true' EXIT; \
-    bbt --keep-going --verbose $< > $@; \
+    bbt --keep-going --verbose --junit coap_results.xml $< > $@; \
     grep -F 'Summary : **Success**' $@; \
     coap_client -m fetch coap://localhost/
 
@@ -36,7 +36,7 @@ coaps_results.md: coaps_server_tests.md $(PROGRAM)
 	$(PROGRAM) -v 4 $(SECURE_ARGS) & \
     SERVER_PID=$$!; \
     trap 'sleep 2; kill $$SERVER_PID >/dev/null 2>&1 || true' EXIT; \
-    bbt --keep-going --verbose $< > $@; \
+    bbt --keep-going --verbose --junit coaps_results.xml $< > $@; \
     grep -F 'Summary : **Success**' $@; \
     coap_client -m fetch $(SECURE_ARGS) coaps://localhost/
 

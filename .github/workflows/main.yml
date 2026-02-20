@@ -56,7 +56,9 @@ jobs:
 
         # Install binary crates needed for testing
       - name: Install binary crates
-        run: alr --non-interactive install bbt~0.2.0
+        run: |
+          git clone --depth 1 https://github.com/LionelDraghi/bbt.git
+          alr --non-interactive -C bbt install
         shell: bash
 
         # Run the instrumented testsuite. This will produce *.gcno and *.gcda files for the coverage analysis.
@@ -116,9 +118,17 @@ jobs:
 
         # Upload results to codecov.io
       - if: runner.os == 'Linux'
+        name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true # optional (default = false)
           name: codecov-umbrella # optional
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true # optional (default = false)
+      - name: Upload test results to Codecov
+        if: ${{ !cancelled() }}
+        uses: codecov/codecov-action@v5
+        with:
+          files: server/tests/coap_results.xml, server/tests/coaps_results.xml, client/tests/coap_results.xml, client/tests/coaps_results.xml
+          token: ${{ secrets.CODECOV_TOKEN }}
+          report_type: test_results
