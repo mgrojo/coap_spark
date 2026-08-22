@@ -23,7 +23,7 @@ website = "https://github.com/mgrojo/coap_spark"
 tags = ["spark", "coap", "iot", "protocol"]
 
 [[depends-on]]
-gnatprove = "^14.1.1"
+gnatprove = "^16.1"
 
 [build-switches]
 "*".Style_Checks = [
