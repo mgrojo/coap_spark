@@ -57,6 +57,7 @@ jobs:
         # Install binary crates needed for testing
       - name: Install binary crates
         run: |
+          # FIXME: use a more specific version of bbt, or better, use a custom action to install it from the releases page.
           git clone --depth 1 https://github.com/LionelDraghi/bbt.git
           alr --non-interactive -C bbt install
         shell: bash
