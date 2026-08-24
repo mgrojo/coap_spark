@@ -23,7 +23,7 @@ website = "https://github.com/mgrojo/coap_spark"
 tags = ["spark", "coap", "iot", "protocol"]
 
 [[depends-on]]
-gnatprove = "^14.1.1"
+gnatprove = "^16.1"
 
 [build-switches]
 "*".Style_Checks = [
@@ -68,3 +68,6 @@ wolfssl.STATIC_PSK = true
 
 [[depends-on]]
 gnat_native = "^14.2"
+
+[[depends-on]]
+sparklib = "^15.1.0"
