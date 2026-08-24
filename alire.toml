@@ -68,3 +68,6 @@ wolfssl.STATIC_PSK = true
 
 [[depends-on]]
 gnat_native = "^14.2"
+
+[[depends-on]]
+sparklib = "^15.1.0"
